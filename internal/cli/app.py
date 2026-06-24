@@ -7,7 +7,7 @@ from .start import start
 
 app = typer.Typer(
     name="galaxy",
-    help="Galaxy Framework CLI",
+    help="Galaxy CLI",
 )
 
 app.command()(install)

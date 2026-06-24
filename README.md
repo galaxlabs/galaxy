@@ -1,6 +1,6 @@
-# Galaxy Framework
+# Galaxy
 
-Metadata-driven full-stack low-code business application framework by Galaxy Labs.
+Metadata-driven full-stack low-code business application framework.
 
 Built with Python, PostgreSQL, Starlette, and SQLAlchemy.
 
@@ -21,7 +21,7 @@ docker compose up -d
 # 2. Install dependencies
 pip install -e .
 
-# 3. Install Galaxy Framework site
+# 3. Install Galaxy site
 python cmd\galaxy\main.py install
 
 # 4. Verify installation
@@ -48,7 +48,7 @@ python cmd\galaxy\main.py reset
 
 | Command | Description |
 |---------|-------------|
-| `galaxy install` | Bootstrap a Galaxy Framework site |
+| `galaxy install` | Bootstrap a Galaxy site |
 | `galaxy doctor`  | Check installation health |
 | `galaxy start`   | Start the HTTP server |
 | `galaxy reset`   | Drop and recreate core tables |
@@ -56,7 +56,7 @@ python cmd\galaxy\main.py reset
 ## Project Structure
 
 ```
-galaxy-framework/
+galaxy/
 ├── cmd/galaxy/main.py        # CLI entry point
 ├── internal/
 │   ├── cli/                  # Typer CLI commands

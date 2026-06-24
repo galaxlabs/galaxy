@@ -1,6 +1,6 @@
 [project]
-name = "galaxy-framework"
-description = "Metadata-driven full-stack low-code business application framework by Galaxy Labs"
+name = "galaxy"
+description = "Metadata-driven full-stack low-code business application framework"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
 dynamic = ["version"]
@@ -63,9 +63,9 @@ later_integrations = [
 galaxy = "internal.cli.app:main"
 
 [project.urls]
-Homepage = "https://galaxylabs.local/galaxy-framework"
-Repository = "https://github.com/galaxylabs/galaxy-framework"
-Documentation = "https://docs.galaxylabs.local/galaxy-framework"
+Homepage = "https://galaxylabs.local/galaxy"
+Repository = "https://github.com/galaxylabs/galaxy"
+Documentation = "https://docs.galaxylabs.local/galaxy"
 
 [build-system]
 requires = ["hatchling>=1.25,<2"]

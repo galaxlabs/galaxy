@@ -34,7 +34,7 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 
 async def homepage(request):
-    return JSONResponse({"app": "galaxy-framework", "status": "running"})
+    return JSONResponse({"app": "galaxy", "status": "running"})
 
 
 async def health(request):
@@ -48,7 +48,7 @@ async def health(request):
 
     return JSONResponse({
         "status": "ok" if db_ok else "degraded",
-        "app": "galaxy-framework",
+        "app": "galaxy",
         "database": "ok" if db_ok else "error",
         "site": "default.local",
     })
@@ -56,7 +56,7 @@ async def health(request):
 
 async def api_root(request):
     return JSONResponse({
-        "name": "galaxy-framework",
+        "name": "galaxy",
         "engine": "Galaxy Engine",
         "company": "Galaxy Labs",
         "version": "0.0.1",
@@ -66,7 +66,7 @@ async def api_root(request):
 
 async def api_version(request):
     return JSONResponse({
-        "name": "galaxy-framework",
+        "name": "galaxy",
         "engine": "Galaxy Engine",
         "company": "Galaxy Labs",
         "version": "0.0.1",

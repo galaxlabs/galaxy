@@ -21,7 +21,7 @@ SITE_CONFIG = {
     "db_name": "galaxy_test",
     "db_user": "galaxy_test_user",
     "db_password": "test_password",
-    "installed_apps": ["galaxy_core"],
+    "installed_apps": ["core"],
     "installed_modules": ["Core", "Setup", "Security", "Desk", "Workspace", "Navigation"],
 }
 
@@ -54,7 +54,7 @@ def test_load_site_config(temp_sites):
         assert common["default_site"] == "test.local"
         assert site["db_name"] == "galaxy_test"
         assert site["db_user"] == "galaxy_test_user"
-        assert "galaxy_core" in site["installed_apps"]
+        assert "core" in site["installed_apps"]
 
 
 def test_load_site_config_default_site(temp_sites):

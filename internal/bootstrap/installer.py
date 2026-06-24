@@ -16,7 +16,7 @@ def run_install():
     common, site = load_site_config()
     default_site = common.get("default_site", "default.local")
 
-    print("Galaxy Framework installer")
+    print("Galaxy installer")
     print()
     print("Loaded config:")
     print(f"  Default site: {default_site}")
@@ -78,7 +78,7 @@ def run_doctor():
     common, site = load_site_config()
     default_site = common.get("default_site", "default.local")
 
-    print("Galaxy Framework doctor")
+    print("Galaxy doctor")
     print()
     print(f"Default site: {default_site}")
     print(f"Database: {site['db_type']} {site['db_host']} {site['db_port']} {site['db_name']}")
@@ -120,9 +120,9 @@ def run_doctor():
 
     if (installed_apps >= 1 and installed_modules >= 6 and users >= 1
             and roles >= 1 and doctypes >= 10 and docfields > 0 and docperms >= 10):
-        print("Galaxy Framework installation: OK")
+        print("Galaxy installation: OK")
     else:
-        print("Galaxy Framework installation: INCOMPLETE")
+        print("Galaxy installation: INCOMPLETE")
         raise SystemExit(1)
 
 
@@ -130,7 +130,7 @@ def run_reset():
     common, site = load_site_config()
     default_site = common.get("default_site", "default.local")
 
-    print("Galaxy Framework reset")
+    print("Galaxy reset")
     print()
     print(f"Default site: {default_site}")
     print(f"Database: {site['db_type']} {site['db_host']} {site['db_port']} {site['db_name']}")

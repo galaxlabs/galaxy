@@ -7,7 +7,7 @@ def seed_installed_app(engine: Engine) -> None:
     with engine.begin() as conn:
         result = conn.execute(
             text("""SELECT COUNT(*) FROM "tabInstalled App" WHERE name = :name"""),
-            {"name": "galaxy_core"},
+            {"name": "core"},
         )
         if result.scalar() == 0:
             conn.execute(
@@ -16,8 +16,8 @@ def seed_installed_app(engine: Engine) -> None:
                     VALUES (:name, :app_name, :app_version, :enabled, :idx)
                 """),
                 {
-                    "name": "galaxy_core",
-                    "app_name": "galaxy_core",
+                    "name": "core",
+                    "app_name": "core",
                     "app_version": "0.0.1",
                     "enabled": True,
                     "idx": 0,
@@ -27,12 +27,12 @@ def seed_installed_app(engine: Engine) -> None:
 
 def seed_modules(engine: Engine) -> None:
     modules = [
-        ("Core", "Core", "galaxy_core", "Core", "Core system module", 0),
-        ("Setup", "Setup", "galaxy_core", "Setup", "Setup and configuration module", 1),
-        ("Security", "Security", "galaxy_core", "Security", "Security and access control module", 2),
-        ("Desk", "Desk", "galaxy_core", "Desk", "Desk UI module", 3),
-        ("Workspace", "Workspace", "galaxy_core", "Workspace", "Workspace management module", 4),
-        ("Navigation", "Navigation", "galaxy_core", "Navigation", "Navigation module", 5),
+        ("Core", "Core", "core", "Core", "Core system module", 0),
+        ("Setup", "Setup", "core", "Setup", "Setup and configuration module", 1),
+        ("Security", "Security", "core", "Security", "Security and access control module", 2),
+        ("Desk", "Desk", "core", "Desk", "Desk UI module", 3),
+        ("Workspace", "Workspace", "core", "Workspace", "Workspace management module", 4),
+        ("Navigation", "Navigation", "core", "Navigation", "Navigation module", 5),
     ]
 
     with engine.begin() as conn:
@@ -137,16 +137,16 @@ def seed_administrator(engine: Engine) -> None:
 
 
 DOCTYPES = [
-    ("Installed App", "Setup", "galaxy_core", "tabInstalled App", False, False, False, False, 0),
-    ("Installed Module", "Setup", "galaxy_core", "tabInstalled Module", False, False, False, False, 1),
-    ("Module Def", "Core", "galaxy_core", "tabModule Def", False, False, False, False, 2),
-    ("DocType", "Core", "galaxy_core", "tabDocType", False, False, False, False, 3),
-    ("DocField", "Core", "galaxy_core", "tabDocField", False, False, False, False, 4),
-    ("DocPerm", "Core", "galaxy_core", "tabDocPerm", False, False, False, False, 5),
-    ("User", "Security", "galaxy_core", "tabUser", False, False, False, False, 6),
-    ("Role", "Security", "galaxy_core", "tabRole", False, False, False, False, 7),
-    ("Has Role", "Security", "galaxy_core", "tabHas Role", False, False, False, False, 8),
-    ("Error Log", "Core", "galaxy_core", "tabError Log", False, False, False, False, 9),
+    ("Installed App", "Setup", "core", "tabInstalled App", False, False, False, False, 0),
+    ("Installed Module", "Setup", "core", "tabInstalled Module", False, False, False, False, 1),
+    ("Module Def", "Core", "core", "tabModule Def", False, False, False, False, 2),
+    ("DocType", "Core", "core", "tabDocType", False, False, False, False, 3),
+    ("DocField", "Core", "core", "tabDocField", False, False, False, False, 4),
+    ("DocPerm", "Core", "core", "tabDocPerm", False, False, False, False, 5),
+    ("User", "Security", "core", "tabUser", False, False, False, False, 6),
+    ("Role", "Security", "core", "tabRole", False, False, False, False, 7),
+    ("Has Role", "Security", "core", "tabHas Role", False, False, False, False, 8),
+    ("Error Log", "Core", "core", "tabError Log", False, False, False, False, 9),
 ]
 
 

@@ -2,14 +2,14 @@
 
 **Status:** Complete
 **Date:** 2026-06-25
-**Framework:** Galaxy Framework v0.0.1
+**Framework:** Galaxy v0.0.1
 **Engine:** Galaxy Engine
 
 ---
 
 ## What Was Built
 
-The bootstrap foundation of Galaxy Framework: a working CLI, database layer, metadata schema, seed data, health checker, and HTTP server.
+The bootstrap foundation of Galaxy: a working CLI, database layer, metadata schema, seed data, health checker, and HTTP server.
 
 ### CLI Commands
 
@@ -39,7 +39,7 @@ Created in the `tab*` naming convention:
 
 ### Seed Data
 
-- 1 installed app: `galaxy_core` v0.0.1
+- 1 installed app: `core` v0.0.1
 - 6 modules: Core, Setup, Security, Desk, Workspace, Navigation
 - 1 Administrator user (bcrypt-hashed password)
 - 1 System Manager role
@@ -52,10 +52,10 @@ Created in the `tab*` naming convention:
 
 | Route | Response |
 |-------|----------|
-| `GET /` | `{"app":"galaxy-framework","status":"running"}` |
-| `GET /health` | `{"status":"ok","app":"galaxy-framework","database":"ok","site":"default.local"}` |
+| `GET /` | `{"app":"galaxy","status":"running"}` |
+| `GET /health` | `{"status":"ok","app":"galaxy","database":"ok","site":"default.local"}` |
 | `GET /api` | Framework identity JSON |
-| `GET /api/version` | `{"name":"galaxy-framework","engine":"Galaxy Engine","version":"0.0.1","stage":"bootstrap-core"}` |
+| `GET /api/version` | `{"name":"galaxy","engine":"Galaxy Engine","version":"0.0.1","stage":"bootstrap-core"}` |
 
 ### Technology Stack
 
@@ -87,7 +87,7 @@ All 17 acceptance tests from the specification pass:
 6. ✅ Administrator user with hashed password
 7. ✅ System Manager role exists
 8. ✅ Administrator has System Manager role
-9. ✅ `galaxy_core` installed app record
+9. ✅ `core` installed app record
 10. ✅ 6 module records
 11. ✅ 10 DocType records
 12. ✅ 70 DocField records
