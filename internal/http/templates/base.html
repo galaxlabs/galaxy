@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Galaxy Desk{% endblock %}</title>
+  <link rel="stylesheet" href="/static/desk.css">
+</head>
+<body>
+  <div class="desk-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <a href="/desk">Galaxy Desk</a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/desk" class="nav-item">Dashboard</a>
+        <a href="/desk/doctypes" class="nav-item">DocTypes</a>
+        <a href="/api/core/modules" class="nav-item">Modules</a>
+        <a href="/api/core/installed-apps" class="nav-item">Installed Apps</a>
+      </nav>
+      <div class="sidebar-footer">
+        Site: default.local
+      </div>
+    </aside>
+    <main class="main-content">
+      <header class="topbar">
+        <h1>{% block heading %}Galaxy Desk{% endblock %}</h1>
+      </header>
+      <div class="content">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+</body>
+</html>

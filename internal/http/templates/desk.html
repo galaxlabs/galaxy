@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Galaxy Desk{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+{% block content %}
+<div class="summary-grid">
+  <div class="card">
+    <div class="card-label">Installed Apps</div>
+    <div class="card-value">{{ summary.installed_apps }}</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Modules</div>
+    <div class="card-value">{{ summary.modules }}</div>
+  </div>
+  <div class="card">
+    <div class="card-label">DocTypes</div>
+    <div class="card-value">{{ summary.doctypes }}</div>
+  </div>
+  <div class="card">
+    <div class="card-label">DocFields</div>
+    <div class="card-value">{{ summary.docfields }}</div>
+  </div>
+  <div class="card">
+    <div class="card-label">DocPerms</div>
+    <div class="card-value">{{ summary.docperms }}</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Users</div>
+    <div class="card-value">{{ summary.users }}</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Roles</div>
+    <div class="card-value">{{ summary.roles }}</div>
+  </div>
+</div>
+{% endblock %}

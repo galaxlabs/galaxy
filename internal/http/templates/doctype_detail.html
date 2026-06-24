@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}{{ doctype.name }} — Galaxy Desk{% endblock %}
+{% block heading %}{{ doctype.name }}{% endblock %}
+{% block content %}
+
+<section class="detail-section">
+  <h2>DocType Details</h2>
+  <table class="data-table">
+    <tbody>
+      <tr><td>Name</td><td>{{ doctype.name }}</td></tr>
+      <tr><td>Module</td><td>{{ doctype.module }}</td></tr>
+      <tr><td>App</td><td>{{ doctype.app_name }}</td></tr>
+      <tr><td>Table Name</td><td>{{ doctype.table_name }}</td></tr>
+      <tr><td>Is Single</td><td>{{ "Yes" if doctype.is_single else "No" }}</td></tr>
+      <tr><td>Is Submittable</td><td>{{ "Yes" if doctype.is_submittable else "No" }}</td></tr>
+      <tr><td>Is Child Table</td><td>{{ "Yes" if doctype.is_child_table else "No" }}</td></tr>
+      <tr><td>Is Tree</td><td>{{ "Yes" if doctype.is_tree else "No" }}</td></tr>
+      <tr><td>Index</td><td>{{ doctype.idx }}</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="detail-section">
+  <h2>Fields ({{ fields | length }})</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Fieldname</th>
+        <th>Label</th>
+        <th>Fieldtype</th>
+        <th>Options</th>
+        <th>Required</th>
+        <th>Hidden</th>
+        <th>Read Only</th>
+        <th>In List View</th>
+        <th>Index</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in fields %}
+      <tr>
+        <td>{{ f.fieldname }}</td>
+        <td>{{ f.label }}</td>
+        <td>{{ f.fieldtype }}</td>
+        <td>{{ f.options or "" }}</td>
+        <td>{{ "Yes" if f.reqd else "No" }}</td>
+        <td>{{ "Yes" if f.hidden else "No" }}</td>
+        <td>{{ "Yes" if f.read_only else "No" }}</td>
+        <td>{{ "Yes" if f.in_list_view else "No" }}</td>
+        <td>{{ f.idx }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="detail-section">
+  <h2>Permissions ({{ permissions | length }})</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Role</th>
+        <th>Perm Level</th>
+        <th>Read</th>
+        <th>Write</th>
+        <th>Create</th>
+        <th>Delete</th>
+        <th>Index</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in permissions %}
+      <tr>
+        <td>{{ p.role }}</td>
+        <td>{{ p.permlevel }}</td>
+        <td>{{ "Yes" if p.read else "No" }}</td>
+        <td>{{ "Yes" if p.write else "No" }}</td>
+        <td>{{ "Yes" if p.create else "No" }}</td>
+        <td>{{ "Yes" if p.delete else "No" }}</td>
+        <td>{{ p.idx }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<a href="/desk/doctypes" class="back-link">&larr; Back to DocTypes</a>
+{% endblock %}
