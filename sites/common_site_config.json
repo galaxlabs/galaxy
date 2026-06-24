@@ -1,0 +1,7 @@
+{
+  "default_site": "default.local",
+  "server_port": 8080,
+  "developer_mode": true,
+  "production_mode": false,
+  "cloud_mode": false
+}
