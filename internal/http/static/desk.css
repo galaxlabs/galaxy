@@ -376,3 +376,16 @@ body {
   background: #ffedd5;
   color: #9a3412;
 }
+
+.sql-block {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+  font-family: "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+  margin-top: 8px;
+}

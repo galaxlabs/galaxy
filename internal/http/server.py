@@ -18,9 +18,12 @@ from internal.core.api import (
     handle_doctypes,
     handle_installed_apps,
     handle_installed_modules,
+    handle_migration_apply,
+    handle_migration_preview,
     handle_modules,
     handle_summary,
 )
+from internal.core.migration_planner import plan_doctype_migration
 from internal.core.repository import (
     get_core_summary,
     get_doctype,
@@ -98,10 +101,11 @@ async def desk_doctype_detail(request):
         return JSONResponse({"error": "DocType not found"}, status_code=404)
     fields = get_doctype_fields(name)
     permissions = get_doctype_permissions(name)
+    migration_preview = plan_doctype_migration(name)
     return templates.TemplateResponse(
         request,
         "doctype_detail.html",
-        {"doctype": doctype, "fields": fields, "permissions": permissions},
+        {"doctype": doctype, "fields": fields, "permissions": permissions, "migration_preview": migration_preview},
     )
 
 
@@ -120,6 +124,8 @@ routes = [
     Route("/api/core/summary", endpoint=handle_summary),
     Route("/api/builder/doctype/preview", endpoint=handle_builder_preview, methods=["POST"]),
     Route("/api/builder/doctype/save", endpoint=handle_builder_save, methods=["POST"]),
+    Route("/api/migration/doctype/{name}/preview", endpoint=handle_migration_preview),
+    Route("/api/migration/doctype/{name}/apply", endpoint=handle_migration_apply, methods=["POST"]),
     Route("/desk", endpoint=desk_dashboard),
     Route("/desk/builder/doctype/new", endpoint=desk_builder_new),
     Route("/desk/doctypes", endpoint=desk_doctypes),

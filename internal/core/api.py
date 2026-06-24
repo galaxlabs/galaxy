@@ -1,7 +1,11 @@
+import urllib.parse
+
 from starlette.responses import JSONResponse
 
 from internal.core.builder import build_doctype_json, validate_doctype_payload
 from internal.core.builder_repository import save_doctype_metadata
+from internal.core.migration_applier import apply_doctype_migration
+from internal.core.migration_planner import plan_doctype_migration
 from internal.core.repository import (
     get_core_summary,
     get_doctype,
@@ -119,6 +123,40 @@ async def handle_builder_save(request):
         return JSONResponse({"error": f"Save failed: {e!s}"}, status_code=500)
 
     if not result.get("valid"):
+        return JSONResponse(result, status_code=400)
+
+    return JSONResponse(result)
+
+
+async def handle_migration_preview(request):
+    raw = request.path_params.get("name", "")
+    name = urllib.parse.unquote(raw)
+    try:
+        result = plan_doctype_migration(name)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+    if not result["exists"]:
+        return JSONResponse({"error": "DocType not found"}, status_code=404)
+
+    return JSONResponse({"data": result})
+
+
+async def handle_migration_apply(request):
+    raw = request.path_params.get("name", "")
+    name = urllib.parse.unquote(raw)
+    try:
+        result = apply_doctype_migration(name)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+    if not result["success"] and result["message"] == "DocType not found.":
+        return JSONResponse({"error": result["message"]}, status_code=404)
+
+    if not result["success"] and result["message"] == "Migration already applied.":
+        return JSONResponse(result, status_code=409)
+
+    if not result["success"]:
         return JSONResponse(result, status_code=400)
 
     return JSONResponse(result)
