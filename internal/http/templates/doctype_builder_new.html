@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}New DocType — Galaxy Desk{% endblock %}
+{% block heading %}New DocType{% endblock %}
+{% block content %}
+
+<div class="builder-layout">
+  <div class="builder-form">
+    <section class="detail-section">
+      <h2>DocType Details</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="dt_name" placeholder="e.g. Customer" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Module</label>
+          <input type="text" id="dt_module" placeholder="e.g. Core" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Label</label>
+          <input type="text" id="dt_label" placeholder="e.g. Customer" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Table Name</label>
+          <input type="text" id="dt_table" placeholder="e.g. tabCustomer" class="form-input">
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Fields</h2>
+      <div class="table-scroll">
+        <table class="data-table" id="fields-table">
+          <thead>
+            <tr>
+              <th>Fieldname</th>
+              <th>Label</th>
+              <th>Fieldtype</th>
+              <th>Options</th>
+              <th>Reqd</th>
+              <th>Hidden</th>
+              <th>Read Only</th>
+              <th>In List</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="fields-body">
+          </tbody>
+        </table>
+      </div>
+      <button class="btn btn-secondary" id="add-field-btn" type="button">+ Add Field</button>
+    </section>
+
+    <div class="builder-actions">
+      <button class="btn btn-primary" id="preview-btn" type="button">Preview JSON</button>
+      <button class="btn btn-success" id="save-btn" type="button">Save Metadata Draft</button>
+    </div>
+
+    <div id="messages"></div>
+  </div>
+
+  <div class="builder-preview">
+    <section class="detail-section">
+      <h2>Validation</h2>
+      <div id="validation-panel"><p class="muted">Click "Preview JSON" to validate.</p></div>
+    </section>
+    <section class="detail-section">
+      <h2>Preview JSON</h2>
+      <pre id="json-panel" class="json-block"><code class="muted">Click "Preview JSON" to see the output.</code></pre>
+    </section>
+  </div>
+</div>
+
+<script>
+const FIELDTYPES = [
+  "Data", "Small Text", "Long Text", "Int", "Float", "Currency",
+  "Check", "Date", "Datetime", "Select", "Link", "Table",
+  "Attach", "JSON", "Code",
+];
+
+let fieldCount = 0;
+
+function createFieldRow(data) {
+  const row = document.createElement("tr");
+  const idx = fieldCount++;
+
+  const fname = data?.fieldname || "";
+  const flabel = data?.label || "";
+  const ftype = data?.fieldtype || "Data";
+  const opts = data?.options || "";
+
+  const boolAttrs = ["reqd", "hidden", "read_only", "in_list_view"];
+  const checked = {};
+  boolAttrs.forEach(a => { checked[a] = data?.[a] || false; });
+
+  row.innerHTML = `
+    <td><input type="text" class="form-input field-fname" value="${fname}" placeholder="fieldname"></td>
+    <td><input type="text" class="form-input field-label" value="${flabel}" placeholder="Label"></td>
+    <td>
+      <select class="form-input field-ftype">
+        ${FIELDTYPES.map(t => `<option value="${t}"${t === ftype ? " selected" : ""}>${t}</option>`).join("")}
+      </select>
+    </td>
+    <td><input type="text" class="form-input field-opts" value="${opts}" placeholder="options"></td>
+    <td class="chk-cell"><input type="checkbox" class="field-reqd" ${checked.reqd ? "checked" : ""}></td>
+    <td class="chk-cell"><input type="checkbox" class="field-hidden" ${checked.hidden ? "checked" : ""}></td>
+    <td class="chk-cell"><input type="checkbox" class="field-readonly" ${checked.read_only ? "checked" : ""}></td>
+    <td class="chk-cell"><input type="checkbox" class="field-inlist" ${checked.in_list_view ? "checked" : ""}></td>
+    <td><button class="btn-remove" type="button">&times;</button></td>
+  `;
+  row.querySelector(".btn-remove").addEventListener("click", () => row.remove());
+  return row;
+}
+
+function addField(data) {
+  document.getElementById("fields-body").appendChild(createFieldRow(data));
+}
+
+document.getElementById("add-field-btn").addEventListener("click", () => addField());
+
+function collectPayload() {
+  const name = document.getElementById("dt_name").value.trim();
+  const module = document.getElementById("dt_module").value.trim();
+  const label = document.getElementById("dt_label").value.trim();
+  const table_name = document.getElementById("dt_table").value.trim();
+
+  const fields = [];
+  document.querySelectorAll("#fields-body tr").forEach(row => {
+    const fieldname = row.querySelector(".field-fname")?.value?.trim();
+    const label = row.querySelector(".field-label")?.value?.trim();
+    if (!fieldname && !label) return;
+    fields.push({
+      fieldname: fieldname || "",
+      label: label || "",
+      fieldtype: row.querySelector(".field-ftype")?.value || "Data",
+      options: row.querySelector(".field-opts")?.value?.trim() || "",
+      reqd: row.querySelector(".field-reqd")?.checked || false,
+      hidden: row.querySelector(".field-hidden")?.checked || false,
+      read_only: row.querySelector(".field-readonly")?.checked || false,
+      in_list_view: row.querySelector(".field-inlist")?.checked || false,
+    });
+  });
+
+  return { name, module, label, table_name, fields };
+}
+
+async function postPreview(payload) {
+  const msgDiv = document.getElementById("messages");
+  const valPanel = document.getElementById("validation-panel");
+  const jsonPanel = document.getElementById("json-panel");
+  msgDiv.innerHTML = "";
+  valPanel.innerHTML = "";
+  jsonPanel.textContent = "Loading...";
+
+  const res = await fetch("/api/builder/doctype/preview", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+
+  if (data.valid) {
+    valPanel.innerHTML = `<div class="msg-success">Validation passed</div>`;
+    if (data.warnings && data.warnings.length > 0) {
+      valPanel.innerHTML += `<div class="msg-warn">Warnings:<ul>${data.warnings.map(w => `<li>${w}</li>`).join("")}</ul></div>`;
+    }
+    jsonPanel.textContent = JSON.stringify(data.preview, null, 2);
+  } else {
+    valPanel.innerHTML = `<div class="msg-error">Validation failed</div>`;
+    if (data.errors && data.errors.length > 0) {
+      valPanel.innerHTML += `<ul class="error-list">${data.errors.map(e => `<li>${e}</li>`).join("")}</ul>`;
+    }
+    if (data.warnings && data.warnings.length > 0) {
+      valPanel.innerHTML += `<div class="msg-warn">Warnings:<ul>${data.warnings.map(w => `<li>${w}</li>`).join("")}</ul></div>`;
+    }
+    jsonPanel.textContent = data.preview ? JSON.stringify(data.preview, null, 2) : "No preview available.";
+  }
+  return data;
+}
+
+document.getElementById("preview-btn").addEventListener("click", async () => {
+  const payload = collectPayload();
+  await postPreview(payload);
+});
+
+document.getElementById("save-btn").addEventListener("click", async () => {
+  const payload = collectPayload();
+  const msgDiv = document.getElementById("messages");
+  const valPanel = document.getElementById("validation-panel");
+  const jsonPanel = document.getElementById("json-panel");
+  msgDiv.innerHTML = "";
+  valPanel.innerHTML = "";
+  jsonPanel.textContent = "Saving...";
+
+  let previewData;
+  try {
+    previewData = await postPreview(payload);
+    if (!previewData.valid) {
+      return;
+    }
+  } catch (err) {
+    valPanel.innerHTML = `<div class="msg-error">Network error: ${err.message}</div>`;
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/builder/doctype/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+
+    if (data.valid) {
+      const name = encodeURIComponent(payload.name);
+      msgDiv.innerHTML = `
+        <div class="msg-success">
+          ${data.message}
+          <a href="/desk/doctypes/${name}" class="btn-link">View ${payload.name}</a>
+        </div>`;
+      jsonPanel.textContent = JSON.stringify(data.data, null, 2);
+    } else {
+      valPanel.innerHTML = `<div class="msg-error">Save failed</div>`;
+      if (data.errors && data.errors.length > 0) {
+        valPanel.innerHTML += `<ul class="error-list">${data.errors.map(e => `<li>${e}</li>`).join("")}</ul>`;
+      }
+    }
+  } catch (err) {
+    msgDiv.innerHTML = `<div class="msg-error">Network error: ${err.message}</div>`;
+  }
+});
+
+addField({ fieldname: "name", label: "Name", fieldtype: "Data", reqd: true, in_list_view: true });
+</script>
+{% endblock %}

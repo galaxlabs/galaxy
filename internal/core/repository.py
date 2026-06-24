@@ -10,6 +10,27 @@ def _get_engine() -> Engine:
     return get_engine(site)
 
 
+def table_exists(table_name: str) -> bool:
+    with _get_engine().connect() as conn:
+        row = conn.execute(
+            text("""
+                SELECT COUNT(*) FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = :name
+            """),
+            {"name": table_name},
+        ).scalar()
+    return row > 0
+
+
+def _migration_status(table_name: str) -> str:
+    return "applied" if table_exists(table_name) else "pending"
+
+
+def _enrich(dt: dict) -> dict:
+    dt["migration_status"] = _migration_status(dt["table_name"])
+    return dt
+
+
 def get_installed_apps():
     with _get_engine().connect() as conn:
         rows = conn.execute(
@@ -43,7 +64,7 @@ def get_doctypes():
                 FROM "tabDocType" ORDER BY idx
             """)
         ).mappings().all()
-    return [dict(r) for r in rows]
+    return [_enrich(dict(r)) for r in rows]
 
 
 def get_doctype(name: str):
@@ -56,7 +77,9 @@ def get_doctype(name: str):
             """),
             {"name": name},
         ).mappings().one_or_none()
-    return dict(row) if row else None
+    if row is None:
+        return None
+    return _enrich(dict(row))
 
 
 def get_doctype_fields(name: str):

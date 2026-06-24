@@ -9,6 +9,7 @@
       <th>Module</th>
       <th>App</th>
       <th>Table Name</th>
+      <th>Migration Status</th>
       <th>Is Single</th>
       <th>Is Child Table</th>
       <th>Index</th>
@@ -21,6 +22,7 @@
       <td>{{ dt.module }}</td>
       <td>{{ dt.app_name }}</td>
       <td>{{ dt.table_name }}</td>
+      <td><span class="badge badge-{{ dt.migration_status }}">{{ dt.migration_status | title }}</span></td>
       <td>{{ "Yes" if dt.is_single else "No" }}</td>
       <td>{{ "Yes" if dt.is_child_table else "No" }}</td>
       <td>{{ dt.idx }}</td>

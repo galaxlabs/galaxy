@@ -11,6 +11,7 @@
       <tr><td>Module</td><td>{{ doctype.module }}</td></tr>
       <tr><td>App</td><td>{{ doctype.app_name }}</td></tr>
       <tr><td>Table Name</td><td>{{ doctype.table_name }}</td></tr>
+      <tr><td>Migration Status</td><td><span class="badge badge-{{ doctype.migration_status }}">{{ doctype.migration_status | title }}</span></td></tr>
       <tr><td>Is Single</td><td>{{ "Yes" if doctype.is_single else "No" }}</td></tr>
       <tr><td>Is Submittable</td><td>{{ "Yes" if doctype.is_submittable else "No" }}</td></tr>
       <tr><td>Is Child Table</td><td>{{ "Yes" if doctype.is_child_table else "No" }}</td></tr>

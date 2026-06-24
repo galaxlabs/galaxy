@@ -10,6 +10,8 @@ from starlette.templating import Jinja2Templates
 
 from internal.config.site_config import load_site_config
 from internal.core.api import (
+    handle_builder_preview,
+    handle_builder_save,
     handle_doctype,
     handle_doctype_fields,
     handle_doctype_permissions,
@@ -84,6 +86,10 @@ async def desk_doctypes(request):
     return templates.TemplateResponse(request, "doctypes.html", {"doctypes": doctypes})
 
 
+async def desk_builder_new(request):
+    return templates.TemplateResponse(request, "doctype_builder_new.html", {})
+
+
 async def desk_doctype_detail(request):
     raw = request.path_params.get("name", "")
     name = urllib.parse.unquote(raw)
@@ -112,7 +118,10 @@ routes = [
     Route("/api/core/doctypes/{name}/fields", endpoint=handle_doctype_fields),
     Route("/api/core/doctypes/{name}/permissions", endpoint=handle_doctype_permissions),
     Route("/api/core/summary", endpoint=handle_summary),
+    Route("/api/builder/doctype/preview", endpoint=handle_builder_preview, methods=["POST"]),
+    Route("/api/builder/doctype/save", endpoint=handle_builder_save, methods=["POST"]),
     Route("/desk", endpoint=desk_dashboard),
+    Route("/desk/builder/doctype/new", endpoint=desk_builder_new),
     Route("/desk/doctypes", endpoint=desk_doctypes),
     Route("/desk/doctypes/{name}", endpoint=desk_doctype_detail),
     Mount("/static", app=StaticFiles(directory=STATIC_DIR), name="static"),

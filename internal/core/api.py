@@ -1,5 +1,7 @@
 from starlette.responses import JSONResponse
 
+from internal.core.builder import build_doctype_json, validate_doctype_payload
+from internal.core.builder_repository import save_doctype_metadata
 from internal.core.repository import (
     get_core_summary,
     get_doctype,
@@ -85,3 +87,38 @@ async def handle_summary(request):
         return JSONResponse({"data": data})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
+
+
+async def handle_builder_preview(request):
+    try:
+        payload = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body."}, status_code=400)
+
+    errors, warnings = validate_doctype_payload(payload)
+    if errors:
+        return JSONResponse({"valid": False, "errors": errors, "warnings": warnings}, status_code=400)
+
+    result = build_doctype_json(payload)
+    return JSONResponse({
+        "valid": True,
+        "warnings": warnings,
+        "preview": result,
+    })
+
+
+async def handle_builder_save(request):
+    try:
+        payload = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body."}, status_code=400)
+
+    try:
+        result = save_doctype_metadata(payload)
+    except Exception as e:
+        return JSONResponse({"error": f"Save failed: {e!s}"}, status_code=500)
+
+    if not result.get("valid"):
+        return JSONResponse(result, status_code=400)
+
+    return JSONResponse(result)
