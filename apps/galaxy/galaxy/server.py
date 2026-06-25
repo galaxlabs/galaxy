@@ -428,7 +428,6 @@ class RequireSessionMiddleware:
         request = Request(scope, receive)
         tenant_id = get_tenant_id(request)
         request.state.tenant_id = tenant_id
-        current_tenant.set(tenant_id)
 
         path = request.url.path
         protected, is_api = _is_protected(path)
