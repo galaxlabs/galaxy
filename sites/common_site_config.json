@@ -3,5 +3,8 @@
   "server_port": 8080,
   "developer_mode": true,
   "production_mode": false,
-  "cloud_mode": false
+  "cloud_mode": false,
+  "allow_server_scripts": true,
+  "allow_query_reports": true,
+  "allow_script_reports": false
 }

@@ -74,6 +74,14 @@ def get_scripts_for_event(doctype_name: str, event: str) -> list[dict]:
 
 def run_scripts(doctype_name: str, event: str, doc: dict) -> list[str]:
     errors: list[str] = []
+
+    from internal.core.security import get_security_settings, log_security_event
+
+    sec = get_security_settings()
+    if not sec["allow_server_scripts"]:
+        log_security_event("script_blocked", None, f"Server scripts disabled. Blocked {event} on {doctype_name}.", "server_script")
+        return errors
+
     scripts = get_scripts_for_event(doctype_name, event)
     if not scripts:
         return errors
