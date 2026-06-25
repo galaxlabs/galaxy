@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,49 +9,117 @@
   <link rel="stylesheet" href="/static/css/components.css">
 </head>
 <body>
-  <div class="desk-layout">
-    <aside class="sidebar">
-      <div class="sidebar-brand">
-        <a href="/desk">Galaxy Desk</a>
+  <!-- Command Palette Overlay -->
+  <div id="cmd-palette" class="cmd-overlay" style="display:none">
+    <div class="cmd-modal">
+      <div class="cmd-search-wrap">
+        <span class="cmd-icon">⌘</span>
+        <input type="text" id="cmd-input" class="cmd-input" placeholder="Search pages, records, actions..." autofocus>
+        <kbd class="cmd-hint">ESC</kbd>
       </div>
-      <nav class="sidebar-nav">
-        <a href="/desk" class="nav-item">Dashboard</a>
-        <a href="/desk/doctypes" class="nav-item">DocTypes</a>
-        <a href="/desk/builder/doctype/new" class="nav-item">New DocType</a>
-        <a href="/desk/scripts" class="nav-item">Server Scripts</a>
-        <a href="/desk/reports" class="nav-item">Reports</a>
-        <a href="/desk/bench" class="nav-item">Bench</a>
-        <a href="/desk/tenants" class="nav-item">Tenants</a>
-        <a href="/api/core/modules" class="nav-item">Modules</a>
-        <a href="/api/core/installed-apps" class="nav-item">Installed Apps</a>
+      <div id="cmd-results" class="cmd-results"></div>
+    </div>
+  </div>
+
+  <div class="desk-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <a href="/desk" class="sidebar-logo">Galaxy</a>
+        <button class="sidebar-collapse-btn" id="sidebar-toggle" title="Toggle sidebar">◀</button>
+      </div>
+      <nav class="sidebar-nav" id="sidebar-nav">
+        <div class="sidebar-section">
+          <span class="sidebar-section-title">Main</span>
+          <a href="/desk" class="nav-item {% if request.url.path == '/desk' %}active{% endif %}" data-nav>
+            <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+          </a>
+          <a href="/desk/doctypes" class="nav-item {% if '/desk/doctypes' in request.url.path %}active{% endif %}" data-nav>
+            <span class="nav-icon">📋</span><span class="nav-label">DocTypes</span>
+          </a>
+          <a href="/desk/reports" class="nav-item {% if '/desk/reports' in request.url.path %}active{% endif %}" data-nav>
+            <span class="nav-icon">📈</span><span class="nav-label">Reports</span>
+          </a>
+          <a href="/desk/scripts" class="nav-item {% if '/desk/scripts' in request.url.path %}active{% endif %}" data-nav>
+            <span class="nav-icon">⚡</span><span class="nav-label">Scripts</span>
+          </a>
+        </div>
+        <div class="sidebar-section">
+          <span class="sidebar-section-title">Builder</span>
+          <a href="/desk/builder/doctype/new" class="nav-item" data-nav>
+            <span class="nav-icon">🛠</span><span class="nav-label">New DocType</span>
+          </a>
+        </div>
+        <div class="sidebar-section">
+          <span class="sidebar-section-title">Management</span>
+          <a href="/desk/bench" class="nav-item {% if '/desk/bench' in request.url.path %}active{% endif %}" data-nav>
+            <span class="nav-icon">⚙️</span><span class="nav-label">Bench</span>
+          </a>
+          <a href="/desk/tenants" class="nav-item {% if '/desk/tenants' in request.url.path %}active{% endif %}" data-nav>
+            <span class="nav-icon">🏢</span><span class="nav-label">Tenants</span>
+          </a>
+        </div>
+        <div class="sidebar-section">
+          <span class="sidebar-section-title">Developer</span>
+          <a href="/desk/ui-guide" class="nav-item {% if '/desk/ui-guide' in request.url.path %}active{% endif %}" data-nav>
+            <span class="nav-icon">🎨</span><span class="nav-label">UI Guide</span>
+          </a>
+        </div>
       </nav>
       <div class="sidebar-footer">
-        <a href="#" id="logout-link" class="nav-item">Logout</a>
-        <span class="sidebar-site">Site: default.local</span>
+        <div class="sidebar-user">
+          <span class="sidebar-user-avatar">A</span>
+          <span class="sidebar-user-name">Administrator</span>
+        </div>
+        <a href="#" id="logout-link" class="sidebar-logout">Sign out</a>
       </div>
     </aside>
-    <main class="main-content">
+
+    <!-- Main -->
+    <main class="main-content" id="main-content">
+      <!-- Topbar -->
       <header class="topbar">
-        <h1>{% block heading %}Galaxy Desk{% endblock %}</h1>
-        <div class="topbar-actions">
+        <div class="topbar-left">
+          <button class="topbar-mobile-menu" id="mobile-menu-toggle">☰</button>
+          <button class="topbar-cmd-btn" id="cmd-trigger" title="Search (Ctrl+K)">
+            <span class="cmd-trigger-icon">🔍</span>
+            <span class="cmd-trigger-text">Search...</span>
+            <kbd class="cmd-trigger-kbd">Ctrl+K</kbd>
+          </button>
+        </div>
+        <div class="topbar-right">
           {{ ui.theme_switcher() }}
+          <div class="topbar-user-menu">
+            <button class="topbar-user-btn" id="user-menu-btn">
+              <span class="topbar-user-avatar">A</span>
+            </button>
+            <div class="topbar-dropdown" id="user-dropdown" style="display:none">
+              <a href="#" class="dropdown-item">Profile</a>
+              <a href="#" class="dropdown-item">Settings</a>
+              <hr>
+              <a href="#" id="logout-link2" class="dropdown-item dropdown-danger">Sign out</a>
+            </div>
+          </div>
         </div>
       </header>
+
+      <!-- Page Content -->
       <div class="content">
         {% block content %}{% endblock %}
       </div>
     </main>
   </div>
+
   {{ ui.toast_container() }}
+  <div id="modal-root"></div>
   <script src="/static/js/galaxy.js"></script>
   <script>
+    // ── CSRF ──
     function getCookie(name) {
       const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
       return match ? decodeURIComponent(match[2]) : null;
     }
-
     const csrfToken = getCookie("galaxy_csrf");
-
     const origFetch = window.fetch;
     window.fetch = function(url, opts) {
       opts = opts || {};
@@ -62,11 +130,13 @@
       return origFetch.call(this, url, opts);
     };
 
-    document.getElementById("logout-link")?.addEventListener("click", async function(e) {
+    // ── Logout ──
+    function doLogout(e) {
       e.preventDefault();
-      await fetch("/api/auth/logout", { method: "POST" });
-      window.location.href = "/login";
-    });
+      fetch("/api/auth/logout", { method: "POST" }).then(() => { window.location.href = "/login"; });
+    }
+    document.getElementById("logout-link")?.addEventListener("click", doLogout);
+    document.getElementById("logout-link2")?.addEventListener("click", doLogout);
   </script>
 </body>
 </html>

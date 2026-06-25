@@ -1,35 +1,120 @@
 {% extends "base.html" %}
 {% block title %}Dashboard — Galaxy Desk{% endblock %}
-{% block heading %}Dashboard{% endblock %}
 {% block content %}
-<div class="summary-grid">
-  <div class="card">
-    <div class="card-label">Installed Apps</div>
-    <div class="card-value">{{ summary.installed_apps }}</div>
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Galaxy Framework overview and quick actions</p>
   </div>
-  <div class="card">
-    <div class="card-label">Modules</div>
-    <div class="card-value">{{ summary.modules }}</div>
+  <div class="page-actions">
+    <a href="/desk/builder/doctype/new" class="galaxy-btn galaxy-btn-solid galaxy-btn-primary galaxy-btn-md">New DocType</a>
   </div>
-  <div class="card">
-    <div class="card-label">DocTypes</div>
-    <div class="card-value">{{ summary.doctypes }}</div>
+</div>
+
+<!-- Metric Cards -->
+<div class="dashboard-grid">
+  <div class="stat-card" onclick="window.location='/desk/doctypes'" style="cursor:pointer">
+    <div class="stat-card-icon stat-icon-doctype">📋</div>
+    <div class="stat-card-body">
+      <div class="stat-card-value">{{ summary.doctypes }}</div>
+      <div class="stat-card-label">DocTypes</div>
+    </div>
+    <div class="stat-card-trend up">+{{ summary.docfields }} fields</div>
   </div>
-  <div class="card">
-    <div class="card-label">DocFields</div>
-    <div class="card-value">{{ summary.docfields }}</div>
+  <div class="stat-card">
+    <div class="stat-card-icon stat-icon-apps">📦</div>
+    <div class="stat-card-body">
+      <div class="stat-card-value">{{ summary.installed_apps }}</div>
+      <div class="stat-card-label">Installed Apps</div>
+    </div>
   </div>
-  <div class="card">
-    <div class="card-label">DocPerms</div>
-    <div class="card-value">{{ summary.docperms }}</div>
+  <div class="stat-card">
+    <div class="stat-card-icon stat-icon-modules">🧩</div>
+    <div class="stat-card-body">
+      <div class="stat-card-value">{{ summary.modules }}</div>
+      <div class="stat-card-label">Modules</div>
+    </div>
   </div>
-  <div class="card">
-    <div class="card-label">Users</div>
-    <div class="card-value">{{ summary.users }}</div>
+  <div class="stat-card">
+    <div class="stat-card-icon stat-icon-users">👥</div>
+    <div class="stat-card-body">
+      <div class="stat-card-value">{{ summary.users }}</div>
+      <div class="stat-card-label">Users</div>
+    </div>
   </div>
-  <div class="card">
-    <div class="card-label">Roles</div>
-    <div class="card-value">{{ summary.roles }}</div>
+  <div class="stat-card">
+    <div class="stat-card-icon stat-icon-roles">🔑</div>
+    <div class="stat-card-body">
+      <div class="stat-card-value">{{ summary.roles }}</div>
+      <div class="stat-card-label">Roles</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-icon stat-icon-perms">🛡️</div>
+    <div class="stat-card-body">
+      <div class="stat-card-value">{{ summary.docperms }}</div>
+      <div class="stat-card-label">Permissions</div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions + Recent Activity -->
+<div class="dashboard-bottom">
+  <div class="dash-section">
+    <h3 class="dash-section-title">Quick Actions</h3>
+    <div class="quick-actions">
+      <a href="/desk/builder/doctype/new" class="quick-action-card">
+        <span class="qa-icon">🛠</span>
+        <span class="qa-label">New DocType</span>
+        <span class="qa-desc">Create a custom DocType</span>
+      </a>
+      <a href="/desk/scripts/new" class="quick-action-card">
+        <span class="qa-icon">⚡</span>
+        <span class="qa-label">New Script</span>
+        <span class="qa-desc">Write a server script</span>
+      </a>
+      <a href="/desk/bench/sites/new" class="quick-action-card">
+        <span class="qa-icon">🌐</span>
+        <span class="qa-label">New Site</span>
+        <span class="qa-desc">Create a bench site</span>
+      </a>
+      <a href="/desk/ui-guide" class="quick-action-card">
+        <span class="qa-icon">🎨</span>
+        <span class="qa-label">UI Guide</span>
+        <span class="qa-desc">Browse components</span>
+      </a>
+    </div>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">Recently Viewed</h3>
+    <div class="activity-list" id="recent-list" hx-get="/api/core/doctypes" hx-trigger="load" hx-swap="innerHTML">
+      <div class="activity-placeholder">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<div class="setup-card">
+  <div class="setup-card-header">
+    <span>🚀 Getting Started</span>
+    <span class="setup-progress">1/4 complete</span>
+  </div>
+  <div class="setup-steps">
+    <div class="setup-step done">
+      <span class="setup-step-icon">✓</span>
+      <span>Install Galaxy</span>
+    </div>
+    <div class="setup-step done">
+      <span class="setup-step-icon">✓</span>
+      <span>Login as Administrator</span>
+    </div>
+    <div class="setup-step">
+      <span class="setup-step-icon">○</span>
+      <span>Explore DocType Builder</span>
+    </div>
+    <div class="setup-step">
+      <span class="setup-step-icon">○</span>
+      <span>Create your first custom app</span>
+    </div>
   </div>
 </div>
 {% endblock %}
