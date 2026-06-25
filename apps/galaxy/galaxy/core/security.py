@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 
 from sqlalchemy import text
 
-from apps.galaxy.galaxy.db.connection import get_engine
+from galaxy.db.connection import get_engine
 from internal.config.site_config import load_common_config
 
 

@@ -5,7 +5,7 @@ from passlib.hash import bcrypt as passlib_bcrypt
 from sqlalchemy import text
 
 from apps.galaxy.galaxy.core.tenant import current_tenant
-from apps.galaxy.galaxy.db.connection import get_engine
+from galaxy.db.connection import get_engine
 from internal.config.site_config import load_site_config
 
 

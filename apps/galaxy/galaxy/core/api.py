@@ -35,7 +35,7 @@ from apps.galaxy.galaxy.core.security import (
     log_security_event,
     validate_csrf_token,
 )
-from apps.galaxy.galaxy.db.connection import get_engine
+from galaxy.db.connection import get_engine
 from internal.config.site_config import load_site_config
 
 

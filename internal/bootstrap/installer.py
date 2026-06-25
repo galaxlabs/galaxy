@@ -1,6 +1,6 @@
-from apps.galaxy.galaxy.db.connection import get_engine, test_connection
-from apps.galaxy.galaxy.db.core_tables import create_core_tables
-from apps.galaxy.galaxy.db.seed import (
+from galaxy.db.connection import get_engine, test_connection
+from galaxy.db.core_tables import create_core_tables
+from galaxy.db.seed import (
     seed_administrator,
     seed_docfields,
     seed_docperms,
@@ -165,7 +165,7 @@ def run_reset():
     engine = get_engine(site)
 
     print("Dropping all core tables...")
-    from apps.galaxy.galaxy.db.core_tables import drop_core_tables
+    from galaxy.db.core_tables import drop_core_tables
     drop_core_tables(engine)
     print("Core tables dropped: OK")
     print()

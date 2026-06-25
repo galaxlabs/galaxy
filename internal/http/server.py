@@ -78,7 +78,7 @@ async def homepage(request):
 
 async def health(request):
     try:
-        from apps.galaxy.galaxy.db.connection import get_engine, test_connection
+        from galaxy.db.connection import get_engine, test_connection
         _, site = load_site_config()
         engine = get_engine(site)
         db_ok = test_connection(engine)
@@ -210,7 +210,7 @@ async def desk_reports(request):
         return RedirectResponse(url="/login", status_code=302)
     from sqlalchemy import text
 
-    from apps.galaxy.galaxy.db.connection import get_engine
+    from galaxy.db.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -228,7 +228,7 @@ async def desk_report_detail(request):
     name = urllib.parse.unquote(raw)
     from sqlalchemy import text
 
-    from apps.galaxy.galaxy.db.connection import get_engine
+    from galaxy.db.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -247,7 +247,7 @@ async def desk_scripts(request):
         return RedirectResponse(url="/login", status_code=302)
     from sqlalchemy import text
 
-    from apps.galaxy.galaxy.db.connection import get_engine
+    from galaxy.db.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -273,7 +273,7 @@ async def desk_script_edit(request):
     name = urllib.parse.unquote(raw)
     from sqlalchemy import text
 
-    from apps.galaxy.galaxy.db.connection import get_engine
+    from galaxy.db.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:

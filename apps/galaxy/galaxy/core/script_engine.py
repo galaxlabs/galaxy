@@ -3,7 +3,7 @@ from datetime import UTC
 
 from sqlalchemy import text
 
-from apps.galaxy.galaxy.db.connection import get_engine
+from galaxy.db.connection import get_engine
 from internal.config.site_config import load_site_config
 
 VALID_EVENTS = {"before_save", "after_save", "before_delete", "after_delete", "on_load"}

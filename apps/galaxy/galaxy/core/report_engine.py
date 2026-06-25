@@ -4,7 +4,7 @@ import traceback
 from sqlalchemy import text
 
 from apps.galaxy.galaxy.core.security import get_security_settings, log_security_event
-from apps.galaxy.galaxy.db.connection import get_engine
+from galaxy.db.connection import get_engine
 from internal.config.site_config import load_site_config
 
 

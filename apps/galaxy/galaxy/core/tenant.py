@@ -3,7 +3,7 @@ import contextvars
 from sqlalchemy import text
 from starlette.responses import JSONResponse
 
-from apps.galaxy.galaxy.db.connection import get_engine
+from galaxy.db.connection import get_engine
 
 current_tenant: contextvars.ContextVar[str] = contextvars.ContextVar("current_tenant", default="Default")
 

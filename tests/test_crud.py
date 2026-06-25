@@ -8,7 +8,7 @@ from apps.galaxy.galaxy.core.crud import (
     list_documents,
     validate_create_payload,
 )
-from apps.galaxy.galaxy.db.connection import get_engine
+from galaxy.db.connection import get_engine
 from internal.config.site_config import load_site_config
 
 SUPPLIER = "Supplier"
