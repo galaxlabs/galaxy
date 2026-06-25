@@ -3,11 +3,11 @@ import urllib.parse
 
 import uvicorn
 from starlette.applications import Starlette
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse, RedirectResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
+from starlette.types import ASGIApp
 
 from galaxy.config import load_site_config
 from galaxy.core.api import (
@@ -418,8 +418,14 @@ def _is_protected(path: str) -> tuple[bool, bool]:
     return False, False
 
 
-class RequireSessionMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
+class RequireSessionMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        from starlette.requests import Request
+
+        request = Request(scope, receive)
         tenant_id = get_tenant_id(request)
         request.state.tenant_id = tenant_id
         current_tenant.set(tenant_id)
@@ -428,21 +434,26 @@ class RequireSessionMiddleware(BaseHTTPMiddleware):
         protected, is_api = _is_protected(path)
 
         if not protected:
-            return await call_next(request)
+            await self.app(scope, receive, send)
+            return
 
         from galaxy.auth import require_session
 
         user = require_session(request)
         if user is not None:
             request.state.user = user
-            return await call_next(request)
+            await self.app(scope, receive, send)
+            return
 
         if is_api:
-            return JSONResponse(
+            response = JSONResponse(
                 {"success": False, "error": "Authentication required."},
                 status_code=401,
             )
-        return RedirectResponse(url="/login", status_code=302)
+            await response(scope, receive, send)
+        else:
+            response = RedirectResponse(url="/login", status_code=302)
+            await response(scope, receive, send)
 
 
 routes = [
@@ -507,8 +518,7 @@ routes = [
     Mount("/static", app=StaticFiles(directory=STATIC_DIR), name="static"),
 ]
 
-app = Starlette(routes=routes)
-app.add_middleware(RequireSessionMiddleware)
+app: ASGIApp = RequireSessionMiddleware(Starlette(routes=routes))
 
 
 def run_server(host="127.0.0.1", port=8080):
