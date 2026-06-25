@@ -39,6 +39,7 @@
           body: JSON.stringify({username, password}),
         });
         if (resp.ok) {
+          await new Promise(r => setTimeout(r, 100));
           window.location.href = "/desk";
         } else {
           const data = await resp.json();
