@@ -15,7 +15,6 @@ from galaxy.core.crud import (
 )
 from galaxy.core.migration_applier import apply_doctype_migration
 from galaxy.core.migration_planner import plan_doctype_migration
-from galaxy.core.permissions import authorize
 from galaxy.core.report_engine import run_report
 from galaxy.core.repository import (
     get_core_summary,
@@ -36,6 +35,7 @@ from galaxy.core.security import (
     validate_csrf_token,
 )
 from galaxy.db.connection import get_engine
+from galaxy.permissions import authorize
 from internal.config.site_config import load_site_config
 
 
