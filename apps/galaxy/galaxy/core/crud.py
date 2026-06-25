@@ -27,7 +27,7 @@ SKIP_FIELDTYPES = {"Table"}
 
 def _tenant_where(table_name: str) -> tuple[str, dict]:
     if table_name in TENANT_TABLES:
-        return '"tenant_id" = :_tenant_id', {"_tenant_id": current_tenant.get()}
+        return '"tenant_id" = :_tenant_id', {"_tenant_id": current_tenant.get() or "Default"}
     return "", {}
 
 
@@ -115,7 +115,7 @@ def create_document(doctype_name: str, payload: dict) -> dict:
     col_values = [doc_name]
 
     if table_name in TENANT_TABLES:
-        tenant_id = current_tenant.get()
+        tenant_id = current_tenant.get() or "Default"
         col_names.append("tenant_id")
         col_values.append(tenant_id)
 

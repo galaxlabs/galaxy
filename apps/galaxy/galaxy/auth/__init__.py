@@ -15,7 +15,7 @@ def _get_engine():
 
 
 def verify_password(username: str, password: str) -> dict | None:
-    tenant_id = current_tenant.get()
+    tenant_id = current_tenant.get() or "Default"
     engine = _get_engine()
     with engine.connect() as conn:
         row = conn.execute(
@@ -38,7 +38,7 @@ def verify_password(username: str, password: str) -> dict | None:
 
 
 def create_session(username: str) -> str:
-    tenant_id = current_tenant.get()
+    tenant_id = current_tenant.get() or "Default"
     token = secrets.token_urlsafe(48)
     engine = _get_engine()
     name = f"ses-{token[:16]}"
@@ -57,7 +57,7 @@ def create_session(username: str) -> str:
 
 
 def get_session(token: str) -> dict | None:
-    tenant_id = current_tenant.get()
+    tenant_id = current_tenant.get() or "Default"
     engine = _get_engine()
     with engine.connect() as conn:
         row = conn.execute(
