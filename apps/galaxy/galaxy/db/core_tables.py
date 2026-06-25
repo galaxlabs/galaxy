@@ -1,6 +1,22 @@
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
+TENANT_COL = 'tenant_id VARCHAR(255) NOT NULL DEFAULT \'Default\''
+
+TENANT_TABLES = {
+    "tabUser",
+    "tabSession",
+    "tabHas Role",
+    "tabServer Script",
+    "tabReport",
+    "tabError Log",
+    "tabTenant",
+}
+
+
+def _tenant_alter(table: str) -> str:
+    return f'ALTER TABLE "{table}" ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(255) NOT NULL DEFAULT \'Default\';'
+
 
 def create_core_tables(engine: Engine) -> None:
     statements = [
@@ -94,6 +110,7 @@ def create_core_tables(engine: Engine) -> None:
             email VARCHAR(255),
             password_hash VARCHAR(255) NOT NULL,
             enabled BOOLEAN DEFAULT TRUE,
+            tenant_id VARCHAR(255) NOT NULL DEFAULT 'Default',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -111,6 +128,7 @@ def create_core_tables(engine: Engine) -> None:
             name VARCHAR(255) PRIMARY KEY,
             parent VARCHAR(255) NOT NULL,
             role VARCHAR(255) NOT NULL,
+            tenant_id VARCHAR(255) NOT NULL DEFAULT 'Default',
             idx INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -126,6 +144,7 @@ def create_core_tables(engine: Engine) -> None:
             script TEXT,
             columns JSONB,
             enabled BOOLEAN DEFAULT TRUE,
+            tenant_id VARCHAR(255) NOT NULL DEFAULT 'Default',
             idx INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -140,6 +159,7 @@ def create_core_tables(engine: Engine) -> None:
             script_type VARCHAR(20) DEFAULT 'Python',
             script TEXT,
             enabled BOOLEAN DEFAULT TRUE,
+            tenant_id VARCHAR(255) NOT NULL DEFAULT 'Default',
             idx INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -156,6 +176,7 @@ def create_core_tables(engine: Engine) -> None:
             method VARCHAR(10),
             user_name VARCHAR(255),
             status VARCHAR(50),
+            tenant_id VARCHAR(255) NOT NULL DEFAULT 'Default',
             idx INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -166,15 +187,38 @@ def create_core_tables(engine: Engine) -> None:
             name VARCHAR(255) PRIMARY KEY,
             user_name VARCHAR(255) NOT NULL,
             token VARCHAR(255) NOT NULL UNIQUE,
+            tenant_id VARCHAR(255) NOT NULL DEFAULT 'Default',
             idx INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             expires_at TIMESTAMP NOT NULL
         );
         """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabTenant" (
+            name VARCHAR(255) PRIMARY KEY,
+            display_name VARCHAR(255) NOT NULL,
+            domain VARCHAR(255),
+            status VARCHAR(50) NOT NULL DEFAULT 'active',
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+    ]
+
+    alter_statements = [
+        _tenant_alter("tabUser"),
+        _tenant_alter("tabHas Role"),
+        _tenant_alter("tabSession"),
+        _tenant_alter("tabServer Script"),
+        _tenant_alter("tabReport"),
+        _tenant_alter("tabError Log"),
     ]
 
     with engine.begin() as conn:
         for stmt in statements:
+            conn.execute(text(stmt))
+        for stmt in alter_statements:
             conn.execute(text(stmt))
 
 
@@ -193,6 +237,7 @@ def drop_core_tables(engine: Engine) -> None:
         "tabServer Script",
         "tabError Log",
         "tabSession",
+        "tabTenant",
     ]
 
     with engine.begin() as conn:

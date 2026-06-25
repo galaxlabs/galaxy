@@ -3,10 +3,50 @@ from datetime import UTC
 
 from sqlalchemy import text
 
+from apps.galaxy.galaxy.db.connection import get_engine
 from internal.config.site_config import load_site_config
-from internal.db.connection import get_engine
 
 VALID_EVENTS = {"before_save", "after_save", "before_delete", "after_delete", "on_load"}
+
+BLOCKED_PATTERNS = [
+    "__import__",
+    "open(",
+    "exec(",
+    "eval(",
+    "compile(",
+    "input(",
+    "breakpoint(",
+    "vars(",
+    "globals(",
+    "locals(",
+    "dir(",
+    "getattr(",
+    "setattr(",
+    "delattr(",
+]
+
+BLOCKED_MODULES = [
+    "os",
+    "subprocess",
+    "socket",
+    "pathlib",
+    "shutil",
+    "signal",
+    "ctypes",
+    "sys",
+    "inspect",
+    "importlib",
+]
+
+
+def _check_dangerous_code(code: str) -> str | None:
+    for pat in BLOCKED_PATTERNS:
+        if pat in code:
+            return f"Dangerous function call blocked: '{pat}'"
+    for mod in BLOCKED_MODULES:
+        if f"import {mod}" in code or f"from {mod}" in code:
+            return f"Dangerous module blocked: '{mod}'"
+    return None
 
 
 def _get_engine():
@@ -95,6 +135,13 @@ def run_scripts(doctype_name: str, event: str, doc: dict) -> list[str]:
         code = script_def["script"]
         if not code:
             continue
+        blocked = _check_dangerous_code(code)
+        if blocked:
+            msg = f"Script '{script_def['name']}' blocked on {event}: {blocked}"
+            errors.append(msg)
+            frappe.log_error(f"{msg}\n{code}")
+            continue
+
         globals_dict = {
             "doc": doc,
             "frappe": frappe,

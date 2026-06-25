@@ -3,9 +3,9 @@ import traceback
 
 from sqlalchemy import text
 
+from apps.galaxy.galaxy.db.connection import get_engine
 from internal.config.site_config import load_site_config
 from internal.core.security import get_security_settings, log_security_event
-from internal.db.connection import get_engine
 
 
 def _get_engine():
@@ -34,22 +34,58 @@ def get_report(name: str) -> dict | None:
     return result
 
 
+DANGEROUS_KEYWORDS = [
+    "insert", "update", "delete", "drop", "alter", "create",
+    "truncate", "grant", "revoke", "copy", "call", "do",
+    "replace", "rename", "comment", "merge",
+]
+
+COMMENT_PATTERNS = ["--", "/*", "*/", "#"]
+
+
+def _validate_query_safe(query: str) -> tuple[bool, str]:
+    stripped = query.strip().rstrip(";")
+    if not stripped:
+        return False, "Query is empty."
+
+    semi_count = stripped.count(";")
+    if semi_count > 0:
+        return False, "Multiple statements are not allowed (semicolon detected)."
+
+    import re
+    no_comments = stripped
+    for pat in COMMENT_PATTERNS:
+        no_comments = re.sub(re.escape(pat) + ".*", "", no_comments)
+
+    lower = no_comments.lower().strip()
+    if not lower.startswith("select") and not lower.startswith("with"):
+        return False, "Only SELECT queries are allowed."
+
+    words = set(lower.split())
+    for kw in DANGEROUS_KEYWORDS:
+        if kw in words:
+            return False, f"Dangerous keyword '{kw}' is not allowed."
+
+    return True, ""
+
+
 def run_query_report(report: dict) -> dict:
     query = (report.get("query") or "").strip()
     if not query:
         return {"success": False, "error": "Query is empty."}
 
-    lower_query = query.lower().strip()
-    if not lower_query.startswith("select"):
-        return {"success": False, "error": "Only SELECT queries are allowed."}
+    valid, msg = _validate_query_safe(query)
+    if not valid:
+        return {"success": False, "error": msg}
 
     try:
         engine = _get_engine()
         with engine.connect() as conn:
             rows = conn.execute(text(query)).mappings().all()
         result = [dict(r) for r in rows]
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+    except Exception:
+        log_security_event("query_report_error", None, f"Query report execution failed for query: {query[:200]}", "report")
+        return {"success": False, "error": "Query report execution failed."}
 
     return {"success": True, "data": result, "count": len(result)}
 

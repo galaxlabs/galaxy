@@ -1,7 +1,6 @@
-from internal.config.site_config import load_site_config
-from internal.db.connection import get_engine, test_connection
-from internal.db.core_tables import create_core_tables
-from internal.db.seed import (
+from apps.galaxy.galaxy.db.connection import get_engine, test_connection
+from apps.galaxy.galaxy.db.core_tables import create_core_tables
+from apps.galaxy.galaxy.db.seed import (
     seed_administrator,
     seed_docfields,
     seed_docperms,
@@ -9,17 +8,20 @@ from internal.db.seed import (
     seed_installed_app,
     seed_modules,
     seed_roles,
+    seed_tenant,
 )
+from internal.config.site_config import load_site_config
 
 
-def run_install():
-    common, site = load_site_config()
+def run_install(site_name: str | None = None):
+    common, site = load_site_config(site_name)
     default_site = common.get("default_site", "default.local")
+    resolved_site = site_name or default_site
 
     print("Galaxy installer")
     print()
     print("Loaded config:")
-    print(f"  Default site: {default_site}")
+    print(f"  Site: {resolved_site}")
     print(f"  Database: {site['db_type']} {site['db_host']} {site['db_port']} {site['db_name']}")
     print(f"  DB user: {site['db_user']}")
     print(f"  Installed app: {site['installed_apps']}")
@@ -45,11 +47,12 @@ def run_install():
     print("Galaxy core metadata tables: OK")
     print()
 
-    print("Seeding default app, modules, role, and Administrator...")
+    print("Seeding default app, modules, role, Administrator, and tenant...")
     seed_installed_app(engine)
     seed_modules(engine)
     seed_roles(engine)
     seed_administrator(engine)
+    seed_tenant(engine)
     print("Core seed data: OK")
     print()
 
@@ -71,6 +74,22 @@ def run_install():
     print("Administrator username: Administrator")
     print("Administrator password: admin")
     print()
+
+    print("Registering site in Bench platform...")
+    try:
+        from internal.bench.platform_db import init_platform_db, register_site, site_exists
+
+        init_platform_db()
+        if not site_exists(resolved_site):
+            config_path = f"sites/{resolved_site}/site_config.json"
+            register_site(resolved_site, site["db_name"], site["db_user"], config_path)
+            print(f"  Site '{resolved_site}' registered in platform.")
+        else:
+            print(f"  Site '{resolved_site}' already registered.")
+    except Exception as e:
+        print(f"  Warning: platform registration skipped ({e})")
+    print()
+
     print("Next step: run galaxy doctor")
 
 
@@ -83,6 +102,13 @@ def run_doctor():
     print(f"Default site: {default_site}")
     print(f"Database: {site['db_type']} {site['db_host']} {site['db_port']} {site['db_name']}")
     print(f"DB user: {site['db_user']}")
+
+    print()
+    print("Security settings:")
+    from internal.core.security import get_security_settings
+    sec = get_security_settings()
+    for key, val in sec.items():
+        print(f"  {key}: {val}")
 
     engine = get_engine(site)
 
@@ -139,7 +165,7 @@ def run_reset():
     engine = get_engine(site)
 
     print("Dropping all core tables...")
-    from internal.db.core_tables import drop_core_tables
+    from apps.galaxy.galaxy.db.core_tables import drop_core_tables
     drop_core_tables(engine)
     print("Core tables dropped: OK")
     print()

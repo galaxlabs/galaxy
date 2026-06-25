@@ -1,4 +1,4 @@
-from internal.db.seed import DOCFIELDS, DOCTYPES
+from apps.galaxy.galaxy.db.seed import DOCFIELDS, DOCTYPES
 
 
 def test_doctypes_count():

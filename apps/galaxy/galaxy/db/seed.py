@@ -3,6 +3,28 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 
+def seed_tenant(engine: Engine) -> None:
+    with engine.begin() as conn:
+        result = conn.execute(
+            text("""SELECT COUNT(*) FROM "tabTenant" WHERE name = :name"""),
+            {"name": "Default"},
+        )
+        if result.scalar() == 0:
+            conn.execute(
+                text("""
+                    INSERT INTO "tabTenant" (name, display_name, domain, status, idx)
+                    VALUES (:name, :display_name, :domain, :status, :idx)
+                """),
+                {
+                    "name": "Default",
+                    "display_name": "Default Tenant",
+                    "domain": "",
+                    "status": "active",
+                    "idx": 0,
+                },
+            )
+
+
 def seed_installed_app(engine: Engine) -> None:
     with engine.begin() as conn:
         result = conn.execute(
@@ -105,8 +127,8 @@ def seed_administrator(engine: Engine) -> None:
         if result.scalar() == 0:
             conn.execute(
                 text("""
-                    INSERT INTO "tabUser" (name, username, email, password_hash, enabled)
-                    VALUES (:name, :username, :email, :password_hash, :enabled)
+                    INSERT INTO "tabUser" (name, username, email, password_hash, enabled, tenant_id)
+                    VALUES (:name, :username, :email, :password_hash, :enabled, :tenant_id)
                 """),
                 {
                     "name": "Administrator",
@@ -114,6 +136,7 @@ def seed_administrator(engine: Engine) -> None:
                     "email": "administrator@galaxy.local",
                     "password_hash": password_hash,
                     "enabled": True,
+                    "tenant_id": "Default",
                 },
             )
 
@@ -124,13 +147,14 @@ def seed_administrator(engine: Engine) -> None:
         if result.scalar() == 0:
             conn.execute(
                 text("""
-                    INSERT INTO "tabHas Role" (name, parent, role, idx)
-                    VALUES (:name, :parent, :role, :idx)
+                    INSERT INTO "tabHas Role" (name, parent, role, tenant_id, idx)
+                    VALUES (:name, :parent, :role, :tenant_id, :idx)
                 """),
                 {
                     "name": "Administrator",
                     "parent": "Administrator",
                     "role": "System Manager",
+                    "tenant_id": "Default",
                     "idx": 0,
                 },
             )

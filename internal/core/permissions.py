@@ -1,7 +1,7 @@
 from sqlalchemy import text
 
+from apps.galaxy.galaxy.db.connection import get_engine
 from internal.config.site_config import load_site_config
-from internal.db.connection import get_engine
 
 
 def _get_engine():
@@ -45,7 +45,7 @@ def check_permission(doctype_name: str, role: str, perm_type: str) -> bool:
 
 def authorize(doctype_name: str, username: str | None, perm_type: str) -> tuple[bool, str]:
     if not username:
-        username = "Administrator"
+        return False, "Authentication required."
 
     roles = get_user_roles(username)
     if not roles:

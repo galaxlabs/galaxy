@@ -3,6 +3,7 @@ import urllib.parse
 
 import uvicorn
 from starlette.applications import Starlette
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse, RedirectResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
@@ -34,6 +35,18 @@ from internal.core.api import (
     handle_summary,
     require_auth,
 )
+from internal.core.bench_api import (
+    handle_bench_backup,
+    handle_bench_create_site,
+    handle_bench_install_app,
+    handle_bench_list_backups,
+    handle_bench_migration_status,
+    handle_bench_restore,
+    handle_bench_site_apps,
+    handle_bench_site_detail,
+    handle_bench_sites,
+    handle_bench_uninstall_app,
+)
 from internal.core.crud import list_documents
 from internal.core.migration_planner import plan_doctype_migration
 from internal.core.repository import (
@@ -42,6 +55,15 @@ from internal.core.repository import (
     get_doctype_fields,
     get_doctype_permissions,
     get_doctypes,
+)
+from internal.core.tenant import (
+    current_tenant,
+    get_tenant_id,
+    handle_tenant_create,
+    handle_tenant_delete,
+    handle_tenant_get,
+    handle_tenant_list,
+    handle_tenant_update,
 )
 
 TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
@@ -56,7 +78,7 @@ async def homepage(request):
 
 async def health(request):
     try:
-        from internal.db.connection import get_engine, test_connection
+        from apps.galaxy.galaxy.db.connection import get_engine, test_connection
         _, site = load_site_config()
         engine = get_engine(site)
         db_ok = test_connection(engine)
@@ -188,7 +210,7 @@ async def desk_reports(request):
         return RedirectResponse(url="/login", status_code=302)
     from sqlalchemy import text
 
-    from internal.db.connection import get_engine
+    from apps.galaxy.galaxy.db.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -206,7 +228,7 @@ async def desk_report_detail(request):
     name = urllib.parse.unquote(raw)
     from sqlalchemy import text
 
-    from internal.db.connection import get_engine
+    from apps.galaxy.galaxy.db.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -225,7 +247,7 @@ async def desk_scripts(request):
         return RedirectResponse(url="/login", status_code=302)
     from sqlalchemy import text
 
-    from internal.db.connection import get_engine
+    from apps.galaxy.galaxy.db.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -251,7 +273,7 @@ async def desk_script_edit(request):
     name = urllib.parse.unquote(raw)
     from sqlalchemy import text
 
-    from internal.db.connection import get_engine
+    from apps.galaxy.galaxy.db.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -265,6 +287,31 @@ async def desk_script_edit(request):
     doctypes = get_doctypes()
     events = ["before_save", "after_save", "before_delete", "after_delete", "on_load"]
     return templates.TemplateResponse(request, "server_script_form.html", {"title": f"Edit: {name}", "script": script, "doctypes": doctypes, "events": events})
+
+
+async def desk_bench(request):
+    from internal.bench.platform_db import init_platform_db, list_sites
+    init_platform_db()
+    sites = list_sites()
+    return templates.TemplateResponse(request, "bench.html", {"sites": sites})
+
+
+async def desk_bench_site(request):
+    name = request.path_params.get("name", "")
+    from internal.bench.platform_db import get_site, init_platform_db
+    init_platform_db()
+    site = get_site(name)
+    if site is None:
+        return JSONResponse({"error": "Site not found."}, status_code=404)
+    return templates.TemplateResponse(request, "bench_site.html", {"site": site})
+
+
+async def desk_bench_new(request):
+    return templates.TemplateResponse(request, "bench_new.html", {})
+
+
+async def desk_tenants(request):
+    return templates.TemplateResponse(request, "tenants.html", {})
 
 
 async def desk_resource_detail(request):
@@ -300,6 +347,96 @@ async def desk_resource_detail(request):
     )
 
 
+# ── Route Protection ──────────────────────────────────────────────
+
+
+def _path_matches(path: str, prefix: str) -> bool:
+    return path == prefix or path.startswith(prefix + "/")
+
+
+PROTECTED_DESK_PREFIXES = ["/desk"]
+PROTECTED_API_PREFIXES = [
+    "/api/resource",
+    "/api/core/scripts",
+    "/api/report",
+    "/api/reports",
+    "/api/server-script",
+    "/api/scripts",
+    "/api/builder",
+    "/api/auth/me",
+    "/api/bench",
+]
+PUBLIC_EXACT = {
+    "/",
+    "/health",
+    "/api",
+    "/api/version",
+    "/login",
+    "/api/auth/login",
+    "/api/auth/logout",
+}
+PUBLIC_PREFIXES = ["/static", "/assets", "/favicon.ico", "/desk/assets"]
+ALLOWED_CORE_PREFIXES = [
+    "/api/core/installed-apps",
+    "/api/core/installed-modules",
+    "/api/core/modules",
+    "/api/core/doctypes",
+    "/api/core/summary",
+]
+
+
+def _is_protected(path: str) -> tuple[bool, bool]:
+    for p in PUBLIC_EXACT:
+        if path == p:
+            return False, False
+    for p in PUBLIC_PREFIXES:
+        if _path_matches(path, p):
+            return False, False
+    for p in ALLOWED_CORE_PREFIXES:
+        if _path_matches(path, p):
+            return False, False
+
+    for p in PROTECTED_DESK_PREFIXES:
+        if _path_matches(path, p):
+            return True, False
+
+    for p in PROTECTED_API_PREFIXES:
+        if _path_matches(path, p):
+            return True, True
+
+    if path.startswith("/api/migration/") and path.endswith("/apply"):
+        return True, True
+
+    return False, False
+
+
+class RequireSessionMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        tenant_id = get_tenant_id(request)
+        request.state.tenant_id = tenant_id
+        current_tenant.set(tenant_id)
+
+        path = request.url.path
+        protected, is_api = _is_protected(path)
+
+        if not protected:
+            return await call_next(request)
+
+        from internal.core.auth import require_session
+
+        user = require_session(request)
+        if user is not None:
+            request.state.user = user
+            return await call_next(request)
+
+        if is_api:
+            return JSONResponse(
+                {"success": False, "error": "Authentication required."},
+                status_code=401,
+            )
+        return RedirectResponse(url="/login", status_code=302)
+
+
 routes = [
     Route("/", endpoint=homepage),
     Route("/health", endpoint=health),
@@ -328,6 +465,21 @@ routes = [
     Route("/api/resource/{doctype}/{name}", endpoint=handle_resource_delete, methods=["DELETE"]),
     Route("/api/core/scripts", endpoint=handle_save_script, methods=["POST"]),
     Route("/api/report/{name}", endpoint=handle_run_report),
+    Route("/api/bench/sites", endpoint=handle_bench_sites),
+    Route("/api/bench/sites", endpoint=handle_bench_create_site, methods=["POST"]),
+    Route("/api/bench/sites/{name}", endpoint=handle_bench_site_detail),
+    Route("/api/bench/sites/{name}/apps", endpoint=handle_bench_site_apps),
+    Route("/api/bench/sites/{name}/apps", endpoint=handle_bench_install_app, methods=["POST"]),
+    Route("/api/bench/sites/{name}/apps", endpoint=handle_bench_uninstall_app, methods=["DELETE"]),
+    Route("/api/bench/sites/{name}/backup", endpoint=handle_bench_backup, methods=["POST"]),
+    Route("/api/bench/sites/{name}/backups", endpoint=handle_bench_list_backups),
+    Route("/api/bench/sites/{name}/restore", endpoint=handle_bench_restore, methods=["POST"]),
+    Route("/api/bench/sites/{name}/migrations", endpoint=handle_bench_migration_status),
+    Route("/api/tenants", endpoint=handle_tenant_list),
+    Route("/api/tenants", endpoint=handle_tenant_create, methods=["POST"]),
+    Route("/api/tenants/{name}", endpoint=handle_tenant_get),
+    Route("/api/tenants/{name}", endpoint=handle_tenant_update, methods=["PUT"]),
+    Route("/api/tenants/{name}", endpoint=handle_tenant_delete, methods=["DELETE"]),
     Route("/desk", endpoint=desk_dashboard),
     Route("/desk/builder/doctype/new", endpoint=desk_builder_new),
     Route("/desk/doctypes", endpoint=desk_doctypes),
@@ -339,10 +491,15 @@ routes = [
     Route("/desk/scripts/{name}", endpoint=desk_script_edit),
     Route("/desk/resource/{doctype}", endpoint=desk_resource_list),
     Route("/desk/resource/{doctype}/{name}", endpoint=desk_resource_detail),
+    Route("/desk/bench", endpoint=desk_bench),
+    Route("/desk/bench/sites/new", endpoint=desk_bench_new),
+    Route("/desk/bench/sites/{name}", endpoint=desk_bench_site),
+    Route("/desk/tenants", endpoint=desk_tenants),
     Mount("/static", app=StaticFiles(directory=STATIC_DIR), name="static"),
 ]
 
 app = Starlette(routes=routes)
+app.add_middleware(RequireSessionMiddleware)
 
 
 def run_server(host="127.0.0.1", port=8080):

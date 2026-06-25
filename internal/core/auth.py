@@ -4,8 +4,9 @@ from datetime import UTC, datetime, timedelta
 from passlib.hash import bcrypt as passlib_bcrypt
 from sqlalchemy import text
 
+from apps.galaxy.galaxy.db.connection import get_engine
 from internal.config.site_config import load_site_config
-from internal.db.connection import get_engine
+from internal.core.tenant import current_tenant
 
 
 def _get_engine():
@@ -14,11 +15,12 @@ def _get_engine():
 
 
 def verify_password(username: str, password: str) -> dict | None:
+    tenant_id = current_tenant.get()
     engine = _get_engine()
     with engine.connect() as conn:
         row = conn.execute(
-            text('SELECT name, username, email, password_hash, enabled FROM "tabUser" WHERE username = :username'),
-            {"username": username},
+            text('SELECT name, username, email, password_hash, enabled FROM "tabUser" WHERE username = :username AND tenant_id = :tenant_id'),
+            {"username": username, "tenant_id": tenant_id},
         ).mappings().one_or_none()
 
     if row is None:
@@ -36,6 +38,7 @@ def verify_password(username: str, password: str) -> dict | None:
 
 
 def create_session(username: str) -> str:
+    tenant_id = current_tenant.get()
     token = secrets.token_urlsafe(48)
     engine = _get_engine()
     name = f"ses-{token[:16]}"
@@ -44,16 +47,17 @@ def create_session(username: str) -> str:
     with engine.begin() as conn:
         conn.execute(
             text("""
-                INSERT INTO "tabSession" (name, user_name, token, expires_at, idx)
-                VALUES (:name, :user_name, :token, :expires_at, 0)
+                INSERT INTO "tabSession" (name, user_name, token, tenant_id, expires_at, idx)
+                VALUES (:name, :user_name, :token, :tenant_id, :expires_at, 0)
             """),
-            {"name": name, "user_name": username, "token": token, "expires_at": expires_at},
+            {"name": name, "user_name": username, "token": token, "tenant_id": tenant_id, "expires_at": expires_at},
         )
 
     return token
 
 
 def get_session(token: str) -> dict | None:
+    tenant_id = current_tenant.get()
     engine = _get_engine()
     with engine.connect() as conn:
         row = conn.execute(
@@ -61,9 +65,9 @@ def get_session(token: str) -> dict | None:
                 SELECT s.user_name, s.expires_at, u.name, u.username, u.email, u.enabled
                 FROM "tabSession" s
                 JOIN "tabUser" u ON s.user_name = u.name
-                WHERE s.token = :token
+                WHERE s.token = :token AND s.tenant_id = :tenant_id
             """),
-            {"token": token},
+            {"token": token, "tenant_id": tenant_id},
         ).mappings().one_or_none()
 
     if row is None:
@@ -96,3 +100,13 @@ def delete_session(token: str) -> None:
             text('DELETE FROM "tabSession" WHERE token = :token'),
             {"token": token},
         )
+
+
+def require_session(request) -> str | None:
+    cookie = request.cookies.get("galaxy_session")
+    if not cookie:
+        return None
+    session = get_session(cookie)
+    if session is None:
+        return None
+    return session["username"]

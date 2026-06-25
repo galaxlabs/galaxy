@@ -3,6 +3,7 @@ import urllib.parse
 from sqlalchemy import text
 from starlette.responses import JSONResponse
 
+from apps.galaxy.galaxy.db.connection import get_engine
 from internal.config.site_config import load_site_config
 from internal.core.auth import create_session, delete_session, get_session, verify_password
 from internal.core.builder import build_doctype_json, validate_doctype_payload
@@ -22,7 +23,14 @@ from internal.core.repository import (
     get_installed_modules,
     get_modules,
 )
-from internal.db.connection import get_engine
+from internal.core.security import (
+    check_login_rate_limit,
+    clear_login_rate_limit,
+    generate_csrf_token,
+    get_security_settings,
+    log_security_event,
+    validate_csrf_token,
+)
 
 
 async def handle_installed_apps(request):
@@ -121,6 +129,8 @@ async def handle_builder_preview(request):
 async def handle_builder_save(request):
     if require_auth(request) is None:
         return JSONResponse(AUTH_REQUIRED, status_code=401)
+    if not _require_csrf(request):
+        return _err(403, "Invalid CSRF token.")
     try:
         payload = await request.json()
     except Exception:
@@ -128,8 +138,9 @@ async def handle_builder_save(request):
 
     try:
         result = save_doctype_metadata(payload)
-    except Exception as e:
-        return JSONResponse({"error": f"Save failed: {e!s}"}, status_code=500)
+    except Exception:
+        log_security_event("builder_save_error", None, "DocType save failed", "doctype")
+        return _err(500, "DocType save failed.")
 
     if not result.get("valid"):
         return JSONResponse(result, status_code=400)
@@ -142,35 +153,35 @@ async def handle_migration_preview(request):
     name = urllib.parse.unquote(raw)
     try:
         result = plan_doctype_migration(name)
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+    except Exception:
+        log_security_event("migration_preview_error", None, "Migration preview failed", "doctype")
+        return _err(500, "Migration preview failed.")
 
     if not result["exists"]:
-        return JSONResponse({"error": "DocType not found"}, status_code=404)
+        return _err(404, "DocType not found.")
 
-    return JSONResponse({"data": result})
+    return _ok(result)
 
 
 async def handle_migration_apply(request):
     if require_auth(request) is None:
         return JSONResponse(AUTH_REQUIRED, status_code=401)
+    if not _require_csrf(request):
+        return _err(403, "Invalid CSRF token.")
     raw = request.path_params.get("name", "")
     name = urllib.parse.unquote(raw)
     try:
         result = apply_doctype_migration(name)
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
-
-    if not result["success"] and result["message"] == "DocType not found.":
-        return JSONResponse({"error": result["message"]}, status_code=404)
-
-    if not result["success"] and result["message"] == "Migration already applied.":
-        return JSONResponse(result, status_code=409)
+    except Exception:
+        log_security_event("migration_apply_error", None, "Migration apply failed", "doctype")
+        return _err(500, "Migration apply failed.")
 
     if not result["success"]:
-        return JSONResponse(result, status_code=400)
+        msg = result.get("message", "Migration failed.")
+        code = 409 if "already applied" in msg.lower() else (404 if "not found" in msg.lower() else 400)
+        return _err(code, msg)
 
-    return JSONResponse(result)
+    return _ok(result)
 
 
 def _get_user(request):
@@ -179,7 +190,7 @@ def _get_user(request):
         session = get_session(cookie)
         if session:
             return session["username"]
-    return request.headers.get("X-Galaxy-User")
+    return None
 
 
 def require_auth(request) -> str | None:
@@ -206,7 +217,35 @@ def _ok(data, status: int = 200):
     return JSONResponse({"success": True, "data": data}, status_code=status)
 
 
+def _client_ip(request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    host = request.client.host if request.client else "127.0.0.1"
+    return host
+
+
+def _require_csrf(request) -> bool:
+    sec = get_security_settings()
+    if not sec["csrf_enabled"]:
+        return True
+
+    method = request.method.upper()
+    if method in ("GET", "HEAD", "OPTIONS"):
+        return True
+
+    session_cookie = request.cookies.get("galaxy_session")
+    if not session_cookie:
+        return True
+
+    provided = request.headers.get("X-CSRF-Token", "")
+    if not provided:
+        return False
+    return validate_csrf_token(session_cookie, provided)
+
+
 async def handle_login(request):
+    ip = _client_ip(request)
     try:
         payload = await request.json()
     except Exception:
@@ -218,16 +257,33 @@ async def handle_login(request):
     if not username or not password:
         return _err(400, "Username and password are required.")
 
+    ok, msg = check_login_rate_limit(ip, username)
+    if not ok:
+        log_security_event("login_rate_limited", username, f"Rate limited login for {username}", "auth", ip)
+        return _err(429, msg)
+
     user = verify_password(username, password)
     if user is None:
+        log_security_event("login_failed", username, f"Failed login attempt for {username}", "auth", ip)
         return _err(401, "Invalid username or password.")
 
+    clear_login_rate_limit(ip, username)
     token = create_session(username)
+    csrf_token = generate_csrf_token(token)
+
     response = _ok({"user": user, "token": token})
     response.set_cookie(
         key="galaxy_session",
         value=token,
         httponly=True,
+        samesite="lax",
+        max_age=86400,
+        path="/",
+    )
+    response.set_cookie(
+        key="galaxy_csrf",
+        value=csrf_token,
+        httponly=False,
         samesite="lax",
         max_age=86400,
         path="/",
@@ -244,6 +300,14 @@ async def handle_logout(request):
         key="galaxy_session",
         value="",
         httponly=True,
+        samesite="lax",
+        max_age=0,
+        path="/",
+    )
+    response.set_cookie(
+        key="galaxy_csrf",
+        value="",
+        httponly=False,
         samesite="lax",
         max_age=0,
         path="/",
@@ -275,6 +339,8 @@ async def handle_auth_me(request):
 async def handle_resource_create(request):
     if require_auth(request) is None:
         return JSONResponse(AUTH_REQUIRED, status_code=401)
+    if not _require_csrf(request):
+        return _err(403, "Invalid CSRF token.")
     raw = request.path_params.get("doctype", "")
     doctype = urllib.parse.unquote(raw)
     user = _get_user(request)
@@ -292,8 +358,9 @@ async def handle_resource_create(request):
 
     try:
         result = create_document(doctype, payload)
-    except Exception as e:
-        return _err(500, str(e))
+    except Exception:
+        log_security_event("resource_create_error", None, f"Resource create failed for {doctype}", "crud")
+        return _err(500, "Resource create failed.")
 
     if not result["success"]:
         err_msg = result.get("error", "Error")
@@ -336,8 +403,9 @@ async def handle_resource_list(request):
 
     try:
         result = list_documents(doctype, limit=limit, offset=offset)
-    except Exception as e:
-        return _err(500, str(e))
+    except Exception:
+        log_security_event("resource_list_error", None, f"Resource list failed for {doctype}", "crud")
+        return _err(500, "Resource list failed.")
 
     if isinstance(result, dict) and not result.get("success", True):
         return _err(404, result.get("error", "Not found"))
@@ -359,8 +427,8 @@ async def handle_resource_get(request):
 
     try:
         doc = get_document(doctype, name)
-    except Exception as e:
-        return _err(500, str(e))
+    except Exception:
+        return _err(500, "Document retrieval failed.")
 
     if isinstance(doc, dict) and not doc.get("success", True):
         return _err(404, doc.get("error", "Not found"))
@@ -374,6 +442,8 @@ async def handle_resource_get(request):
 async def handle_save_script(request):
     if require_auth(request) is None:
         return JSONResponse(AUTH_REQUIRED, status_code=401)
+    if not _require_csrf(request):
+        return _err(403, "Invalid CSRF token.")
     _, site = load_site_config()
     engine = get_engine(site)
 
@@ -437,8 +507,8 @@ async def handle_run_report(request):
     name = urllib.parse.unquote(raw)
     try:
         result = run_report(name)
-    except Exception as e:
-        return _err(500, str(e))
+    except Exception:
+        return _err(500, "Report execution failed.")
     if not result["success"]:
         return _err(404, result["error"])
     return _ok({"name": name, "columns": list(result["data"][0].keys()) if result["data"] else [], "rows": result["data"], "count": result["count"]})
@@ -447,6 +517,8 @@ async def handle_run_report(request):
 async def handle_resource_update(request):
     if require_auth(request) is None:
         return JSONResponse(AUTH_REQUIRED, status_code=401)
+    if not _require_csrf(request):
+        return _err(403, "Invalid CSRF token.")
     raw_dt = request.path_params.get("doctype", "")
     raw_name = request.path_params.get("name", "")
     doctype = urllib.parse.unquote(raw_dt)
@@ -466,8 +538,9 @@ async def handle_resource_update(request):
 
     try:
         result = update_document(doctype, name, payload)
-    except Exception as e:
-        return _err(500, str(e))
+    except Exception:
+        log_security_event("resource_update_error", None, f"Resource update failed for {doctype}/{name}", "crud")
+        return _err(500, "Resource update failed.")
 
     if not result["success"]:
         err_msg = result.get("error", "Error")
@@ -481,6 +554,8 @@ async def handle_resource_update(request):
 async def handle_resource_delete(request):
     if require_auth(request) is None:
         return JSONResponse(AUTH_REQUIRED, status_code=401)
+    if not _require_csrf(request):
+        return _err(403, "Invalid CSRF token.")
     raw_dt = request.path_params.get("doctype", "")
     raw_name = request.path_params.get("name", "")
     doctype = urllib.parse.unquote(raw_dt)
@@ -492,8 +567,9 @@ async def handle_resource_delete(request):
 
     try:
         result = delete_document(doctype, name)
-    except Exception as e:
-        return _err(500, str(e))
+    except Exception:
+        log_security_event("resource_delete_error", None, f"Resource delete failed for {doctype}/{name}", "crud")
+        return _err(500, "Resource delete failed.")
 
     if not result["success"]:
         err_msg = result.get("error", "Error")

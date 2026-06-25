@@ -5,10 +5,12 @@ from datetime import UTC, datetime
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
+from apps.galaxy.galaxy.db.connection import get_engine
+from apps.galaxy.galaxy.db.core_tables import TENANT_TABLES
 from internal.config.site_config import load_site_config
 from internal.core.repository import get_doctype, get_doctype_fields
 from internal.core.script_engine import run_scripts
-from internal.db.connection import get_engine
+from internal.core.tenant import current_tenant
 
 
 def _get_engine() -> Engine:
@@ -21,6 +23,12 @@ def _quote(name: str) -> str:
 
 
 SKIP_FIELDTYPES = {"Table"}
+
+
+def _tenant_where(table_name: str) -> tuple[str, dict]:
+    if table_name in TENANT_TABLES:
+        return '"tenant_id" = :_tenant_id', {"_tenant_id": current_tenant.get()}
+    return "", {}
 
 
 def get_doctype_for_crud(doctype_name: str) -> dict | None:
@@ -106,6 +114,11 @@ def create_document(doctype_name: str, payload: dict) -> dict:
     col_names = ["name"]
     col_values = [doc_name]
 
+    if table_name in TENANT_TABLES:
+        tenant_id = current_tenant.get()
+        col_names.append("tenant_id")
+        col_values.append(tenant_id)
+
     for f in fields:
         fname = f["fieldname"]
         if fname not in cleaned:
@@ -166,11 +179,15 @@ def list_documents(doctype_name: str, limit: int = 20, offset: int = 0) -> list[
     col_names = ["name"] + [f["fieldname"] for f in fields]
     quoted_cols = ", ".join(_quote(c) for c in col_names)
 
-    sql = f"SELECT {quoted_cols} FROM {quoted_table} ORDER BY name LIMIT :lim OFFSET :off"
+    tenant_clause, tenant_params = _tenant_where(table_name)
+    where = f"WHERE {tenant_clause}" if tenant_clause else ""
+    sql = f"SELECT {quoted_cols} FROM {quoted_table} {where} ORDER BY name LIMIT :lim OFFSET :off"
 
     engine = _get_engine()
+    params = {"lim": limit, "off": offset}
+    params.update(tenant_params)
     with engine.connect() as conn:
-        rows = conn.execute(text(sql), {"lim": limit, "off": offset}).mappings().all()
+        rows = conn.execute(text(sql), params).mappings().all()
     return [dict(r) for r in rows]
 
 
@@ -186,11 +203,15 @@ def get_document(doctype_name: str, name: str) -> dict | None:
     col_names = ["name"] + [f["fieldname"] for f in fields]
     quoted_cols = ", ".join(_quote(c) for c in col_names)
 
-    sql = f"SELECT {quoted_cols} FROM {quoted_table} WHERE name = :name"
+    tenant_clause, tenant_params = _tenant_where(table_name)
+    and_clause = f"AND {tenant_clause}" if tenant_clause else ""
+    sql = f"SELECT {quoted_cols} FROM {quoted_table} WHERE name = :name {and_clause}"
 
     engine = _get_engine()
+    params = {"name": name}
+    params.update(tenant_params)
     with engine.connect() as conn:
-        row = conn.execute(text(sql), {"name": name}).mappings().one_or_none()
+        row = conn.execute(text(sql), params).mappings().one_or_none()
     if row is None:
         return None
     return dict(row)
@@ -245,7 +266,10 @@ def update_document(doctype_name: str, name: str, payload: dict) -> dict:
         set_parts.append(f'{_quote(fname)} = :{pname}')
         params[pname] = val
 
-    sql = f"UPDATE {quoted_table} SET {', '.join(set_parts)} WHERE name = :name_param"
+    tenant_clause, extra_params = _tenant_where(table_name)
+    and_clause = f"AND {tenant_clause}" if tenant_clause else ""
+    sql = f"UPDATE {quoted_table} SET {', '.join(set_parts)} WHERE name = :name_param {and_clause}"
+    params.update(extra_params)
 
     engine = _get_engine()
 
@@ -275,7 +299,9 @@ def delete_document(doctype_name: str, name: str) -> dict:
 
     table_name = doctype["table_name"]
     quoted_table = _quote(table_name)
-    sql = f'DELETE FROM {quoted_table} WHERE name = :name'
+    tenant_clause, extra_params = _tenant_where(table_name)
+    and_clause = f"AND {tenant_clause}" if tenant_clause else ""
+    sql = f'DELETE FROM {quoted_table} WHERE name = :name {and_clause}'
 
     engine = _get_engine()
 
@@ -283,8 +309,10 @@ def delete_document(doctype_name: str, name: str) -> dict:
     if script_errors:
         return {"success": False, "error": "Script validation failed.", "errors": script_errors}
 
+    params = {"name": name}
+    params.update(extra_params)
     with engine.begin() as conn:
-        conn.execute(text(sql), {"name": name})
+        conn.execute(text(sql), params)
 
     run_scripts(doctype_name, "after_delete", {"doctype": doctype_name, "name": name, **existing})
 
