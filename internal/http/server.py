@@ -3,7 +3,7 @@ import urllib.parse
 
 import uvicorn
 from starlette.applications import Starlette
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, RedirectResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
@@ -32,6 +32,7 @@ from internal.core.api import (
     handle_run_report,
     handle_save_script,
     handle_summary,
+    require_auth,
 )
 from internal.core.crud import list_documents
 from internal.core.migration_planner import plan_doctype_migration
@@ -90,21 +91,33 @@ async def api_version(request):
     })
 
 
+async def login_page(request):
+    return templates.TemplateResponse(request, "login.html", {})
+
+
 async def desk_dashboard(request):
+    if require_auth(request) is None:
+        return RedirectResponse(url="/login", status_code=302)
     summary = get_core_summary()
     return templates.TemplateResponse(request, "desk.html", {"summary": summary})
 
 
 async def desk_doctypes(request):
+    if require_auth(request) is None:
+        return RedirectResponse(url="/login", status_code=302)
     doctypes = get_doctypes()
     return templates.TemplateResponse(request, "doctypes.html", {"doctypes": doctypes})
 
 
 async def desk_builder_new(request):
+    if require_auth(request) is None:
+        return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse(request, "doctype_builder_new.html", {})
 
 
 async def desk_doctype_detail(request):
+    if require_auth(request) is None:
+        return RedirectResponse(url="/login", status_code=302)
     raw = request.path_params.get("name", "")
     name = urllib.parse.unquote(raw)
     doctype = get_doctype(name)
@@ -121,6 +134,8 @@ async def desk_doctype_detail(request):
 
 
 async def desk_resource_list(request):
+    if require_auth(request) is None:
+        return RedirectResponse(url="/login", status_code=302)
     raw = request.path_params.get("doctype", "")
     doctype_name = urllib.parse.unquote(raw)
     doctype = get_doctype(doctype_name)
@@ -169,6 +184,8 @@ async def desk_resource_list(request):
 
 
 async def desk_reports(request):
+    if require_auth(request) is None:
+        return RedirectResponse(url="/login", status_code=302)
     from sqlalchemy import text
 
     from internal.db.connection import get_engine
@@ -183,6 +200,8 @@ async def desk_reports(request):
 
 
 async def desk_report_detail(request):
+    if require_auth(request) is None:
+        return RedirectResponse(url="/login", status_code=302)
     raw = request.path_params.get("name", "")
     name = urllib.parse.unquote(raw)
     from sqlalchemy import text
@@ -202,6 +221,8 @@ async def desk_report_detail(request):
 
 
 async def desk_scripts(request):
+    if require_auth(request) is None:
+        return RedirectResponse(url="/login", status_code=302)
     from sqlalchemy import text
 
     from internal.db.connection import get_engine
@@ -216,12 +237,16 @@ async def desk_scripts(request):
 
 
 async def desk_script_new(request):
+    if require_auth(request) is None:
+        return RedirectResponse(url="/login", status_code=302)
     doctypes = get_doctypes()
     events = ["before_save", "after_save", "before_delete", "after_delete", "on_load"]
     return templates.TemplateResponse(request, "server_script_form.html", {"title": "New Server Script", "script": None, "doctypes": doctypes, "events": events})
 
 
 async def desk_script_edit(request):
+    if require_auth(request) is None:
+        return RedirectResponse(url="/login", status_code=302)
     raw = request.path_params.get("name", "")
     name = urllib.parse.unquote(raw)
     from sqlalchemy import text
@@ -243,6 +268,8 @@ async def desk_script_edit(request):
 
 
 async def desk_resource_detail(request):
+    if require_auth(request) is None:
+        return RedirectResponse(url="/login", status_code=302)
     raw_dt = request.path_params.get("doctype", "")
     raw_name = request.path_params.get("name", "")
     doctype_name = urllib.parse.unquote(raw_dt)
@@ -276,6 +303,7 @@ async def desk_resource_detail(request):
 routes = [
     Route("/", endpoint=homepage),
     Route("/health", endpoint=health),
+    Route("/login", endpoint=login_page),
     Route("/api", endpoint=api_root),
     Route("/api/version", endpoint=api_version),
     Route("/api/core/installed-apps", endpoint=handle_installed_apps),

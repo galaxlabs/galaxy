@@ -22,7 +22,8 @@
         <a href="/api/core/installed-apps" class="nav-item">Installed Apps</a>
       </nav>
       <div class="sidebar-footer">
-        Site: default.local
+        <a href="#" id="logout-link" class="nav-item">Logout</a>
+        <span class="sidebar-site">Site: default.local</span>
       </div>
     </aside>
     <main class="main-content">
@@ -34,5 +35,12 @@
       </div>
     </main>
   </div>
+  <script>
+    document.getElementById("logout-link")?.addEventListener("click", async function(e) {
+      e.preventDefault();
+      await fetch("/api/auth/logout", { method: "POST" });
+      window.location.href = "/login";
+    });
+  </script>
 </body>
 </html>

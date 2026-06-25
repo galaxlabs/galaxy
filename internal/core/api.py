@@ -119,6 +119,8 @@ async def handle_builder_preview(request):
 
 
 async def handle_builder_save(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
     try:
         payload = await request.json()
     except Exception:
@@ -150,6 +152,8 @@ async def handle_migration_preview(request):
 
 
 async def handle_migration_apply(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
     raw = request.path_params.get("name", "")
     name = urllib.parse.unquote(raw)
     try:
@@ -176,6 +180,19 @@ def _get_user(request):
         if session:
             return session["username"]
     return request.headers.get("X-Galaxy-User", "Administrator")
+
+
+def require_auth(request) -> str | None:
+    cookie = request.cookies.get("galaxy_session")
+    if not cookie:
+        return None
+    session = get_session(cookie)
+    if session is None:
+        return None
+    return session["username"]
+
+
+AUTH_REQUIRED = {"success": False, "error": "Authentication required."}
 
 
 def _err(status: int, error: str, errors: list[str] | None = None):
@@ -256,6 +273,8 @@ async def handle_auth_me(request):
 
 
 async def handle_resource_create(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
     raw = request.path_params.get("doctype", "")
     doctype = urllib.parse.unquote(raw)
     user = _get_user(request)
@@ -290,6 +309,8 @@ async def handle_resource_create(request):
 
 
 async def handle_resource_list(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
     raw = request.path_params.get("doctype", "")
     doctype = urllib.parse.unquote(raw)
     user = _get_user(request)
@@ -325,6 +346,8 @@ async def handle_resource_list(request):
 
 
 async def handle_resource_get(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
     raw_dt = request.path_params.get("doctype", "")
     raw_name = request.path_params.get("name", "")
     doctype = urllib.parse.unquote(raw_dt)
@@ -349,6 +372,8 @@ async def handle_resource_get(request):
 
 
 async def handle_save_script(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
     _, site = load_site_config()
     engine = get_engine(site)
 
@@ -406,6 +431,8 @@ async def handle_save_script(request):
 
 
 async def handle_run_report(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
     raw = request.path_params.get("name", "")
     name = urllib.parse.unquote(raw)
     try:
@@ -418,6 +445,8 @@ async def handle_run_report(request):
 
 
 async def handle_resource_update(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
     raw_dt = request.path_params.get("doctype", "")
     raw_name = request.path_params.get("name", "")
     doctype = urllib.parse.unquote(raw_dt)
@@ -450,6 +479,8 @@ async def handle_resource_update(request):
 
 
 async def handle_resource_delete(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
     raw_dt = request.path_params.get("doctype", "")
     raw_name = request.path_params.get("name", "")
     doctype = urllib.parse.unquote(raw_dt)
