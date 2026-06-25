@@ -19,8 +19,9 @@ def get_tenant_id(request) -> str:
     if tenant:
         return tenant
     host = request.headers.get("Host", "")
+    host = host.split(":")[0]
     parts = host.split(".")
-    if len(parts) >= 3:
+    if len(parts) >= 3 and not host.replace(".", "").isdigit():
         return parts[0]
     return "Default"
 
