@@ -161,6 +161,16 @@ def create_core_tables(engine: Engine) -> None:
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabSession" (
+            name VARCHAR(255) PRIMARY KEY,
+            user_name VARCHAR(255) NOT NULL,
+            token VARCHAR(255) NOT NULL UNIQUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP NOT NULL
+        );
+        """,
     ]
 
     with engine.begin() as conn:
@@ -182,6 +192,7 @@ def drop_core_tables(engine: Engine) -> None:
         "tabReport",
         "tabServer Script",
         "tabError Log",
+        "tabSession",
     ]
 
     with engine.begin() as conn:

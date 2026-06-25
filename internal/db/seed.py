@@ -149,6 +149,7 @@ DOCTYPES = [
     ("Error Log", "Core", "core", "tabError Log", False, False, False, False, 9),
     ("Server Script", "Core", "core", "tabServer Script", False, False, False, False, 10),
     ("Report", "Core", "core", "tabReport", False, False, False, False, 11),
+    ("Session", "Security", "core", "tabSession", False, False, False, False, 12),
 ]
 
 
@@ -292,6 +293,13 @@ DOCFIELDS = {
         ("status", "Status", "Data", None, False, False, False, False, 8),
         ("idx", "Idx", "Int", None, False, False, False, False, 9),
     ],
+    "Session": [
+        ("name", "Name", "Data", None, True, False, False, True, 0),
+        ("user_name", "User Name", "Data", None, True, False, False, True, 1),
+        ("token", "Token", "Data", None, True, False, False, False, 2),
+        ("expires_at", "Expires At", "Datetime", None, True, False, False, False, 3),
+        ("idx", "Idx", "Int", None, False, False, False, False, 4),
+    ],
 }
 
 
@@ -330,7 +338,7 @@ def seed_docfields(engine: Engine) -> None:
 def seed_docperms(engine: Engine) -> None:
     doctype_names = [
         "Installed App", "Installed Module", "Module Def", "DocType", "DocField",
-        "DocPerm", "User", "Role", "Has Role", "Error Log", "Server Script", "Report",
+        "DocPerm", "User", "Role", "Has Role", "Error Log", "Server Script", "Report", "Session",
     ]
 
     with engine.begin() as conn:

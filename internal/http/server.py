@@ -10,6 +10,7 @@ from starlette.templating import Jinja2Templates
 
 from internal.config.site_config import load_site_config
 from internal.core.api import (
+    handle_auth_me,
     handle_builder_preview,
     handle_builder_save,
     handle_doctype,
@@ -18,6 +19,8 @@ from internal.core.api import (
     handle_doctypes,
     handle_installed_apps,
     handle_installed_modules,
+    handle_login,
+    handle_logout,
     handle_migration_apply,
     handle_migration_preview,
     handle_modules,
@@ -283,6 +286,9 @@ routes = [
     Route("/api/core/doctypes/{name}/fields", endpoint=handle_doctype_fields),
     Route("/api/core/doctypes/{name}/permissions", endpoint=handle_doctype_permissions),
     Route("/api/core/summary", endpoint=handle_summary),
+    Route("/api/auth/login", endpoint=handle_login, methods=["POST"]),
+    Route("/api/auth/logout", endpoint=handle_logout, methods=["POST"]),
+    Route("/api/auth/me", endpoint=handle_auth_me),
     Route("/api/builder/doctype/preview", endpoint=handle_builder_preview, methods=["POST"]),
     Route("/api/builder/doctype/save", endpoint=handle_builder_save, methods=["POST"]),
     Route("/api/migration/doctype/{name}/preview", endpoint=handle_migration_preview),

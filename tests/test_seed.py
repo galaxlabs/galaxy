@@ -2,7 +2,7 @@ from internal.db.seed import DOCFIELDS, DOCTYPES
 
 
 def test_doctypes_count():
-    assert len(DOCTYPES) == 12
+    assert len(DOCTYPES) == 13
 
 
 def test_doctypes_include_core():
@@ -19,6 +19,7 @@ def test_doctypes_include_core():
     assert "Module Def" in names
     assert "Server Script" in names
     assert "Report" in names
+    assert "Session" in names
 
 
 def test_docfields_all_doctypes():

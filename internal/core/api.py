@@ -4,6 +4,7 @@ from sqlalchemy import text
 from starlette.responses import JSONResponse
 
 from internal.config.site_config import load_site_config
+from internal.core.auth import create_session, delete_session, get_session, verify_password
 from internal.core.builder import build_doctype_json, validate_doctype_payload
 from internal.core.builder_repository import save_doctype_metadata
 from internal.core.crud import create_document, delete_document, get_document, list_documents, update_document
@@ -169,6 +170,11 @@ async def handle_migration_apply(request):
 
 
 def _get_user(request):
+    cookie = request.cookies.get("galaxy_session")
+    if cookie:
+        session = get_session(cookie)
+        if session:
+            return session["username"]
     return request.headers.get("X-Galaxy-User", "Administrator")
 
 
@@ -181,6 +187,72 @@ def _err(status: int, error: str, errors: list[str] | None = None):
 
 def _ok(data, status: int = 200):
     return JSONResponse({"success": True, "data": data}, status_code=status)
+
+
+async def handle_login(request):
+    try:
+        payload = await request.json()
+    except Exception:
+        return _err(400, "Invalid JSON body.")
+
+    username = (payload.get("username") or "").strip()
+    password = payload.get("password") or ""
+
+    if not username or not password:
+        return _err(400, "Username and password are required.")
+
+    user = verify_password(username, password)
+    if user is None:
+        return _err(401, "Invalid username or password.")
+
+    token = create_session(username)
+    response = _ok({"user": user, "token": token})
+    response.set_cookie(
+        key="galaxy_session",
+        value=token,
+        httponly=True,
+        samesite="lax",
+        max_age=86400,
+        path="/",
+    )
+    return response
+
+
+async def handle_logout(request):
+    cookie = request.cookies.get("galaxy_session")
+    if cookie:
+        delete_session(cookie)
+    response = _ok({"message": "Logged out."})
+    response.set_cookie(
+        key="galaxy_session",
+        value="",
+        httponly=True,
+        samesite="lax",
+        max_age=0,
+        path="/",
+    )
+    return response
+
+
+async def handle_auth_me(request):
+    cookie = request.cookies.get("galaxy_session")
+    if not cookie:
+        return _err(401, "Not authenticated.")
+
+    user = get_session(cookie)
+    if user is None:
+        response = _err(401, "Session expired or invalid.")
+        response.set_cookie(
+            key="galaxy_session",
+            value="",
+            httponly=True,
+            samesite="lax",
+            max_age=0,
+            path="/",
+        )
+        return response
+
+    return _ok({"user": user})
 
 
 async def handle_resource_create(request):
