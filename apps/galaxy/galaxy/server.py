@@ -423,21 +423,22 @@ class RequireSessionMiddleware:
         self.app = app
 
     async def __call__(self, scope, receive, send):
-        from starlette.requests import Request
-
-        request = Request(scope, receive)
-        tenant_id = get_tenant_id(request)
-        request.state.tenant_id = tenant_id
-
-        path = request.url.path
+        path = scope.get("path", "")
         protected, is_api = _is_protected(path)
 
         if not protected:
             await self.app(scope, receive, send)
             return
 
-        from galaxy.auth import require_session
+        from starlette.requests import Request
+        request = Request(scope, receive)
+        from galaxy.core.tenant import get_tenant_id
+        tenant_id = get_tenant_id(request)
+        from galaxy.core.tenant import current_tenant
+        current_tenant.set(tenant_id)
+        request.state.tenant_id = tenant_id
 
+        from galaxy.auth import require_session
         user = require_session(request)
         if user is not None:
             request.state.user = user
