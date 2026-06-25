@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}UI Component Guide — Galaxy Desk{% endblock %}
+{% block heading %}UI Component Guide{% endblock %}
+{% block content %}
+<div style="max-width:960px;margin:0 auto">
+
+  {{ ui.alert("This is the Galaxy UI Component Guide. All components render with current theme tokens.", tone="info") }}
+
+  <!-- ── Buttons ── -->
+  <section class="galaxy-guide-section">
+    <h2>Buttons</h2>
+    {% for variant in ["solid", "outline", "ghost", "soft", "destructive", "link"] %}
+    <div class="galaxy-guide-row">
+      <span class="galaxy-guide-label">{{ variant }}</span>
+      {% for tone in ["primary", "neutral", "success", "warning", "danger", "info"] %}
+        {{ ui.button(tone, variant=variant, tone=tone, size="sm") }}
+      {% endfor %}
+    </div>
+    {% endfor %}
+    <div class="galaxy-guide-row">
+      <span class="galaxy-guide-label">sizes</span>
+      {% for size in ["xs", "sm", "md", "lg", "xl"] %}
+        {{ ui.button(size, variant="solid", tone="primary", size=size) }}
+      {% endfor %}
+    </div>
+    <div class="galaxy-guide-row">
+      <span class="galaxy-guide-label">states</span>
+      {{ ui.button("Loading", variant="solid", tone="primary", loading=True) }}
+      {{ ui.button("Disabled", variant="solid", tone="primary", disabled=True) }}
+    </div>
+  </section>
+
+  <!-- ── Badges ── -->
+  <section class="galaxy-guide-section">
+    <h2>Badges</h2>
+    {% for variant in ["solid", "soft", "outline"] %}
+    <div class="galaxy-guide-row">
+      <span class="galaxy-guide-label">{{ variant }}</span>
+      {% for tone in ["primary", "neutral", "success", "warning", "danger", "info"] %}
+        {{ ui.badge(tone, variant=variant, tone=tone) }}
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </section>
+
+  <!-- ── Alerts ── -->
+  <section class="galaxy-guide-section">
+    <h2>Alerts</h2>
+    {% for tone in ["info", "success", "warning", "danger", "neutral"] %}
+    <div style="margin-bottom:0.5rem">
+      {{ ui.alert("This is a " ~ tone ~ " alert message.", tone=tone, title=tone) }}
+    </div>
+    {% endfor %}
+  </section>
+
+  <!-- ── Cards ── -->
+  <section class="galaxy-guide-section">
+    <h2>Cards</h2>
+    {% for variant in ["bordered", "elevated", "flat", "interactive"] %}
+    <div style="margin-bottom:1rem;display:inline-block;width:calc(50% - 0.5rem);vertical-align:top;margin-right:0.5rem">
+      {{ ui.card(title=variant ~ " card", variant=variant) }}
+        <p style="color:var(--galaxy-muted-text);font-size:var(--galaxy-font-size-sm)">Card content goes here.</p>
+      {{ ui.endcard() }}
+    </div>
+    {% endfor %}
+  </section>
+
+  <!-- ── Modal demo ── -->
+  <section class="galaxy-guide-section">
+    <h2>Modal</h2>
+    <button class="galaxy-btn galaxy-btn-solid galaxy-btn-primary galaxy-btn-md" onclick="galaxy.modal.open('demo-modal')">
+      Open Modal
+    </button>
+    {{ ui.modal(title="Demo Modal", id="demo-modal", size="md") }}
+      <p>This modal is rendered server-side and opened via JavaScript.</p>
+      <p style="color:var(--galaxy-muted-text);font-size:var(--galaxy-font-size-sm)">You can put any content here, including forms and data tables.</p>
+    {{ ui.endmodal() }}
+  </section>
+
+  <!-- ── Toast demo ── -->
+  <section class="galaxy-guide-section">
+    <h2>Toast Notifications</h2>
+    <div class="galaxy-guide-row">
+      <button class="galaxy-btn galaxy-btn-solid galaxy-btn-success galaxy-btn-sm" onclick="galaxy.toast('Saved successfully', {tone:'success'})">Success Toast</button>
+      <button class="galaxy-btn galaxy-btn-solid galaxy-btn-danger galaxy-btn-sm" onclick="galaxy.toast('Error occurred', {tone:'danger'})">Error Toast</button>
+      <button class="galaxy-btn galaxy-btn-solid galaxy-btn-info galaxy-btn-sm" onclick="galaxy.toast('Information', {tone:'info'})">Info Toast</button>
+      <button class="galaxy-btn galaxy-btn-solid galaxy-btn-warning galaxy-btn-sm" onclick="galaxy.toast('Warning', {tone:'warning'})">Warning Toast</button>
+    </div>
+  </section>
+
+  <!-- ── Confirm dialog demo ── -->
+  <section class="galaxy-guide-section">
+    <h2>Confirm Dialog</h2>
+    <button class="galaxy-btn galaxy-btn-solid galaxy-btn-danger galaxy-btn-sm" onclick="galaxy.confirm('Delete this record?', {tone:'danger', confirmText:'Delete'}).then(r => galaxy.toast('Result: ' + r, {tone:r?'success':'info'}))">
+      Delete (confirm)
+    </button>
+  </section>
+
+  <!-- ── Theme tokens ── -->
+  <section class="galaxy-guide-section">
+    <h2>Theme Tokens</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:1rem">
+      {% for name in ["primary", "accent", "success", "warning", "danger", "info"] %}
+      <div style="display:flex;align-items:center;gap:0.5rem">
+        <div style="width:2rem;height:2rem;border-radius:var(--galaxy-radius);background:var(--galaxy-{{ name }});border:1px solid var(--galaxy-border)"></div>
+        <span style="font-size:var(--galaxy-font-size-sm)">--galaxy-{{ name }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <div style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:1rem">
+      {% for name in ["bg", "surface", "muted"] %}
+      <div style="display:flex;align-items:center;gap:0.5rem">
+        <div style="width:2rem;height:2rem;border-radius:var(--galaxy-radius);background:var(--galaxy-{{ name }});border:1px solid var(--galaxy-border)"></div>
+        <span style="font-size:var(--galaxy-font-size-sm)">--galaxy-{{ name }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+</div>
+{% endblock %}

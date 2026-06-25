@@ -1,0 +1,4 @@
+<div class="galaxy-alert galaxy-alert-{{ tone }} {{ class_ }}" {{ attrs | map_attrs | safe }}>
+  {% if title %}<strong>{{ title }}</strong>{% endif %}
+  <span>{{ message }}</span>
+</div>

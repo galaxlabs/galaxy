@@ -65,11 +65,13 @@ from galaxy.core.tenant import (
     handle_tenant_list,
     handle_tenant_update,
 )
+from galaxy.desk.components import ui
 
 TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "desk", "templates")
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "desk", "static")
 
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
+templates.env.globals["ui"] = ui
 
 
 async def homepage(request):
@@ -203,6 +205,12 @@ async def desk_resource_list(request):
         "resource_list.html",
         {"doctype": doctype, "columns": columns, "records": records, "limit": limit, "total": len(records)},
     )
+
+
+async def desk_ui_guide(request):
+    if require_auth(request) is None:
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse(request, "ui_guide.html", {})
 
 
 async def desk_reports(request):
@@ -482,6 +490,7 @@ routes = [
     Route("/api/tenants/{name}", endpoint=handle_tenant_delete, methods=["DELETE"]),
     Route("/desk", endpoint=desk_dashboard),
     Route("/desk/builder/doctype/new", endpoint=desk_builder_new),
+    Route("/desk/ui-guide", endpoint=desk_ui_guide),
     Route("/desk/doctypes", endpoint=desk_doctypes),
     Route("/desk/doctypes/{name}", endpoint=desk_doctype_detail),
     Route("/desk/reports", endpoint=desk_reports),

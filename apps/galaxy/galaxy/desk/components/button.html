@@ -1,0 +1,3 @@
+<button class="galaxy-btn galaxy-btn-{{ variant }} galaxy-btn-{{ tone }} galaxy-btn-{{ size }} {{ class_ }} {% if loading %}galaxy-btn-loading{% endif %} {% if disabled %}galaxy-btn-disabled{% endif %}" {% if disabled %}disabled{% endif %} {{ attrs | map_attrs | safe }}>
+  {% if loading %}<span class="galaxy-spinner"></span> {% endif %}{{ label }}
+</button>

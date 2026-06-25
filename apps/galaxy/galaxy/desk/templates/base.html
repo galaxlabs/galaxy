@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Galaxy Desk{% endblock %}</title>
   <link rel="stylesheet" href="/static/desk.css">
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/components.css">
 </head>
 <body>
   <div class="desk-layout">
@@ -31,12 +33,17 @@
     <main class="main-content">
       <header class="topbar">
         <h1>{% block heading %}Galaxy Desk{% endblock %}</h1>
+        <div class="topbar-actions">
+          {{ ui.theme_switcher() }}
+        </div>
       </header>
       <div class="content">
         {% block content %}{% endblock %}
       </div>
     </main>
   </div>
+  {{ ui.toast_container() }}
+  <script src="/static/js/galaxy.js"></script>
   <script>
     function getCookie(name) {
       const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));

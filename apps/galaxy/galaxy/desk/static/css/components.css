@@ -1,0 +1,194 @@
+/* ── Button ──────────────────────────────────────────── */
+.galaxy-btn {
+  display: inline-flex; align-items: center; gap: 0.375rem;
+  font-family: var(--galaxy-font-family); font-weight: 500;
+  border: 1px solid transparent; border-radius: var(--galaxy-radius);
+  cursor: pointer; transition: all var(--galaxy-transition);
+  text-decoration: none; line-height: 1; white-space: nowrap;
+}
+.galaxy-btn:focus-visible { outline: 2px solid var(--galaxy-border-focus); outline-offset: 2px; }
+.galaxy-btn-disabled, .galaxy-btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+/* sizes */
+.galaxy-btn-xs { padding: 0.125rem 0.375rem; font-size: var(--galaxy-font-size-xs); }
+.galaxy-btn-sm { padding: 0.25rem 0.5rem; font-size: var(--galaxy-font-size-sm); }
+.galaxy-btn-md { padding: 0.375rem 0.75rem; font-size: var(--galaxy-font-size); }
+.galaxy-btn-lg { padding: 0.5rem 1rem; font-size: var(--galaxy-font-size-lg); }
+.galaxy-btn-xl { padding: 0.625rem 1.25rem; font-size: var(--galaxy-font-size-xl); }
+/* solid */
+.galaxy-btn-solid.galaxy-btn-primary { background: var(--galaxy-primary); color: #fff; }
+.galaxy-btn-solid.galaxy-btn-primary:hover { background: var(--galaxy-primary-hover); }
+.galaxy-btn-solid.galaxy-btn-neutral { background: var(--galaxy-surface); color: var(--galaxy-text); border-color: var(--galaxy-border); }
+.galaxy-btn-solid.galaxy-btn-neutral:hover { background: var(--galaxy-muted); }
+.galaxy-btn-solid.galaxy-btn-success { background: var(--galaxy-success); color: #fff; }
+.galaxy-btn-solid.galaxy-btn-success:hover { background: var(--galaxy-success-hover); }
+.galaxy-btn-solid.galaxy-btn-warning { background: var(--galaxy-warning); color: #fff; }
+.galaxy-btn-solid.galaxy-btn-warning:hover { background: var(--galaxy-warning-hover); }
+.galaxy-btn-solid.galaxy-btn-danger { background: var(--galaxy-danger); color: #fff; }
+.galaxy-btn-solid.galaxy-btn-danger:hover { background: var(--galaxy-danger-hover); }
+.galaxy-btn-solid.galaxy-btn-info { background: var(--galaxy-info); color: #fff; }
+.galaxy-btn-solid.galaxy-btn-info:hover { background: var(--galaxy-info-hover); }
+/* outline */
+.galaxy-btn-outline { background: transparent; }
+.galaxy-btn-outline.galaxy-btn-primary { color: var(--galaxy-primary); border-color: var(--galaxy-primary); }
+.galaxy-btn-outline.galaxy-btn-primary:hover { background: var(--galaxy-primary); color: #fff; }
+.galaxy-btn-outline.galaxy-btn-neutral { color: var(--galaxy-text); border-color: var(--galaxy-border); }
+.galaxy-btn-outline.galaxy-btn-neutral:hover { background: var(--galaxy-muted); }
+.galaxy-btn-outline.galaxy-btn-success { color: var(--galaxy-success); border-color: var(--galaxy-success); }
+.galaxy-btn-outline.galaxy-btn-success:hover { background: var(--galaxy-success); color: #fff; }
+.galaxy-btn-outline.galaxy-btn-danger { color: var(--galaxy-danger); border-color: var(--galaxy-danger); }
+.galaxy-btn-outline.galaxy-btn-danger:hover { background: var(--galaxy-danger); color: #fff; }
+.galaxy-btn-outline.galaxy-btn-warning { color: var(--galaxy-warning); border-color: var(--galaxy-warning); }
+.galaxy-btn-outline.galaxy-btn-warning:hover { background: var(--galaxy-warning); color: #fff; }
+.galaxy-btn-outline.galaxy-btn-info { color: var(--galaxy-info); border-color: var(--galaxy-info); }
+.galaxy-btn-outline.galaxy-btn-info:hover { background: var(--galaxy-info); color: #fff; }
+/* ghost */
+.galaxy-btn-ghost { background: transparent; border-color: transparent; }
+.galaxy-btn-ghost.galaxy-btn-primary { color: var(--galaxy-primary); }
+.galaxy-btn-ghost.galaxy-btn-primary:hover { background: color-mix(in srgb, var(--galaxy-primary) 10%, transparent); }
+.galaxy-btn-ghost.galaxy-btn-neutral { color: var(--galaxy-muted-text); }
+.galaxy-btn-ghost.galaxy-btn-neutral:hover { background: var(--galaxy-muted); color: var(--galaxy-text); }
+.galaxy-btn-ghost.galaxy-btn-danger { color: var(--galaxy-danger); }
+.galaxy-btn-ghost.galaxy-btn-danger:hover { background: color-mix(in srgb, var(--galaxy-danger) 10%, transparent); }
+/* soft */
+.galaxy-btn-soft { border-color: transparent; }
+.galaxy-btn-soft.galaxy-btn-primary { background: color-mix(in srgb, var(--galaxy-primary) 15%, transparent); color: var(--galaxy-primary); }
+.galaxy-btn-soft.galaxy-btn-primary:hover { background: color-mix(in srgb, var(--galaxy-primary) 25%, transparent); }
+.galaxy-btn-soft.galaxy-btn-neutral { background: var(--galaxy-surface); color: var(--galaxy-text); }
+.galaxy-btn-soft.galaxy-btn-neutral:hover { background: var(--galaxy-muted); }
+.galaxy-btn-soft.galaxy-btn-success { background: color-mix(in srgb, var(--galaxy-success) 15%, transparent); color: var(--galaxy-success); }
+.galaxy-btn-soft.galaxy-btn-success:hover { background: color-mix(in srgb, var(--galaxy-success) 25%, transparent); }
+.galaxy-btn-soft.galaxy-btn-danger { background: color-mix(in srgb, var(--galaxy-danger) 15%, transparent); color: var(--galaxy-danger); }
+.galaxy-btn-soft.galaxy-btn-danger:hover { background: color-mix(in srgb, var(--galaxy-danger) 25%, transparent); }
+.galaxy-btn-soft.galaxy-btn-warning { background: color-mix(in srgb, var(--galaxy-warning) 15%, transparent); color: var(--galaxy-warning); }
+.galaxy-btn-soft.galaxy-btn-warning:hover { background: color-mix(in srgb, var(--galaxy-warning) 25%, transparent); }
+.galaxy-btn-soft.galaxy-btn-info { background: color-mix(in srgb, var(--galaxy-info) 15%, transparent); color: var(--galaxy-info); }
+.galaxy-btn-soft.galaxy-btn-info:hover { background: color-mix(in srgb, var(--galaxy-info) 25%, transparent); }
+/* link */
+.galaxy-btn-link { background: transparent; border-color: transparent; padding: 0; text-decoration: none; }
+.galaxy-btn-link.galaxy-btn-primary { color: var(--galaxy-primary); }
+.galaxy-btn-link.galaxy-btn-primary:hover { text-decoration: underline; }
+.galaxy-btn-link.galaxy-btn-neutral { color: var(--galaxy-muted-text); }
+.galaxy-btn-link.galaxy-btn-neutral:hover { color: var(--galaxy-text); text-decoration: underline; }
+.galaxy-btn-link.galaxy-btn-danger { color: var(--galaxy-danger); }
+.galaxy-btn-link.galaxy-btn-danger:hover { text-decoration: underline; }
+/* loading */
+.galaxy-btn-loading { position: relative; color: transparent !important; pointer-events: none; }
+.galaxy-btn-loading .galaxy-spinner { position: absolute; color: currentColor; }
+
+/* ── Badge ──────────────────────────────────────────── */
+.galaxy-badge {
+  display: inline-flex; align-items: center;
+  font-family: var(--galaxy-font-family); font-weight: 500; font-size: var(--galaxy-font-size-xs);
+  padding: 0.125rem 0.375rem; border-radius: var(--galaxy-radius-sm);
+  line-height: 1.25; white-space: nowrap;
+}
+.galaxy-badge-solid.galaxy-badge-primary { background: var(--galaxy-primary); color: #fff; }
+.galaxy-badge-solid.galaxy-badge-neutral { background: var(--galaxy-surface); color: var(--galaxy-text); border: 1px solid var(--galaxy-border); }
+.galaxy-badge-solid.galaxy-badge-success { background: var(--galaxy-success); color: #fff; }
+.galaxy-badge-solid.galaxy-badge-warning { background: var(--galaxy-warning); color: #fff; }
+.galaxy-badge-solid.galaxy-badge-danger  { background: var(--galaxy-danger); color: #fff; }
+.galaxy-badge-solid.galaxy-badge-info    { background: var(--galaxy-info); color: #fff; }
+.galaxy-badge-soft.galaxy-badge-primary  { background: color-mix(in srgb, var(--galaxy-primary) 15%, transparent); color: var(--galaxy-primary); }
+.galaxy-badge-soft.galaxy-badge-neutral  { background: var(--galaxy-muted); color: var(--galaxy-muted-text); }
+.galaxy-badge-soft.galaxy-badge-success  { background: color-mix(in srgb, var(--galaxy-success) 15%, transparent); color: var(--galaxy-success); }
+.galaxy-badge-soft.galaxy-badge-warning  { background: color-mix(in srgb, var(--galaxy-warning) 15%, transparent); color: var(--galaxy-warning); }
+.galaxy-badge-soft.galaxy-badge-danger   { background: color-mix(in srgb, var(--galaxy-danger) 15%, transparent); color: var(--galaxy-danger); }
+.galaxy-badge-soft.galaxy-badge-info     { background: color-mix(in srgb, var(--galaxy-info) 15%, transparent); color: var(--galaxy-info); }
+.galaxy-badge-outline { background: transparent; border: 1px solid; }
+.galaxy-badge-outline.galaxy-badge-primary { color: var(--galaxy-primary); border-color: var(--galaxy-primary); }
+.galaxy-badge-outline.galaxy-badge-neutral { color: var(--galaxy-muted-text); border-color: var(--galaxy-border); }
+.galaxy-badge-outline.galaxy-badge-success { color: var(--galaxy-success); border-color: var(--galaxy-success); }
+.galaxy-badge-outline.galaxy-badge-warning { color: var(--galaxy-warning); border-color: var(--galaxy-warning); }
+.galaxy-badge-outline.galaxy-badge-danger  { color: var(--galaxy-danger); border-color: var(--galaxy-danger); }
+.galaxy-badge-outline.galaxy-badge-info    { color: var(--galaxy-info); border-color: var(--galaxy-info); }
+
+/* ── Card ───────────────────────────────────────────── */
+.galaxy-card {
+  background: var(--galaxy-bg); border-radius: var(--galaxy-radius-lg);
+  overflow: hidden; transition: all var(--galaxy-transition);
+}
+.galaxy-card-bordered { border: 1px solid var(--galaxy-border); }
+.galaxy-card-elevated { box-shadow: var(--galaxy-shadow); }
+.galaxy-card-flat { border: none; box-shadow: none; background: transparent; }
+.galaxy-card-interactive { cursor: pointer; border: 1px solid var(--galaxy-border); }
+.galaxy-card-interactive:hover { box-shadow: var(--galaxy-shadow); border-color: var(--galaxy-border-focus); }
+.galaxy-card-header {
+  padding: calc(0.75rem * var(--galaxy-density));
+  font-weight: 600; font-size: var(--galaxy-font-size);
+  border-bottom: 1px solid var(--galaxy-border);
+  background: var(--galaxy-surface);
+}
+.galaxy-card-body { padding: calc(0.75rem * var(--galaxy-density)); }
+
+/* ── Alert ──────────────────────────────────────────── */
+.galaxy-alert {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.625rem 0.75rem; border-radius: var(--galaxy-radius);
+  font-size: var(--galaxy-font-size-sm); line-height: 1.4;
+}
+.galaxy-alert-info    { background: color-mix(in srgb, var(--galaxy-info) 10%, transparent); color: var(--galaxy-info); border: 1px solid color-mix(in srgb, var(--galaxy-info) 20%, transparent); }
+.galaxy-alert-success { background: color-mix(in srgb, var(--galaxy-success) 10%, transparent); color: var(--galaxy-success); border: 1px solid color-mix(in srgb, var(--galaxy-success) 20%, transparent); }
+.galaxy-alert-warning { background: color-mix(in srgb, var(--galaxy-warning) 10%, transparent); color: var(--galaxy-warning); border: 1px solid color-mix(in srgb, var(--galaxy-warning) 20%, transparent); }
+.galaxy-alert-danger  { background: color-mix(in srgb, var(--galaxy-danger) 10%, transparent); color: var(--galaxy-danger); border: 1px solid color-mix(in srgb, var(--galaxy-danger) 20%, transparent); }
+.galaxy-alert-neutral { background: var(--galaxy-muted); color: var(--galaxy-text); border: 1px solid var(--galaxy-border); }
+
+/* ── Modal / Backdrop ───────────────────────────────── */
+.galaxy-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000; align-items: center; justify-content: center;
+  backdrop-filter: blur(2px);
+}
+.galaxy-backdrop.galaxy-modal-open, .galaxy-backdrop:has(.galaxy-modal-open) { display: flex; }
+.galaxy-modal {
+  background: var(--galaxy-bg); border-radius: var(--galaxy-radius-lg);
+  box-shadow: var(--galaxy-shadow-lg); max-height: 80vh; overflow-y: auto;
+  width: 90%; animation: galaxy-modal-in 0.2s ease-out;
+}
+.galaxy-modal-sm { max-width: 24rem; }
+.galaxy-modal-md { max-width: 36rem; }
+.galaxy-modal-lg { max-width: 48rem; }
+.galaxy-modal-xl { max-width: 64rem; }
+.galaxy-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem; border-bottom: 1px solid var(--galaxy-border);
+}
+.galaxy-modal-body { padding: 1rem; }
+.galaxy-modal-footer {
+  display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem;
+  padding: 0.75rem 1rem; border-top: 1px solid var(--galaxy-border);
+}
+@keyframes galaxy-modal-in { from { opacity: 0; transform: scale(0.95) translateY(-10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+/* ── Toast ──────────────────────────────────────────── */
+.galaxy-toast {
+  padding: 0.625rem 1rem; border-radius: var(--galaxy-radius);
+  font-size: var(--galaxy-font-size-sm); font-weight: 500;
+  box-shadow: var(--galaxy-shadow-lg);
+  animation: galaxy-toast-in 0.3s ease-out;
+  max-width: 24rem;
+}
+.galaxy-toast-info    { background: var(--galaxy-info); color: #fff; }
+.galaxy-toast-success { background: var(--galaxy-success); color: #fff; }
+.galaxy-toast-warning { background: var(--galaxy-warning); color: #fff; }
+.galaxy-toast-danger  { background: var(--galaxy-danger); color: #fff; }
+.galaxy-toast-exit { opacity: 0; transform: translateX(100%); transition: all 0.3s; }
+@keyframes galaxy-toast-in { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+
+/* ── Theme Toggle ────────────────────────────────────── */
+.galaxy-theme-icon-dark { display: none; }
+.dark .galaxy-theme-icon-light { display: none; }
+.dark .galaxy-theme-icon-dark { display: inline; }
+
+/* ── UI Guide ───────────────────────────────────────── */
+.galaxy-guide-section { margin-bottom: 2rem; }
+.galaxy-guide-section h2 {
+  font-size: var(--galaxy-font-size-xl); font-weight: 600;
+  margin-bottom: 0.75rem; padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--galaxy-border);
+}
+.galaxy-guide-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 1rem; }
+.galaxy-guide-label {
+  font-size: var(--galaxy-font-size-sm); color: var(--galaxy-muted-text);
+  min-width: 8rem; font-weight: 500;
+}
