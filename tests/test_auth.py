@@ -1,8 +1,8 @@
+from galaxy.core.auth import create_session, delete_session, get_session, verify_password
+from galaxy.db.connection import get_engine
 from sqlalchemy import text
 from starlette.testclient import TestClient
 
-from galaxy.core.auth import create_session, delete_session, get_session, verify_password
-from galaxy.db.connection import get_engine
 from internal.config.site_config import load_site_config
 from internal.http.server import app
 

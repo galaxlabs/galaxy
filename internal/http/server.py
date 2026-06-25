@@ -2,13 +2,6 @@ import os
 import urllib.parse
 
 import uvicorn
-from starlette.applications import Starlette
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import JSONResponse, RedirectResponse
-from starlette.routing import Mount, Route
-from starlette.staticfiles import StaticFiles
-from starlette.templating import Jinja2Templates
-
 from galaxy.core.api import (
     handle_auth_me,
     handle_builder_preview,
@@ -64,6 +57,13 @@ from galaxy.core.tenant import (
     handle_tenant_list,
     handle_tenant_update,
 )
+from starlette.applications import Starlette
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse, RedirectResponse
+from starlette.routing import Mount, Route
+from starlette.staticfiles import StaticFiles
+from starlette.templating import Jinja2Templates
+
 from internal.config.site_config import load_site_config
 
 TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
@@ -208,9 +208,8 @@ async def desk_resource_list(request):
 async def desk_reports(request):
     if require_auth(request) is None:
         return RedirectResponse(url="/login", status_code=302)
-    from sqlalchemy import text
-
     from galaxy.db.connection import get_engine
+    from sqlalchemy import text
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -226,9 +225,8 @@ async def desk_report_detail(request):
         return RedirectResponse(url="/login", status_code=302)
     raw = request.path_params.get("name", "")
     name = urllib.parse.unquote(raw)
-    from sqlalchemy import text
-
     from galaxy.db.connection import get_engine
+    from sqlalchemy import text
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -245,9 +243,8 @@ async def desk_report_detail(request):
 async def desk_scripts(request):
     if require_auth(request) is None:
         return RedirectResponse(url="/login", status_code=302)
-    from sqlalchemy import text
-
     from galaxy.db.connection import get_engine
+    from sqlalchemy import text
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -271,9 +268,8 @@ async def desk_script_edit(request):
         return RedirectResponse(url="/login", status_code=302)
     raw = request.path_params.get("name", "")
     name = urllib.parse.unquote(raw)
-    from sqlalchemy import text
-
     from galaxy.db.connection import get_engine
+    from sqlalchemy import text
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
