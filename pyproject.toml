@@ -60,7 +60,7 @@ later_integrations = [
 ]
 
 [project.scripts]
-galaxy = "internal.cli.app:main"
+galaxy = "galaxy.cli.app:main"
 
 [project.urls]
 Homepage = "https://galaxylabs.local/galaxy"

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Bench Manager — Galaxy Desk{% endblock %}
+{% block heading %}Bench Manager{% endblock %}
+{% block content %}
+<div class="bench-toolbar">
+  <a href="/desk/bench/sites/new" class="btn btn-primary">New Site</a>
+</div>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Site</th>
+      <th>Database</th>
+      <th>DB User</th>
+      <th>Status</th>
+      <th>Created</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for site in sites %}
+    <tr>
+      <td><a href="/desk/bench/sites/{{ site.name }}">{{ site.name }}</a></td>
+      <td>{{ site.db_name }}</td>
+      <td>{{ site.db_user }}</td>
+      <td><span class="badge badge-{{ site.status }}">{{ site.status }}</span></td>
+      <td>{{ site.created_at[:10] }}</td>
+      <td><a href="/desk/bench/sites/{{ site.name }}" class="btn-link">View</a></td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="6" class="empty-state">No sites registered. Run <code>galaxy bench init</code> then <code>galaxy bench create-site</code>.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

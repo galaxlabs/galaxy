@@ -1,4 +1,4 @@
-from internal.bootstrap.installer import run_doctor
+from galaxy.installer import run_doctor
 
 
 def doctor():

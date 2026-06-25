@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}New Site — Bench Manager — Galaxy Desk{% endblock %}
+{% block heading %}New Site{% endblock %}
+{% block content %}
+<form id="new-site-form" class="detail-form">
+  <div class="detail-row">
+    <label class="detail-label" for="name">Site Name</label>
+    <input type="text" id="name" name="name" class="input" placeholder="e.g. mysite.local" required>
+  </div>
+  <div class="detail-row">
+    <label class="detail-label" for="db_host">DB Host</label>
+    <input type="text" id="db_host" name="db_host" class="input" value="127.0.0.1">
+  </div>
+  <div class="detail-row">
+    <label class="detail-label" for="db_port">DB Port</label>
+    <input type="number" id="db_port" name="db_port" class="input" value="5432">
+  </div>
+  <div class="detail-actions">
+    <button type="submit" class="btn btn-primary">Create Site</button>
+    <a href="/desk/bench" class="btn">Cancel</a>
+  </div>
+</form>
+<div id="new-site-result" style="display:none;"></div>
+<script>
+document.getElementById("new-site-form")?.addEventListener("submit", async function(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = {
+    name: form.name.value,
+    db_host: form.db_host.value,
+    db_port: parseInt(form.db_port.value, 10),
+  };
+  const resp = await fetch("/api/bench/sites", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(data),
+  });
+  const result = await resp.json();
+  const resultDiv = document.getElementById("new-site-result");
+  resultDiv.style.display = "block";
+  if (result.success) {
+    resultDiv.innerHTML = '<div class="msg-success">Site created. <a href="/desk/bench/sites/' + data.name + '">View site</a></div>';
+    form.reset();
+  } else {
+    resultDiv.innerHTML = '<div class="msg-error">' + (result.error || "Failed to create site.") + '</div>';
+  }
+});
+</script>
+{% endblock %}

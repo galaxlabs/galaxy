@@ -1,28 +1,28 @@
 from starlette.responses import JSONResponse
 
-from internal.bench.platform_db import get_site, init_platform_db, list_sites, site_exists
-from internal.bench.site_manager import (
+from galaxy.bench_manager.platform_db import get_site, init_platform_db, list_sites, site_exists
+from galaxy.bench_manager.site_manager import (
     backup_site as _backup_site,
 )
-from internal.bench.site_manager import (
+from galaxy.bench_manager.site_manager import (
     create_site as _create_site,
 )
-from internal.bench.site_manager import (
+from galaxy.bench_manager.site_manager import (
     get_site_migration_status as _get_site_migration_status,
 )
-from internal.bench.site_manager import (
+from galaxy.bench_manager.site_manager import (
     install_app as _install_app,
 )
-from internal.bench.site_manager import (
+from galaxy.bench_manager.site_manager import (
     list_apps as _list_apps,
 )
-from internal.bench.site_manager import (
+from galaxy.bench_manager.site_manager import (
     list_backups as _list_backups,
 )
-from internal.bench.site_manager import (
+from galaxy.bench_manager.site_manager import (
     restore_site as _restore_site,
 )
-from internal.bench.site_manager import (
+from galaxy.bench_manager.site_manager import (
     uninstall_app as _uninstall_app,
 )
 

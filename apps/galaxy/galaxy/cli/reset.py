@@ -1,4 +1,4 @@
-from internal.bootstrap.installer import run_reset
+from galaxy.installer import run_reset
 
 
 def reset():

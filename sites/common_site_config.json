@@ -6,5 +6,10 @@
   "cloud_mode": false,
   "allow_server_scripts": true,
   "allow_query_reports": true,
-  "allow_script_reports": false
+  "allow_script_reports": false,
+  "allow_dev_auth_bypass": false,
+  "csrf_enabled": true,
+  "login_rate_limit_enabled": true,
+  "login_rate_limit_max_attempts": 5,
+  "login_rate_limit_window_seconds": 300
 }

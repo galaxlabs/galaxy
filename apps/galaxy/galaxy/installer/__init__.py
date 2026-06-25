@@ -77,7 +77,7 @@ def run_install(site_name: str | None = None):
 
     print("Registering site in Bench platform...")
     try:
-        from internal.bench.platform_db import init_platform_db, register_site, site_exists
+        from galaxy.bench_manager.platform_db import init_platform_db, register_site, site_exists
 
         init_platform_db()
         if not site_exists(resolved_site):

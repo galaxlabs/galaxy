@@ -2,6 +2,13 @@ import os
 import urllib.parse
 
 import uvicorn
+from starlette.applications import Starlette
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse, RedirectResponse
+from starlette.routing import Mount, Route
+from starlette.staticfiles import StaticFiles
+from starlette.templating import Jinja2Templates
+
 from galaxy.config import load_site_config
 from galaxy.core.api import (
     handle_auth_me,
@@ -58,15 +65,9 @@ from galaxy.core.tenant import (
     handle_tenant_list,
     handle_tenant_update,
 )
-from starlette.applications import Starlette
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import JSONResponse, RedirectResponse
-from starlette.routing import Mount, Route
-from starlette.staticfiles import StaticFiles
-from starlette.templating import Jinja2Templates
 
-TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
-STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "desk", "templates")
+STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "desk", "static")
 
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
@@ -207,8 +208,9 @@ async def desk_resource_list(request):
 async def desk_reports(request):
     if require_auth(request) is None:
         return RedirectResponse(url="/login", status_code=302)
-    from galaxy.db.connection import get_engine
     from sqlalchemy import text
+
+    from galaxy.db.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -224,8 +226,9 @@ async def desk_report_detail(request):
         return RedirectResponse(url="/login", status_code=302)
     raw = request.path_params.get("name", "")
     name = urllib.parse.unquote(raw)
-    from galaxy.db.connection import get_engine
     from sqlalchemy import text
+
+    from galaxy.db.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -242,8 +245,9 @@ async def desk_report_detail(request):
 async def desk_scripts(request):
     if require_auth(request) is None:
         return RedirectResponse(url="/login", status_code=302)
-    from galaxy.db.connection import get_engine
     from sqlalchemy import text
+
+    from galaxy.db.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -267,8 +271,9 @@ async def desk_script_edit(request):
         return RedirectResponse(url="/login", status_code=302)
     raw = request.path_params.get("name", "")
     name = urllib.parse.unquote(raw)
-    from galaxy.db.connection import get_engine
     from sqlalchemy import text
+
+    from galaxy.db.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -285,7 +290,7 @@ async def desk_script_edit(request):
 
 
 async def desk_bench(request):
-    from internal.bench.platform_db import init_platform_db, list_sites
+    from galaxy.bench_manager.platform_db import init_platform_db, list_sites
     init_platform_db()
     sites = list_sites()
     return templates.TemplateResponse(request, "bench.html", {"sites": sites})
@@ -293,7 +298,7 @@ async def desk_bench(request):
 
 async def desk_bench_site(request):
     name = request.path_params.get("name", "")
-    from internal.bench.platform_db import get_site, init_platform_db
+    from galaxy.bench_manager.platform_db import get_site, init_platform_db
     init_platform_db()
     site = get_site(name)
     if site is None:
