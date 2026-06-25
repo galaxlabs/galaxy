@@ -53,23 +53,62 @@ python cmd\galaxy\main.py reset
 | `galaxy start`   | Start the HTTP server |
 | `galaxy reset`   | Drop and recreate core tables |
 
+## Status
+
+**Milestones 1–8 complete.** Fully functional: metadata engine, DocType Builder, migration engine, CRUD API + Desk UI, permission engine, server scripting, and report builder.
+
 ## Project Structure
 
 ```
 galaxy/
-├── cmd/galaxy/main.py        # CLI entry point
+├── cmd/galaxy/main.py              # CLI entry point
 ├── internal/
-│   ├── cli/                  # Typer CLI commands
-│   ├── config/               # Site configuration
-│   ├── db/                   # Database layer
-│   ├── http/                 # Starlette HTTP server
-│   └── bootstrap/            # Installer and doctor
-├── sites/                    # Site configs
-├── tests/                    # Pytest test suite
-└── docs/                     # Milestone documentation
+│   ├── bootstrap/                  # Installer and doctor
+│   ├── cli/                        # Typer CLI commands
+│   ├── config/                     # Site configuration
+│   ├── core/                       # Core business logic
+│   │   ├── api.py                  # API handlers
+│   │   ├── crud.py                 # CRUD engine
+│   │   ├── permissions.py          # Role-based access control
+│   │   ├── report_engine.py        # Report builder
+│   │   └── script_engine.py        # Server scripting
+│   ├── db/                         # Database layer
+│   │   ├── connection.py           # SQLAlchemy engine (pooled)
+│   │   ├── core_tables.py          # 12 core DDLs
+│   │   ├── metadata.py             # DocType metadata queries
+│   │   ├── repository.py           # DocType/field resolvers
+│   │   ├── seed.py                 # Idempotent data seeding
+│   │   └── migration.py            # ALTER TABLE migration
+│   └── http/                       # Starlette HTTP server
+│       ├── server.py               # 22 routes, Starlette app
+│       ├── static/                 # CSS/JS assets
+│       └── templates/              # Jinja2 templates
+│           ├── base.html           # Sidebar + layout
+│           ├── doctype_detail.html # DocType builder form
+│           ├── doctype_list.html   # DocType list
+│           ├── resource_list.html  # Record list
+│           ├── resource_detail.html# Record detail
+│           ├── server_scripts.html # Script list
+│           ├── server_script_form.html
+│           ├── reports.html        # Report list
+│           └── report_detail.html  # Report runner
+├── sites/                          # Site configs
+├── tests/                          # Pytest test suite
+│   ├── test_seed.py                # 13 seed/metadata tests
+│   └── test_crud.py                # 17 CRUD tests
+└── docs/                           # Milestone documentation
 ```
 
 ## Milestones
 
-- **Milestone 1** — Bootstrap Core (current)
-- Milestone 2+ — DocType Builder, CRUD, UI, etc.
+| # | Name | Status |
+|---|------|--------|
+| 1 | Bootstrap Core | Done |
+| 2 | DocType Builder | Done |
+| 3 | Metadata API + Desk UI | Done |
+| 4 | Migration Engine | Done |
+| 5 | Core CRUD Engine | Done |
+| 6 | Permission Engine | Done |
+| 7 | Server Scripting | Done |
+| 8 | Report Builder | Done |
+| 9+ | Platform Features (auth, workspaces, jobs, notifications, dashboards, plugins) | Pending |
