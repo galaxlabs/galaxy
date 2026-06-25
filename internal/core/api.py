@@ -179,7 +179,7 @@ def _get_user(request):
         session = get_session(cookie)
         if session:
             return session["username"]
-    return request.headers.get("X-Galaxy-User", "Administrator")
+    return request.headers.get("X-Galaxy-User")
 
 
 def require_auth(request) -> str | None:

@@ -111,3 +111,57 @@ def test_login_then_desk():
 
     resp = client.get("/desk", cookies=login_resp.cookies)
     assert resp.status_code == 200
+
+
+def test_invalid_session_cookie_returns_401():
+    resp = client.get("/api/resource/Supplier", cookies={"galaxy_session": "invalid-random-token-value"})
+    assert resp.status_code == 401
+    data = resp.json()
+    assert data["success"] is False
+    assert data["error"] == "Authentication required."
+
+
+def test_expired_session_is_rejected():
+    engine = _get_engine()
+    from datetime import UTC, datetime, timedelta
+    expired_token = "expired-test-token-12345"
+    past = datetime.now(UTC) - timedelta(hours=1)
+    with engine.begin() as conn:
+        conn.execute(
+            text("""
+                INSERT INTO "tabSession" (name, user_name, token, expires_at, idx)
+                VALUES (:name, :user_name, :token, :expires_at, 0)
+            """),
+            {"name": "expired-session-test", "user_name": "Administrator",
+             "token": expired_token, "expires_at": past},
+        )
+    try:
+        resp = client.get("/api/resource/Supplier", cookies={"galaxy_session": expired_token})
+        assert resp.status_code == 401
+        data = resp.json()
+        assert data["success"] is False
+        assert data["error"] == "Authentication required."
+    finally:
+        with engine.begin() as conn:
+            conn.execute(
+                text('DELETE FROM "tabSession" WHERE token = :token'),
+                {"token": expired_token},
+            )
+
+
+def test_logout_invalidates_session():
+    login_resp = client.post("/api/auth/login", json={"username": "Administrator", "password": "admin"})
+    assert login_resp.status_code == 200
+    cookie_jar = login_resp.cookies
+
+    resp_before = client.get("/api/resource/Supplier", cookies=cookie_jar)
+    assert resp_before.status_code == 200
+
+    logout_resp = client.post("/api/auth/logout", cookies=cookie_jar)
+    assert logout_resp.status_code == 200
+
+    resp_after = client.get("/api/resource/Supplier", cookies=cookie_jar)
+    assert resp_after.status_code == 401
+    data = resp_after.json()
+    assert data["success"] is False
+    assert data["error"] == "Authentication required."
