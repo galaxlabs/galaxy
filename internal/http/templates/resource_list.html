@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ doctype.name }} Records — Galaxy Desk{% endblock %}
+{% block heading %}{{ doctype.name }} Records{% endblock %}
+{% block content %}
+
+<section class="detail-section">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+    <h2 style="margin:0; padding:0; border:none;">Records ({{ records | length }})</h2>
+    <a href="/desk/doctypes/{{ doctype.name | urlencode }}" class="back-link" style="margin:0;">&larr; Back to DocType</a>
+  </div>
+
+  {% if records %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        {% for col in columns %}
+        <th>{{ col.label }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in records %}
+      <tr>
+        <td><a href="/desk/resource/{{ doctype.name | urlencode }}/{{ row.name | urlencode }}">{{ row.name }}</a></td>
+        {% for col in columns[1:] %}
+        <td>{{ row.get(col.fieldname, "") }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="muted" style="margin-top:12px;">
+    Showing {{ records | length }} records
+    {% if limit < total %}(first {{ limit }} of {{ total }}){% endif %}
+  </p>
+  {% else %}
+  <p class="muted">No records found.</p>
+  {% endif %}
+</section>
+
+{% endblock %}

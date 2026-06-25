@@ -147,6 +147,8 @@ DOCTYPES = [
     ("Role", "Security", "core", "tabRole", False, False, False, False, 7),
     ("Has Role", "Security", "core", "tabHas Role", False, False, False, False, 8),
     ("Error Log", "Core", "core", "tabError Log", False, False, False, False, 9),
+    ("Server Script", "Core", "core", "tabServer Script", False, False, False, False, 10),
+    ("Report", "Core", "core", "tabReport", False, False, False, False, 11),
 ]
 
 
@@ -257,6 +259,27 @@ DOCFIELDS = {
         ("role", "Role", "Link", "Role", True, False, False, True, 2),
         ("idx", "Idx", "Int", None, False, False, False, False, 3),
     ],
+    "Report": [
+        ("name", "Name", "Data", None, True, False, False, True, 0),
+        ("module", "Module", "Link", "Module Def", False, False, False, True, 1),
+        ("ref_doctype", "Reference DocType", "Link", "DocType", True, False, False, True, 2),
+        ("report_type", "Report Type", "Select", "Query Report\nScript Report", True, False, False, True, 3),
+        ("query", "Query", "Code", None, False, False, False, False, 4),
+        ("script", "Script", "Code", None, False, False, False, False, 5),
+        ("columns", "Columns", "JSON", None, False, False, False, False, 6),
+        ("enabled", "Enabled", "Check", None, False, False, False, True, 7),
+        ("idx", "Idx", "Int", None, False, False, False, False, 8),
+    ],
+    "Server Script": [
+        ("name", "Name", "Data", None, True, False, False, True, 0),
+        ("module", "Module", "Link", "Module Def", False, False, False, True, 1),
+        ("ref_doctype", "Reference DocType", "Link", "DocType", True, False, False, True, 2),
+        ("doctype_event", "DocType Event", "Select", "before_save\nafter_save\nbefore_delete\nafter_delete\non_load", True, False, False, True, 3),
+        ("script_type", "Script Type", "Select", "Python", True, False, False, True, 4),
+        ("script", "Script", "Code", None, True, False, False, False, 5),
+        ("enabled", "Enabled", "Check", None, False, False, False, True, 6),
+        ("idx", "Idx", "Int", None, False, False, False, False, 7),
+    ],
     "Error Log": [
         ("name", "Name", "Data", None, True, False, False, True, 0),
         ("error_type", "Error Type", "Data", None, False, False, False, True, 1),
@@ -307,7 +330,7 @@ def seed_docfields(engine: Engine) -> None:
 def seed_docperms(engine: Engine) -> None:
     doctype_names = [
         "Installed App", "Installed Module", "Module Def", "DocType", "DocField",
-        "DocPerm", "User", "Role", "Has Role", "Error Log",
+        "DocPerm", "User", "Role", "Has Role", "Error Log", "Server Script", "Report",
     ]
 
     with engine.begin() as conn:

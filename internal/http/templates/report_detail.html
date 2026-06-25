@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ report.name }} — Reports — Galaxy Desk{% endblock %}
+{% block heading %}Report: {{ report.name }}{% endblock %}
+{% block content %}
+
+<section class="detail-section">
+  <table class="data-table" style="width:100%;">
+    <tbody>
+      <tr><th style="width:180px; text-align:left; padding:8px;">Name</th><td style="padding:8px;">{{ report.name }}</td></tr>
+      <tr><th style="text-align:left; padding:8px;">DocType</th><td style="padding:8px;">{{ report.ref_doctype }}</td></tr>
+      <tr><th style="text-align:left; padding:8px;">Type</th><td style="padding:8px;"><code>{{ report.report_type }}</code></td></tr>
+      <tr><th style="text-align:left; padding:8px;">Enabled</th><td style="padding:8px;">{{ "Yes" if report.enabled else "No" }}</td></tr>
+    </tbody>
+  </table>
+
+  <div class="builder-actions" style="margin-top:16px;">
+    <button class="btn btn-primary" onclick="runReport()">Run Report</button>
+    <a href="/desk/reports" class="back-link" style="margin-left:12px;">&larr; All Reports</a>
+  </div>
+</section>
+
+<section class="detail-section" id="results-section" style="display:none;">
+  <h2>Results (<span id="result-count">0</span>)</h2>
+  <div id="results-table-wrapper"></div>
+  <pre id="results-error" style="display:none;" class="sql-block"></pre>
+</section>
+
+<script>
+function runReport() {
+  var name = "{{ report.name }}";
+  var url = "/api/report/" + encodeURIComponent(name);
+  var section = document.getElementById("results-section");
+  var wrapper = document.getElementById("results-table-wrapper");
+  var errorEl = document.getElementById("results-error");
+  var countEl = document.getElementById("result-count");
+
+  section.style.display = "block";
+  wrapper.innerHTML = "<p class='muted'>Loading...</p>";
+  errorEl.style.display = "none";
+
+  fetch(url)
+    .then(function(r) { return r.json().then(function(d) { return { status: r.status, body: d }; }); })
+    .then(function(res) {
+      if (res.status !== 200 || !res.body.success) {
+        errorEl.textContent = res.body.error || "Error running report";
+        errorEl.style.display = "block";
+        wrapper.innerHTML = "";
+        return;
+      }
+      var data = res.body.data;
+      countEl.textContent = data.count;
+      if (data.count === 0) {
+        wrapper.innerHTML = "<p class='muted'>No results.</p>";
+        return;
+      }
+      var cols = data.columns;
+      var rows = data.rows;
+      var html = "<table class='data-table'><thead><tr>";
+      cols.forEach(function(c) { html += "<th>" + c + "</th>"; });
+      html += "</tr></thead><tbody>";
+      rows.forEach(function(row) {
+        html += "<tr>";
+        cols.forEach(function(c) { html += "<td>" + (row[c] !== null && row[c] !== undefined ? row[c] : "") + "</td>"; });
+        html += "</tr>";
+      });
+      html += "</tbody></table>";
+      wrapper.innerHTML = html;
+    })
+    .catch(function(err) {
+      errorEl.textContent = "Error: " + err.message;
+      errorEl.style.display = "block";
+      wrapper.innerHTML = "";
+    });
+}
+</script>
+{% endblock %}

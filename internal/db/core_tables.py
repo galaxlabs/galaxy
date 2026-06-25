@@ -117,6 +117,35 @@ def create_core_tables(engine: Engine) -> None:
         );
         """,
         """
+        CREATE TABLE IF NOT EXISTS "tabReport" (
+            name VARCHAR(255) PRIMARY KEY,
+            module VARCHAR(255),
+            ref_doctype VARCHAR(255) NOT NULL,
+            report_type VARCHAR(50) NOT NULL DEFAULT 'Query Report',
+            query TEXT,
+            script TEXT,
+            columns JSONB,
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabServer Script" (
+            name VARCHAR(255) PRIMARY KEY,
+            module VARCHAR(255),
+            ref_doctype VARCHAR(255) NOT NULL,
+            doctype_event VARCHAR(50) NOT NULL,
+            script_type VARCHAR(20) DEFAULT 'Python',
+            script TEXT,
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+        """
         CREATE TABLE IF NOT EXISTS "tabError Log" (
             name VARCHAR(255) PRIMARY KEY,
             error_type VARCHAR(255),
@@ -127,6 +156,7 @@ def create_core_tables(engine: Engine) -> None:
             method VARCHAR(10),
             user_name VARCHAR(255),
             status VARCHAR(50),
+            idx INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -149,6 +179,8 @@ def drop_core_tables(engine: Engine) -> None:
         "tabInstalled Module",
         "tabModule Def",
         "tabInstalled App",
+        "tabReport",
+        "tabServer Script",
         "tabError Log",
     ]
 

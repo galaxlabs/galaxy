@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — Galaxy Desk{% endblock %}
+{% block heading %}{{ title }}{% endblock %}
+{% block content %}
+
+<section class="detail-section">
+  <form id="scriptForm" onsubmit="return saveScript(event)">
+    <input type="hidden" name="name" value="{{ script.name if script else '' }}">
+
+    <table class="data-table" style="width:100%;">
+      <tbody>
+        <tr>
+          <th style="width:180px; text-align:left; padding:8px;">Name</th>
+          <td style="padding:8px;"><input type="text" name="name_input" value="{{ script.name if script else '' }}" required style="width:100%;" {{ 'readonly' if script else '' }}></td>
+        </tr>
+        <tr>
+          <th style="text-align:left; padding:8px;">Reference DocType</th>
+          <td style="padding:8px;">
+            <select name="ref_doctype" required style="width:100%;">
+              <option value="">— Select —</option>
+              {% for dt in doctypes %}
+              <option value="{{ dt.name }}" {{ 'selected' if script and script.ref_doctype == dt.name else '' }}>{{ dt.name }}</option>
+              {% endfor %}
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <th style="text-align:left; padding:8px;">Event</th>
+          <td style="padding:8px;">
+            <select name="doctype_event" required style="width:100%;">
+              <option value="">— Select —</option>
+              {% for ev in events %}
+              <option value="{{ ev }}" {{ 'selected' if script and script.doctype_event == ev else '' }}>{{ ev }}</option>
+              {% endfor %}
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <th style="text-align:left; padding:8px;">Script Type</th>
+          <td style="padding:8px;">
+            <select name="script_type" style="width:100%;">
+              <option value="Python" selected>Python</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <th style="text-align:left; padding:8px;">Enabled</th>
+          <td style="padding:8px;"><input type="checkbox" name="enabled" value="1" {{ 'checked' if script and script.enabled else '' }}></td>
+        </tr>
+        <tr>
+          <th style="text-align:left; padding:8px; vertical-align:top;">Script</th>
+          <td style="padding:8px;">
+            <textarea name="script" rows="15" style="width:100%; font-family:monospace; font-size:13px;" required>{{ script.script if script else '' }}</textarea>
+            <p class="muted" style="font-size:12px; margin-top:4px;">
+              Available variables: <code>doc</code>, <code>frappe.get_doc(doctype, name)</code>,
+              <code>frappe.db.sql(query, params)</code>, <code>frappe.log_error(msg)</code>
+            </p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="builder-actions" style="margin-top:16px;">
+      <button type="submit" class="btn btn-primary">Save Script</button>
+      <a href="/desk/scripts" class="back-link" style="margin-left:12px;">&larr; Cancel</a>
+    </div>
+  </form>
+</section>
+
+<script>
+function saveScript(event) {
+  event.preventDefault();
+  var form = document.getElementById("scriptForm");
+  var data = {
+    name: form.querySelector("[name=name_input]").value,
+    ref_doctype: form.querySelector("[name=ref_doctype]").value,
+    doctype_event: form.querySelector("[name=doctype_event]").value,
+    script_type: form.querySelector("[name=script_type]").value,
+    script: form.querySelector("[name=script]").value,
+    enabled: form.querySelector("[name=enabled]").checked ? true : false
+  };
+  fetch("/api/core/scripts", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(data)
+  })
+  .then(function(r) { return r.json().then(function(d) { return { status: r.status, body: d }; }); })
+  .then(function(res) {
+    if (res.status === 201 || res.body.success) {
+      alert("Script saved.");
+      window.location.href = "/desk/scripts";
+    } else {
+      alert("Error: " + (res.body.error || res.body.message || "Unknown error"));
+    }
+  })
+  .catch(function(err) { alert("Error: " + err.message); });
+  return false;
+}
+</script>
+{% endblock %}

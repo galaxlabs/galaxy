@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Server Scripts — Galaxy Desk{% endblock %}
+{% block heading %}Server Scripts{% endblock %}
+{% block content %}
+
+<section class="detail-section">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+    <h2 style="margin:0; padding:0; border:none;">All Server Scripts ({{ scripts | length }})</h2>
+    <a href="/desk/scripts/new" class="btn btn-primary">New Script</a>
+  </div>
+
+  {% if scripts %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>DocType</th>
+        <th>Event</th>
+        <th>Enabled</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in scripts %}
+      <tr>
+        <td><a href="/desk/scripts/{{ s.name | urlencode }}">{{ s.name }}</a></td>
+        <td>{{ s.ref_doctype }}</td>
+        <td><code>{{ s.doctype_event }}</code></td>
+        <td>{{ "Yes" if s.enabled else "No" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No server scripts defined.</p>
+  {% endif %}
+</section>
+
+{% endblock %}

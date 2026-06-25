@@ -91,6 +91,9 @@
     <p><span class="badge badge-applied">Applied</span></p>
     <p class="muted">{{ migration_preview.message }}</p>
     <p class="muted">No SQL needed.</p>
+    <div class="builder-actions">
+      <a href="/desk/resource/{{ doctype.name | urlencode }}" class="btn btn-primary">Open Records</a>
+    </div>
   {% else %}
     <p><span class="badge badge-pending">Pending</span></p>
     <p>Operation: <code>{{ migration_preview.plan.operation }}</code></p>

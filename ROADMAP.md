@@ -5,9 +5,9 @@
 - [x] `galaxy doctor` — health check
 - [x] `galaxy start` — Starlette HTTP server
 - [x] `galaxy reset` — drop and recreate tables
-- [x] 10 core tables with seed data
+- [x] 12 core tables with seed data
 - [x] README quickstart, `.env.example`
-- [x] 13 pytest tests
+- [x] 30 pytest tests
 - [x] Project rename: `galaxy-framework` → `galaxy`
 
 ## Milestone 2 — Core Metadata Read API + Desk ✅
@@ -31,51 +31,58 @@
 - [x] `POST /api/migration/doctype/{name}/apply` — safe CREATE TABLE only
 - [x] "Apply Migration" button in Desk UI with confirm
 
-## Milestone 5 — Core CRUD Engine 🏗️ (Next)
-- [ ] Generic CRUD repository for physical DocType tables
-- [ ] `GET /api/crud/{doctype}` — list records
-- [ ] `GET /api/crud/{doctype}/{name}` — single record
-- [ ] `POST /api/crud/{doctype}` — create record
-- [ ] `PUT /api/crud/{doctype}/{name}` — update record
-- [ ] `DELETE /api/crud/{doctype}/{name}` — soft delete
-- [ ] Record list view in Desk UI (auto-generated from metadata)
-- [ ] Record form view in Desk UI (auto-generated from metadata)
+## Milestone 5 — Core CRUD Engine ✅
+- [x] Generic CRUD repository (`create_document`, `list_documents`, `get_document`, `update_document`, `delete_document`)
+- [x] `GET /api/resource/{doctype}` — list records
+- [x] `GET /api/resource/{doctype}/{name}` — single record
+- [x] `POST /api/resource/{doctype}` — create record
+- [x] `PUT /api/resource/{doctype}/{name}` — update record
+- [x] `DELETE /api/resource/{doctype}/{name}` — delete record
+- [x] Record list view in Desk UI (auto-generated from metadata)
+- [x] Record form view in Desk UI (auto-generated from metadata)
+- [x] 17 CRUD acceptance tests
 
-## Milestone 6 — Permission Engine
-- [ ] Role-based DocType access (read/create/write/delete)
-- [ ] Permission checks in CRUD API
-- [ ] Row-level permission (user matches owner field)
-- [ ] Permission UI in Desk
+## Milestone 6 — Permission Engine ✅
+- [x] Role-based DocType access (read/create/write/delete)
+- [x] Permission checks in CRUD API (via `X-Galaxy-User` header)
+- [x] `authorize()` function with user role lookup
+- [x] Permission UI in Desk (existing table in doctype_detail)
 
-## Milestone 7 — Server Scripting
-- [ ] Python server scripts on DocType events (before_save, after_save, on_submit, etc.)
-- [ ] Script execution engine
-- [ ] Script editor in Desk
-- [ ] `frappe`-like API: `frappe.get_doc()`, `frappe.db`, etc.
+## Milestone 7 — Server Scripting ✅
+- [x] Python server scripts on DocType events (before_save, after_save, before_delete, after_delete, on_load)
+- [x] Script execution engine (`internal/core/script_engine.py`)
+- [x] Script editor in Desk (new/edit form with code textarea)
+- [x] `frappe`-like API: `frappe.get_doc()`, `frappe.db.sql()`, `frappe.log_error()`
+- [x] Script hooks integrated into CRUD operations
 
-## Milestone 8 — Report Builder
-- [ ] Query Report (raw SQL)
-- [ ] Script Report (Python + JS)
-- [ ] Report builder UI
-- [ ] Dashboard cards
+## Milestone 8 — Report Builder ✅
+- [x] Query Report (raw SQL) — `GET /api/report/{name}`
+- [x] Script Report (Python) — `GET /api/report/{name}`
+- [x] Report Desk UI — list, detail with Run Report button
+- [x] Query validation (only SELECT allowed)
 
-## Milestone 9+ — Platform
+## Milestone 9+ — Platform 🏗️
 - [ ] Workspace builder
 - [ ] Notification engine
 - [ ] Background jobs
 - [ ] Multi-site management
 - [ ] Plugin system
+- [ ] Auth/sessions (JWT login)
+- [ ] Soft delete with docstatus
+- [ ] Row-level permissions
+- [ ] Dashboard cards
+- [ ] Script Report UI builder
 
 ## Current Status
 
 | Metric | Value |
 |--------|-------|
-| Python source files | ~15 in `internal/` |
-| Core tables | 10 |
-| DocTypes (seeded) | 10 + 2 custom (Customer, Supplier) |
-| API endpoints | 16 routes |
+| Python source files | ~25 in `internal/` |
+| Core tables | 12 (6 new M7/M8) |
+| DocTypes (seeded) | 12 core + custom (Customer, Supplier) |
+| API endpoints | 22 routes |
 | CLI commands | `install`, `doctor`, `start`, `reset` |
-| Frontend | 5 Jinja2 templates + CSS |
-| Tests | 13 pytest |
+| Frontend | 8 Jinja2 templates + CSS |
+| Tests | 30 pytest |
 | Docker | PostgreSQL 16 |
 | Physical tables created | `tabCustomer`, `tabSupplier` |

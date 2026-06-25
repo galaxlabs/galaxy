@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Reports — Galaxy Desk{% endblock %}
+{% block heading %}Reports{% endblock %}
+{% block content %}
+
+<section class="detail-section">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+    <h2 style="margin:0; padding:0; border:none;">All Reports ({{ reports | length }})</h2>
+  </div>
+
+  {% if reports %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>DocType</th>
+        <th>Type</th>
+        <th>Enabled</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in reports %}
+      <tr>
+        <td><a href="/desk/reports/{{ r.name | urlencode }}">{{ r.name }}</a></td>
+        <td>{{ r.ref_doctype }}</td>
+        <td><code>{{ r.report_type }}</code></td>
+        <td>{{ "Yes" if r.enabled else "No" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No reports defined.</p>
+  {% endif %}
+</section>
+
+{% endblock %}

@@ -21,8 +21,16 @@ from internal.core.api import (
     handle_migration_apply,
     handle_migration_preview,
     handle_modules,
+    handle_resource_create,
+    handle_resource_delete,
+    handle_resource_get,
+    handle_resource_list,
+    handle_resource_update,
+    handle_run_report,
+    handle_save_script,
     handle_summary,
 )
+from internal.core.crud import list_documents
 from internal.core.migration_planner import plan_doctype_migration
 from internal.core.repository import (
     get_core_summary,
@@ -109,6 +117,159 @@ async def desk_doctype_detail(request):
     )
 
 
+async def desk_resource_list(request):
+    raw = request.path_params.get("doctype", "")
+    doctype_name = urllib.parse.unquote(raw)
+    doctype = get_doctype(doctype_name)
+    if doctype is None:
+        return JSONResponse({"error": "DocType not found"}, status_code=404)
+    if doctype.get("migration_status") != "applied":
+        return templates.TemplateResponse(
+            request,
+            "resource_list.html",
+            {"doctype": doctype, "columns": [], "records": [], "limit": 0, "total": 0},
+        )
+
+    try:
+        limit = int(request.query_params.get("limit", 20))
+    except Exception:
+        limit = 20
+    if limit < 1:
+        limit = 1
+    if limit > 100:
+        limit = 100
+
+    try:
+        offset = int(request.query_params.get("offset", 0))
+    except Exception:
+        offset = 0
+    if offset < 0:
+        offset = 0
+
+    all_fields = get_doctype_fields(doctype_name)
+    columns = [
+        {"fieldname": f["fieldname"], "label": f["label"] or f["fieldname"]}
+        for f in all_fields
+        if f.get("in_list_view") and not f.get("hidden") and f["fieldtype"] != "Table"
+    ]
+    columns.insert(0, {"fieldname": "name", "label": "Name"})
+
+    records = list_documents(doctype_name, limit=limit, offset=offset)
+    if isinstance(records, dict):
+        records = []
+
+    return templates.TemplateResponse(
+        request,
+        "resource_list.html",
+        {"doctype": doctype, "columns": columns, "records": records, "limit": limit, "total": len(records)},
+    )
+
+
+async def desk_reports(request):
+    from sqlalchemy import text
+
+    from internal.db.connection import get_engine
+    _, site = load_site_config()
+    engine = get_engine(site)
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text('SELECT name, ref_doctype, report_type, enabled FROM "tabReport" ORDER BY idx')
+        ).mappings().all()
+    reports = [dict(r) for r in rows]
+    return templates.TemplateResponse(request, "reports.html", {"reports": reports})
+
+
+async def desk_report_detail(request):
+    raw = request.path_params.get("name", "")
+    name = urllib.parse.unquote(raw)
+    from sqlalchemy import text
+
+    from internal.db.connection import get_engine
+    _, site = load_site_config()
+    engine = get_engine(site)
+    with engine.connect() as conn:
+        row = conn.execute(
+            text('SELECT name, ref_doctype, report_type, query, script, enabled FROM "tabReport" WHERE name = :name'),
+            {"name": name},
+        ).mappings().one_or_none()
+    if row is None:
+        return JSONResponse({"error": "Report not found"}, status_code=404)
+    report = dict(row)
+    return templates.TemplateResponse(request, "report_detail.html", {"report": report})
+
+
+async def desk_scripts(request):
+    from sqlalchemy import text
+
+    from internal.db.connection import get_engine
+    _, site = load_site_config()
+    engine = get_engine(site)
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text('SELECT name, ref_doctype, doctype_event, enabled FROM "tabServer Script" ORDER BY idx')
+        ).mappings().all()
+    scripts = [dict(r) for r in rows]
+    return templates.TemplateResponse(request, "server_scripts.html", {"scripts": scripts})
+
+
+async def desk_script_new(request):
+    doctypes = get_doctypes()
+    events = ["before_save", "after_save", "before_delete", "after_delete", "on_load"]
+    return templates.TemplateResponse(request, "server_script_form.html", {"title": "New Server Script", "script": None, "doctypes": doctypes, "events": events})
+
+
+async def desk_script_edit(request):
+    raw = request.path_params.get("name", "")
+    name = urllib.parse.unquote(raw)
+    from sqlalchemy import text
+
+    from internal.db.connection import get_engine
+    _, site = load_site_config()
+    engine = get_engine(site)
+    with engine.connect() as conn:
+        row = conn.execute(
+            text('SELECT name, ref_doctype, doctype_event, script_type, script, enabled FROM "tabServer Script" WHERE name = :name'),
+            {"name": name},
+        ).mappings().one_or_none()
+    if row is None:
+        return JSONResponse({"error": "Script not found"}, status_code=404)
+    script = dict(row)
+    doctypes = get_doctypes()
+    events = ["before_save", "after_save", "before_delete", "after_delete", "on_load"]
+    return templates.TemplateResponse(request, "server_script_form.html", {"title": f"Edit: {name}", "script": script, "doctypes": doctypes, "events": events})
+
+
+async def desk_resource_detail(request):
+    raw_dt = request.path_params.get("doctype", "")
+    raw_name = request.path_params.get("name", "")
+    doctype_name = urllib.parse.unquote(raw_dt)
+    name = urllib.parse.unquote(raw_name)
+
+    doctype = get_doctype(doctype_name)
+    if doctype is None:
+        return JSONResponse({"error": "DocType not found"}, status_code=404)
+
+    from internal.core.crud import get_document as crud_get_document
+
+    doc = crud_get_document(doctype_name, name)
+    if doc is None:
+        return JSONResponse({"error": "Record not found"}, status_code=404)
+
+    all_fields = get_doctype_fields(doctype_name)
+    columns = [
+        {"fieldname": f["fieldname"], "label": f["label"] or f["fieldname"]}
+        for f in all_fields
+        if f["fieldtype"] != "Table"
+    ]
+    columns.insert(0, {"fieldname": "name", "label": "Name"})
+
+    return templates.TemplateResponse(
+        request,
+        "resource_detail.html",
+        {"doctype": doctype, "record": doc, "columns": columns},
+    )
+
+
 routes = [
     Route("/", endpoint=homepage),
     Route("/health", endpoint=health),
@@ -126,10 +287,24 @@ routes = [
     Route("/api/builder/doctype/save", endpoint=handle_builder_save, methods=["POST"]),
     Route("/api/migration/doctype/{name}/preview", endpoint=handle_migration_preview),
     Route("/api/migration/doctype/{name}/apply", endpoint=handle_migration_apply, methods=["POST"]),
+    Route("/api/resource/{doctype}", endpoint=handle_resource_list),
+    Route("/api/resource/{doctype}", endpoint=handle_resource_create, methods=["POST"]),
+    Route("/api/resource/{doctype}/{name}", endpoint=handle_resource_get),
+    Route("/api/resource/{doctype}/{name}", endpoint=handle_resource_update, methods=["PUT"]),
+    Route("/api/resource/{doctype}/{name}", endpoint=handle_resource_delete, methods=["DELETE"]),
+    Route("/api/core/scripts", endpoint=handle_save_script, methods=["POST"]),
+    Route("/api/report/{name}", endpoint=handle_run_report),
     Route("/desk", endpoint=desk_dashboard),
     Route("/desk/builder/doctype/new", endpoint=desk_builder_new),
     Route("/desk/doctypes", endpoint=desk_doctypes),
     Route("/desk/doctypes/{name}", endpoint=desk_doctype_detail),
+    Route("/desk/reports", endpoint=desk_reports),
+    Route("/desk/reports/{name}", endpoint=desk_report_detail),
+    Route("/desk/scripts", endpoint=desk_scripts),
+    Route("/desk/scripts/new", endpoint=desk_script_new),
+    Route("/desk/scripts/{name}", endpoint=desk_script_edit),
+    Route("/desk/resource/{doctype}", endpoint=desk_resource_list),
+    Route("/desk/resource/{doctype}/{name}", endpoint=desk_resource_detail),
     Mount("/static", app=StaticFiles(directory=STATIC_DIR), name="static"),
 ]
 
