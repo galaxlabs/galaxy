@@ -3,7 +3,7 @@ import urllib.parse
 from sqlalchemy import text
 from starlette.responses import JSONResponse
 
-from galaxy.core.auth import create_session, delete_session, get_session, verify_password
+from galaxy.auth import create_session, delete_session, get_session, verify_password
 from galaxy.core.builder import build_doctype_json, validate_doctype_payload
 from galaxy.core.builder_repository import save_doctype_metadata
 from galaxy.core.crud import (

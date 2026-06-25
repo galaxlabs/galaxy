@@ -418,7 +418,7 @@ class RequireSessionMiddleware(BaseHTTPMiddleware):
         if not protected:
             return await call_next(request)
 
-        from galaxy.core.auth import require_session
+        from galaxy.auth import require_session
 
         user = require_session(request)
         if user is not None:
