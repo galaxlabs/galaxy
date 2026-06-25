@@ -1,9 +1,9 @@
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
+from apps.galaxy.galaxy.core.builder import build_doctype_json, validate_doctype_payload
 from apps.galaxy.galaxy.db.connection import get_engine
 from internal.config.site_config import load_site_config
-from internal.core.builder import build_doctype_json, validate_doctype_payload
 
 
 def _get_engine() -> Engine:

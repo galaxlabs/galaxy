@@ -1,8 +1,6 @@
 from sqlalchemy import text
 
-from apps.galaxy.galaxy.db.connection import get_engine
-from internal.config.site_config import load_site_config
-from internal.core.crud import (
+from apps.galaxy.galaxy.core.crud import (
     create_document,
     get_crud_fields,
     get_doctype_for_crud,
@@ -10,6 +8,8 @@ from internal.core.crud import (
     list_documents,
     validate_create_payload,
 )
+from apps.galaxy.galaxy.db.connection import get_engine
+from internal.config.site_config import load_site_config
 
 SUPPLIER = "Supplier"
 

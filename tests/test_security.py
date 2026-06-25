@@ -2,11 +2,9 @@ from unittest.mock import patch
 
 from sqlalchemy import text
 
-from apps.galaxy.galaxy.db.connection import get_engine
-from internal.config.site_config import load_site_config
-from internal.core.report_engine import _validate_query_safe, run_report
-from internal.core.script_engine import _check_dangerous_code, run_scripts
-from internal.core.security import (
+from apps.galaxy.galaxy.core.report_engine import _validate_query_safe, run_report
+from apps.galaxy.galaxy.core.script_engine import _check_dangerous_code, run_scripts
+from apps.galaxy.galaxy.core.security import (
     _login_attempts,
     check_login_rate_limit,
     clear_login_rate_limit,
@@ -15,6 +13,8 @@ from internal.core.security import (
     log_security_event,
     validate_csrf_token,
 )
+from apps.galaxy.galaxy.db.connection import get_engine
+from internal.config.site_config import load_site_config
 
 
 def _get_engine():
@@ -54,7 +54,7 @@ def clear_attempts():
     _login_attempts.clear()
 
 
-@patch("internal.core.security.get_security_settings")
+@patch("apps.galaxy.galaxy.core.security.get_security_settings")
 def test_rate_limit_allows_first_attempt(mock_sec):
     mock_sec.return_value = {
         "login_rate_limit_enabled": True,
@@ -67,7 +67,7 @@ def test_rate_limit_allows_first_attempt(mock_sec):
     assert msg == ""
 
 
-@patch("internal.core.security.get_security_settings")
+@patch("apps.galaxy.galaxy.core.security.get_security_settings")
 def test_rate_limit_blocks_after_max(mock_sec):
     mock_sec.return_value = {
         "login_rate_limit_enabled": True,
@@ -82,7 +82,7 @@ def test_rate_limit_blocks_after_max(mock_sec):
     assert "too many" in msg.lower()
 
 
-@patch("internal.core.security.get_security_settings")
+@patch("apps.galaxy.galaxy.core.security.get_security_settings")
 def test_rate_limit_per_ip(mock_sec):
     mock_sec.return_value = {
         "login_rate_limit_enabled": True,
@@ -98,7 +98,7 @@ def test_rate_limit_per_ip(mock_sec):
     assert ok_ip2 is True
 
 
-@patch("internal.core.security.get_security_settings")
+@patch("apps.galaxy.galaxy.core.security.get_security_settings")
 def test_rate_limit_per_user(mock_sec):
     mock_sec.return_value = {
         "login_rate_limit_enabled": True,
@@ -114,7 +114,7 @@ def test_rate_limit_per_user(mock_sec):
     assert ok_other is True
 
 
-@patch("internal.core.security.get_security_settings")
+@patch("apps.galaxy.galaxy.core.security.get_security_settings")
 def test_rate_limit_clear(mock_sec):
     mock_sec.return_value = {
         "login_rate_limit_enabled": True,
@@ -130,7 +130,7 @@ def test_rate_limit_clear(mock_sec):
     assert ok is True
 
 
-@patch("internal.core.security.get_security_settings")
+@patch("apps.galaxy.galaxy.core.security.get_security_settings")
 def test_rate_limit_disabled(mock_sec):
     mock_sec.return_value = {
         "login_rate_limit_enabled": False,
@@ -146,7 +146,7 @@ def test_rate_limit_disabled(mock_sec):
 # ── Secure Defaults Tests ─────────────────────────────────────────
 
 
-@patch("internal.core.security.load_common_config")
+@patch("apps.galaxy.galaxy.core.security.load_common_config")
 def test_security_settings_secure_defaults(mock_config):
     mock_config.return_value = {}
     sec = get_security_settings()
@@ -288,7 +288,7 @@ def test_security_settings_defaults():
     assert sec["developer_mode"] is True
 
 
-@patch("internal.core.report_engine.get_security_settings")
+@patch("apps.galaxy.galaxy.core.report_engine.get_security_settings")
 def test_script_report_blocked(mock_sec):
     mock_sec.return_value = {
         "developer_mode": True,
@@ -314,7 +314,7 @@ def test_script_report_blocked(mock_sec):
             conn.execute(text("""DELETE FROM "tabReport" WHERE name = 'test-sec-script-report'"""))
 
 
-@patch("internal.core.report_engine.get_security_settings")
+@patch("apps.galaxy.galaxy.core.report_engine.get_security_settings")
 def test_query_report_blocked(mock_sec):
     mock_sec.return_value = {
         "developer_mode": True,
@@ -340,7 +340,7 @@ def test_query_report_blocked(mock_sec):
             conn.execute(text("""DELETE FROM "tabReport" WHERE name = 'test-sec-query-report'"""))
 
 
-@patch("internal.core.security.get_security_settings")
+@patch("apps.galaxy.galaxy.core.security.get_security_settings")
 def test_server_scripts_blocked(mock_get_sec):
     mock_get_sec.return_value = {
         "developer_mode": True,
@@ -352,7 +352,7 @@ def test_server_scripts_blocked(mock_get_sec):
     assert errors == []
 
 
-@patch("internal.core.report_engine.get_security_settings")
+@patch("apps.galaxy.galaxy.core.report_engine.get_security_settings")
 def test_query_report_allowed_by_default(mock_sec):
     mock_sec.return_value = {
         "developer_mode": True,

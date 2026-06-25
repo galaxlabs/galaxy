@@ -9,8 +9,7 @@ from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
-from internal.config.site_config import load_site_config
-from internal.core.api import (
+from apps.galaxy.galaxy.core.api import (
     handle_auth_me,
     handle_builder_preview,
     handle_builder_save,
@@ -35,7 +34,7 @@ from internal.core.api import (
     handle_summary,
     require_auth,
 )
-from internal.core.bench_api import (
+from apps.galaxy.galaxy.core.bench_api import (
     handle_bench_backup,
     handle_bench_create_site,
     handle_bench_install_app,
@@ -47,16 +46,16 @@ from internal.core.bench_api import (
     handle_bench_sites,
     handle_bench_uninstall_app,
 )
-from internal.core.crud import list_documents
-from internal.core.migration_planner import plan_doctype_migration
-from internal.core.repository import (
+from apps.galaxy.galaxy.core.crud import list_documents
+from apps.galaxy.galaxy.core.migration_planner import plan_doctype_migration
+from apps.galaxy.galaxy.core.repository import (
     get_core_summary,
     get_doctype,
     get_doctype_fields,
     get_doctype_permissions,
     get_doctypes,
 )
-from internal.core.tenant import (
+from apps.galaxy.galaxy.core.tenant import (
     current_tenant,
     get_tenant_id,
     handle_tenant_create,
@@ -65,6 +64,7 @@ from internal.core.tenant import (
     handle_tenant_list,
     handle_tenant_update,
 )
+from internal.config.site_config import load_site_config
 
 TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
@@ -326,7 +326,7 @@ async def desk_resource_detail(request):
     if doctype is None:
         return JSONResponse({"error": "DocType not found"}, status_code=404)
 
-    from internal.core.crud import get_document as crud_get_document
+    from apps.galaxy.galaxy.core.crud import get_document as crud_get_document
 
     doc = crud_get_document(doctype_name, name)
     if doc is None:
@@ -422,7 +422,7 @@ class RequireSessionMiddleware(BaseHTTPMiddleware):
         if not protected:
             return await call_next(request)
 
-        from internal.core.auth import require_session
+        from apps.galaxy.galaxy.core.auth import require_session
 
         user = require_session(request)
         if user is not None:

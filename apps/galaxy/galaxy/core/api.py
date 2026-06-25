@@ -3,17 +3,21 @@ import urllib.parse
 from sqlalchemy import text
 from starlette.responses import JSONResponse
 
-from apps.galaxy.galaxy.db.connection import get_engine
-from internal.config.site_config import load_site_config
-from internal.core.auth import create_session, delete_session, get_session, verify_password
-from internal.core.builder import build_doctype_json, validate_doctype_payload
-from internal.core.builder_repository import save_doctype_metadata
-from internal.core.crud import create_document, delete_document, get_document, list_documents, update_document
-from internal.core.migration_applier import apply_doctype_migration
-from internal.core.migration_planner import plan_doctype_migration
-from internal.core.permissions import authorize
-from internal.core.report_engine import run_report
-from internal.core.repository import (
+from apps.galaxy.galaxy.core.auth import create_session, delete_session, get_session, verify_password
+from apps.galaxy.galaxy.core.builder import build_doctype_json, validate_doctype_payload
+from apps.galaxy.galaxy.core.builder_repository import save_doctype_metadata
+from apps.galaxy.galaxy.core.crud import (
+    create_document,
+    delete_document,
+    get_document,
+    list_documents,
+    update_document,
+)
+from apps.galaxy.galaxy.core.migration_applier import apply_doctype_migration
+from apps.galaxy.galaxy.core.migration_planner import plan_doctype_migration
+from apps.galaxy.galaxy.core.permissions import authorize
+from apps.galaxy.galaxy.core.report_engine import run_report
+from apps.galaxy.galaxy.core.repository import (
     get_core_summary,
     get_doctype,
     get_doctype_fields,
@@ -23,7 +27,7 @@ from internal.core.repository import (
     get_installed_modules,
     get_modules,
 )
-from internal.core.security import (
+from apps.galaxy.galaxy.core.security import (
     check_login_rate_limit,
     clear_login_rate_limit,
     generate_csrf_token,
@@ -31,6 +35,8 @@ from internal.core.security import (
     log_security_event,
     validate_csrf_token,
 )
+from apps.galaxy.galaxy.db.connection import get_engine
+from internal.config.site_config import load_site_config
 
 
 async def handle_installed_apps(request):

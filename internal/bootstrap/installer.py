@@ -105,7 +105,7 @@ def run_doctor():
 
     print()
     print("Security settings:")
-    from internal.core.security import get_security_settings
+    from apps.galaxy.galaxy.core.security import get_security_settings
     sec = get_security_settings()
     for key, val in sec.items():
         print(f"  {key}: {val}")

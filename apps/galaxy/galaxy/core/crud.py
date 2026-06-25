@@ -5,12 +5,12 @@ from datetime import UTC, datetime
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
+from apps.galaxy.galaxy.core.repository import get_doctype, get_doctype_fields
+from apps.galaxy.galaxy.core.script_engine import run_scripts
+from apps.galaxy.galaxy.core.tenant import current_tenant
 from apps.galaxy.galaxy.db.connection import get_engine
 from apps.galaxy.galaxy.db.core_tables import TENANT_TABLES
 from internal.config.site_config import load_site_config
-from internal.core.repository import get_doctype, get_doctype_fields
-from internal.core.script_engine import run_scripts
-from internal.core.tenant import current_tenant
 
 
 def _get_engine() -> Engine:

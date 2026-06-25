@@ -79,7 +79,7 @@ class FrappeAPI:
         self._engine = engine
 
     def get_doc(self, doctype: str, name: str) -> dict | None:
-        from internal.core.crud import get_document as _get_doc
+        from apps.galaxy.galaxy.core.crud import get_document as _get_doc
         return _get_doc(doctype, name)
 
     def log_error(self, message: str):
@@ -115,7 +115,7 @@ def get_scripts_for_event(doctype_name: str, event: str) -> list[dict]:
 def run_scripts(doctype_name: str, event: str, doc: dict) -> list[str]:
     errors: list[str] = []
 
-    from internal.core.security import get_security_settings, log_security_event
+    from apps.galaxy.galaxy.core.security import get_security_settings, log_security_event
 
     sec = get_security_settings()
     if not sec["allow_server_scripts"]:

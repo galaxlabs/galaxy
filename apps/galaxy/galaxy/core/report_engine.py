@@ -3,9 +3,9 @@ import traceback
 
 from sqlalchemy import text
 
+from apps.galaxy.galaxy.core.security import get_security_settings, log_security_event
 from apps.galaxy.galaxy.db.connection import get_engine
 from internal.config.site_config import load_site_config
-from internal.core.security import get_security_settings, log_security_event
 
 
 def _get_engine():
@@ -97,7 +97,7 @@ def run_script_report(report: dict) -> dict:
 
     engine = _get_engine()
     globals_dict = {"engine": engine, "frappe_db": None}
-    from internal.core.script_engine import FrappeDB
+    from apps.galaxy.galaxy.core.script_engine import FrappeDB
 
     globals_dict["frappe_db"] = FrappeDB(engine)
 
