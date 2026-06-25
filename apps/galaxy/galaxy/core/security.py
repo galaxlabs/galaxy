@@ -6,8 +6,8 @@ from datetime import UTC, datetime
 
 from sqlalchemy import text
 
+from galaxy.config import load_common_config
 from galaxy.db.connection import get_engine
-from internal.config.site_config import load_common_config
 
 
 def get_security_settings() -> dict:
@@ -83,7 +83,7 @@ def clear_login_rate_limit(ip: str, username: str):
 
 def log_security_event(event: str, user: str | None, message: str, source: str, ip_address: str | None = None):
     try:
-        from internal.config.site_config import load_site_config
+        from galaxy.config import load_site_config
 
         _, site = load_site_config()
         engine = get_engine(site)

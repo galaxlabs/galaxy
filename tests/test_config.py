@@ -2,8 +2,7 @@ import json
 from unittest.mock import patch
 
 import pytest
-
-from internal.config.site_config import load_common_config, load_site_config
+from galaxy.config import load_common_config, load_site_config
 
 COMMON_CONFIG = {
     "default_site": "test.local",
@@ -42,14 +41,14 @@ def temp_sites(tmp_path):
 
 
 def test_load_common_config(temp_sites):
-    with patch("internal.config.site_config._get_sites_dir", return_value=str(temp_sites)):
+    with patch("galaxy.config._get_sites_dir", return_value=str(temp_sites)):
         config = load_common_config()
         assert config["default_site"] == "test.local"
         assert config["server_port"] == 8080
 
 
 def test_load_site_config(temp_sites):
-    with patch("internal.config.site_config._get_sites_dir", return_value=str(temp_sites)):
+    with patch("galaxy.config._get_sites_dir", return_value=str(temp_sites)):
         common, site = load_site_config("test.local")
         assert common["default_site"] == "test.local"
         assert site["db_name"] == "galaxy_test"
@@ -58,19 +57,19 @@ def test_load_site_config(temp_sites):
 
 
 def test_load_site_config_default_site(temp_sites):
-    with patch("internal.config.site_config._get_sites_dir", return_value=str(temp_sites)):
+    with patch("galaxy.config._get_sites_dir", return_value=str(temp_sites)):
         _, site = load_site_config()
         assert site["site_name"] == "test.local"
 
 
 def test_common_config_missing(temp_sites):
     nonexistent = temp_sites.parent / "no_config"
-    with patch("internal.config.site_config._get_sites_dir", return_value=str(nonexistent)):
+    with patch("galaxy.config._get_sites_dir", return_value=str(nonexistent)):
         with pytest.raises(FileNotFoundError):
             load_common_config()
 
 
 def test_site_config_missing(temp_sites):
-    with patch("internal.config.site_config._get_sites_dir", return_value=str(temp_sites)):
+    with patch("galaxy.config._get_sites_dir", return_value=str(temp_sites)):
         with pytest.raises(FileNotFoundError):
             load_site_config("nonexistent.local")

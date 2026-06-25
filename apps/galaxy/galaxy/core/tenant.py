@@ -9,7 +9,7 @@ current_tenant: contextvars.ContextVar[str] = contextvars.ContextVar("current_te
 
 
 def _get_engine():
-    from internal.config.site_config import load_site_config
+    from galaxy.config import load_site_config
     _, site = load_site_config()
     return get_engine(site)
 
@@ -179,6 +179,6 @@ async def handle_tenant_delete(request):
 
 
 def get_tenant_engine(tenant_id: str | None = None):
-    from internal.config.site_config import load_site_config
+    from galaxy.config import load_site_config
     _, site = load_site_config()
     return get_engine(site)

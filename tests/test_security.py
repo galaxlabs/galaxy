@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
-from sqlalchemy import text
-
+from galaxy.config import load_site_config
 from galaxy.core.report_engine import _validate_query_safe, run_report
 from galaxy.core.script_engine import _check_dangerous_code, run_scripts
 from galaxy.core.security import (
@@ -14,7 +13,7 @@ from galaxy.core.security import (
     validate_csrf_token,
 )
 from galaxy.db.connection import get_engine
-from internal.config.site_config import load_site_config
+from sqlalchemy import text
 
 
 def _get_engine():

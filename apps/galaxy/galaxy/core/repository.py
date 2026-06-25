@@ -1,8 +1,8 @@
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
+from galaxy.config import load_site_config
 from galaxy.db.connection import get_engine
-from internal.config.site_config import load_site_config
 
 
 def _get_engine() -> Engine:

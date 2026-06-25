@@ -4,6 +4,7 @@ from sqlalchemy import text
 from starlette.responses import JSONResponse
 
 from galaxy.auth import create_session, delete_session, get_session, verify_password
+from galaxy.config import load_site_config
 from galaxy.core.builder import build_doctype_json, validate_doctype_payload
 from galaxy.core.builder_repository import save_doctype_metadata
 from galaxy.core.crud import (
@@ -36,7 +37,6 @@ from galaxy.core.security import (
 )
 from galaxy.db.connection import get_engine
 from galaxy.permissions import authorize
-from internal.config.site_config import load_site_config
 
 
 async def handle_installed_apps(request):

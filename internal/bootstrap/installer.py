@@ -1,3 +1,4 @@
+from galaxy.config import load_site_config
 from galaxy.db.connection import get_engine, test_connection
 from galaxy.db.core_tables import create_core_tables
 from galaxy.db.seed import (
@@ -10,7 +11,6 @@ from galaxy.db.seed import (
     seed_roles,
     seed_tenant,
 )
-from internal.config.site_config import load_site_config
 
 
 def run_install(site_name: str | None = None):

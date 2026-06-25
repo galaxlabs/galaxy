@@ -2,6 +2,7 @@ import os
 import urllib.parse
 
 import uvicorn
+from galaxy.config import load_site_config
 from galaxy.core.api import (
     handle_auth_me,
     handle_builder_preview,
@@ -63,8 +64,6 @@ from starlette.responses import JSONResponse, RedirectResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
-
-from internal.config.site_config import load_site_config
 
 TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")

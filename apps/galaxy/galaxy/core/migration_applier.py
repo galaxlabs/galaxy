@@ -1,10 +1,10 @@
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
+from galaxy.config import load_site_config
 from galaxy.core.migration_planner import plan_doctype_migration
 from galaxy.core.repository import table_exists
 from galaxy.db.connection import get_engine
-from internal.config.site_config import load_site_config
 
 
 def _get_engine() -> Engine:

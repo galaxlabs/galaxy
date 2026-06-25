@@ -1,5 +1,4 @@
-from sqlalchemy import text
-
+from galaxy.config import load_site_config
 from galaxy.core.crud import (
     create_document,
     get_crud_fields,
@@ -9,7 +8,7 @@ from galaxy.core.crud import (
     validate_create_payload,
 )
 from galaxy.db.connection import get_engine
-from internal.config.site_config import load_site_config
+from sqlalchemy import text
 
 SUPPLIER = "Supplier"
 

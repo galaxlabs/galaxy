@@ -1,4 +1,5 @@
-from internal.config.site_config import load_common_config
+from galaxy.config import load_common_config
+
 from internal.http.server import run_server
 
 
