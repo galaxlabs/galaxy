@@ -1,7 +1,7 @@
 from sqlalchemy import text
 from starlette.testclient import TestClient
 
-from apps.galaxy.galaxy.core.auth import create_session, delete_session, get_session, verify_password
+from galaxy.core.auth import create_session, delete_session, get_session, verify_password
 from galaxy.db.connection import get_engine
 from internal.config.site_config import load_site_config
 from internal.http.server import app
@@ -249,63 +249,63 @@ def test_login_session_works_for_report():
 
 
 def test_authorize_no_user_returns_false():
-    from apps.galaxy.galaxy.core.permissions import authorize
+    from galaxy.core.permissions import authorize
     ok, msg = authorize("Supplier", None, "read")
     assert ok is False
     assert msg == "Authentication required."
 
 
 def test_authorize_empty_user_returns_false():
-    from apps.galaxy.galaxy.core.permissions import authorize
+    from galaxy.core.permissions import authorize
     ok, msg = authorize("Supplier", "", "read")
     assert ok is False
     assert msg == "Authentication required."
 
 
 def test_authorize_administrator_can_read_any_doctype():
-    from apps.galaxy.galaxy.core.permissions import authorize
+    from galaxy.core.permissions import authorize
     ok, msg = authorize("NonExistentDocType", "Administrator", "read")
     assert ok is True
     assert msg == ""
 
 
 def test_authorize_administrator_can_create():
-    from apps.galaxy.galaxy.core.permissions import authorize
+    from galaxy.core.permissions import authorize
     ok, _ = authorize("Supplier", "Administrator", "create")
     assert ok is True
 
 
 def test_authorize_administrator_can_write():
-    from apps.galaxy.galaxy.core.permissions import authorize
+    from galaxy.core.permissions import authorize
     ok, _ = authorize("Supplier", "Administrator", "write")
     assert ok is True
 
 
 def test_authorize_administrator_can_delete():
-    from apps.galaxy.galaxy.core.permissions import authorize
+    from galaxy.core.permissions import authorize
     ok, _ = authorize("Supplier", "Administrator", "delete")
     assert ok is True
 
 
 def test_get_user_roles_administrator():
-    from apps.galaxy.galaxy.core.permissions import get_user_roles
+    from galaxy.core.permissions import get_user_roles
     roles = get_user_roles("Administrator")
     assert "System Manager" in roles
 
 
 def test_get_user_roles_unknown():
-    from apps.galaxy.galaxy.core.permissions import get_user_roles
+    from galaxy.core.permissions import get_user_roles
     roles = get_user_roles("NonExistentUser")
     assert roles == []
 
 
 def test_user_has_role_administrator():
-    from apps.galaxy.galaxy.core.permissions import user_has_role
+    from galaxy.core.permissions import user_has_role
     assert user_has_role("Administrator", "System Manager") is True
 
 
 def test_user_has_role_unknown():
-    from apps.galaxy.galaxy.core.permissions import user_has_role
+    from galaxy.core.permissions import user_has_role
     assert user_has_role("NonExistentUser", "System Manager") is False
 
 

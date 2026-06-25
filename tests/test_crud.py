@@ -1,6 +1,6 @@
 from sqlalchemy import text
 
-from apps.galaxy.galaxy.core.crud import (
+from galaxy.core.crud import (
     create_document,
     get_crud_fields,
     get_doctype_for_crud,
