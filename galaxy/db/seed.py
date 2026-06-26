@@ -702,8 +702,21 @@ def seed_phase4_doctypes(engine: Engine) -> None:
         ("DataMaskRule", "Core", "core", "tabDataMaskRule", False, False, False, False, 20),
         ("PermissionRule", "Core", "core", "tabPermissionRule", False, False, False, False, 21),
     ]
+
+
+PHASE5_DOCTYPES = [
+    "DisplayLogic",
+    "DynamicFieldSource",
+]
+
+
+def seed_phase5_doctypes(engine: Engine) -> None:
+    phase5 = [
+        ("DisplayLogic", "Core", "core", "tabDisplayLogic", False, False, False, False, 22),
+        ("DynamicFieldSource", "Core", "core", "tabDynamicFieldSource", False, False, False, False, 23),
+    ]
     with engine.begin() as conn:
-        for dt in phase4:
+        for dt in phase5:
             result = conn.execute(
                 text("""SELECT COUNT(*) FROM "tabDocType" WHERE name = :name"""),
                 {"name": dt[0]},
@@ -729,7 +742,96 @@ def seed_phase4_doctypes(engine: Engine) -> None:
                 )
 
     with engine.begin() as conn:
-        for parent in PHASE4_DOCTYPES:
+        for parent in PHASE5_DOCTYPES:
+            perm_name = f"{parent}-System Manager"
+            result = conn.execute(
+                text("""SELECT COUNT(*) FROM "tabDocPerm" WHERE name = :name"""),
+                {"name": perm_name},
+            )
+            if result.scalar() == 0:
+                conn.execute(
+                    text("""
+                        INSERT INTO "tabDocPerm"
+                        (name, parent, role, permlevel, "read", "write", "create", "delete", idx)
+                        VALUES (:name, :parent, :role, :permlevel, :read, :write, :create, :delete, :idx)
+                    """),
+                    {
+                        "name": perm_name,
+                        "parent": parent,
+                        "role": "System Manager",
+                        "permlevel": 0,
+                        "read": True,
+                        "write": True,
+                        "create": True,
+                        "delete": True,
+                        "idx": 0,
+                    },
+                )
+
+
+PHASE5_DOCFIELDS = {
+    "DisplayLogic": [
+        ("name", "Name", "Data", None, True, False, False, True, 0),
+        ("parent", "Parent", "Data", None, True, False, False, True, 1),
+        ("field_name", "Field Name", "Data", None, True, False, False, True, 2),
+        ("depends_on_field", "Depends On Field", "Data", None, False, False, False, False, 3),
+        ("operator", "Operator", "Select", "=\n!=\nin\nnot in\n>\n<\n>=\n<=\nis_set\nis_not_set", True, False, False, True, 4),
+        ("value", "Value", "Text", None, False, False, False, False, 5),
+        ("action", "Action", "Select", "show\nhide\nrequire\nreadonly\nfilter_options\nset_default", True, False, False, True, 6),
+        ("condition_group", "Condition Group", "Data", None, False, False, False, False, 7),
+        ("priority", "Priority", "Int", None, False, False, False, False, 8),
+        ("enabled", "Enabled", "Check", None, False, False, False, True, 9),
+        ("idx", "Idx", "Int", None, False, False, False, False, 10),
+    ],
+    "DynamicFieldSource": [
+        ("name", "Name", "Data", None, True, False, False, True, 0),
+        ("parent", "Parent", "Data", None, True, False, False, True, 1),
+        ("field_name", "Field Name", "Data", None, True, False, False, True, 2),
+        ("source_type", "Source Type", "Select", "static\nquery\napi\nscript\nintegration\ndocument\nuser_context", True, False, False, True, 3),
+        ("source_handler", "Source Handler", "Code", None, False, False, False, False, 4),
+        ("filters", "Filters", "JSON", None, False, False, False, False, 5),
+        ("depends_on", "Depends On", "JSON", None, False, False, False, False, 6),
+        ("cache_ttl", "Cache TTL", "Int", None, False, False, False, False, 7),
+        ("permission_required", "Permission Required", "Data", None, False, False, False, False, 8),
+        ("enabled", "Enabled", "Check", None, False, False, False, True, 9),
+        ("idx", "Idx", "Int", None, False, False, False, False, 10),
+    ],
+}
+
+
+def seed_phase5_docfields(engine: Engine) -> None:
+    with engine.begin() as conn:
+        for parent, fields in PHASE5_DOCFIELDS.items():
+            for (fieldname, label, fieldtype, options, reqd, hidden, read_only, in_list_view, idx) in fields:
+                docfield_name = f"{parent}.{fieldname}"
+                result = conn.execute(
+                    text("""SELECT COUNT(*) FROM "tabDocField" WHERE name = :name"""),
+                    {"name": docfield_name},
+                )
+                if result.scalar() == 0:
+                    conn.execute(
+                        text("""
+                            INSERT INTO "tabDocField"
+                            (name, parent, fieldname, label, fieldtype, options, reqd, hidden, read_only, in_list_view, idx)
+                            VALUES (:name, :parent, :fieldname, :label, :fieldtype, :options, :reqd, :hidden, :read_only, :in_list_view, :idx)
+                        """),
+                        {
+                            "name": docfield_name,
+                            "parent": parent,
+                            "fieldname": fieldname,
+                            "label": label,
+                            "fieldtype": fieldtype,
+                            "options": options,
+                            "reqd": reqd,
+                            "hidden": hidden,
+                            "read_only": read_only,
+                            "in_list_view": in_list_view,
+                            "idx": idx,
+                        },
+                    )
+
+    with engine.begin() as conn:
+        for parent in PHASE5_DOCTYPES:
             perm_name = f"{parent}-System Manager"
             result = conn.execute(
                 text("""SELECT COUNT(*) FROM "tabDocPerm" WHERE name = :name"""),

@@ -14,6 +14,8 @@ from galaxy.db.seed import (
     seed_phase3_doctypes,
     seed_phase4_docfields,
     seed_phase4_doctypes,
+    seed_phase5_docfields,
+    seed_phase5_doctypes,
     seed_portal_docfields,
     seed_portal_doctypes,
     seed_portal_module,
@@ -126,6 +128,16 @@ def run_install(site_name: str | None = None):
     print("Portal DocField metadata seed: OK")
     print()
 
+    print("Seeding Phase 5 DocType metadata records...")
+    seed_phase5_doctypes(engine)
+    print("Phase 5 DocType metadata seed: OK")
+    print()
+
+    print("Seeding Phase 5 DocField records...")
+    seed_phase5_docfields(engine)
+    print("Phase 5 DocField metadata seed: OK")
+    print()
+
     print("Seeding Portal roles...")
     seed_portal_roles(engine)
     print("Portal roles seed: OK")
@@ -202,6 +214,8 @@ def run_doctor():
     field_perms = count_table("tabFieldPermission")
     data_masks = count_table("tabDataMaskRule")
     permission_rules = count_table("tabPermissionRule")
+    display_logic = count_table("tabDisplayLogic")
+    dynamic_sources = count_table("tabDynamicFieldSource")
     portal_users = count_table("tabPortalUser")
     portal_roles = count_table("tabPortalRole")
     portal_perms = count_table("tabPortalPermission")
@@ -224,6 +238,8 @@ def run_doctor():
     print(f"FieldPermissions: {field_perms}")
     print(f"DataMaskRules: {data_masks}")
     print(f"PermissionRules: {permission_rules}")
+    print(f"DisplayLogic: {display_logic}")
+    print(f"DynamicFieldSources: {dynamic_sources}")
     print(f"PortalUsers: {portal_users}")
     print(f"PortalRoles: {portal_roles}")
     print(f"PortalPermissions: {portal_perms}")

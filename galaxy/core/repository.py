@@ -230,6 +230,32 @@ def get_permission_rules(doctype_name: str) -> list[dict]:
     return [dict(r) for r in rows]
 
 
+def get_display_logic(doctype_name: str) -> list[dict]:
+    with _get_engine().connect() as conn:
+        rows = conn.execute(
+            text("""
+                SELECT name, parent, field_name, depends_on_field, operator, "value",
+                       action, condition_group, priority, enabled, idx
+                FROM "tabDisplayLogic" WHERE parent = :name AND enabled = TRUE ORDER BY idx
+            """),
+            {"name": doctype_name},
+        ).mappings().all()
+    return [dict(r) for r in rows]
+
+
+def get_dynamic_sources(doctype_name: str) -> list[dict]:
+    with _get_engine().connect() as conn:
+        rows = conn.execute(
+            text("""
+                SELECT name, parent, field_name, source_type, source_handler,
+                       filters, depends_on, cache_ttl, permission_required, enabled, idx
+                FROM "tabDynamicFieldSource" WHERE parent = :name AND enabled = TRUE ORDER BY idx
+            """),
+            {"name": doctype_name},
+        ).mappings().all()
+    return [dict(r) for r in rows]
+
+
 def clear_meta_cache(doctype_name: str | None = None) -> None:
     from galaxy.core.doctype.meta_cache import meta_cache
     if doctype_name:
@@ -261,6 +287,8 @@ def get_runtime_meta(doctype_name: str) -> RuntimeMeta | None:
     field_permissions = get_field_permissions(doctype_name)
     data_mask_rules = get_data_mask_rules(doctype_name)
     permission_rules = get_permission_rules(doctype_name)
+    display_logic = get_display_logic(doctype_name)
+    dynamic_sources = get_dynamic_sources(doctype_name)
 
     meta = merge_meta(
         doctype, base_fields, permissions,
@@ -273,6 +301,8 @@ def get_runtime_meta(doctype_name: str) -> RuntimeMeta | None:
         field_permissions=field_permissions,
         data_mask_rules=data_mask_rules,
         permission_rules=permission_rules,
+        display_logic=display_logic,
+        dynamic_sources=dynamic_sources,
     )
     if meta is not None:
         meta_cache.set(doctype_name, meta)

@@ -346,6 +346,43 @@ def create_core_tables(engine: Engine) -> None:
         """,
     ]
 
+    phase5_statements = [
+        """
+        CREATE TABLE IF NOT EXISTS "tabDisplayLogic" (
+            name VARCHAR(255) PRIMARY KEY,
+            parent VARCHAR(255) NOT NULL,
+            field_name VARCHAR(255) NOT NULL,
+            depends_on_field VARCHAR(255),
+            operator VARCHAR(50) NOT NULL DEFAULT '=',
+            "value" TEXT,
+            action VARCHAR(50) NOT NULL DEFAULT 'show',
+            condition_group VARCHAR(255),
+            priority INTEGER DEFAULT 0,
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabDynamicFieldSource" (
+            name VARCHAR(255) PRIMARY KEY,
+            parent VARCHAR(255) NOT NULL,
+            field_name VARCHAR(255) NOT NULL,
+            source_type VARCHAR(50) NOT NULL DEFAULT 'static',
+            source_handler TEXT,
+            filters JSON,
+            depends_on JSON,
+            cache_ttl INTEGER DEFAULT 0,
+            permission_required VARCHAR(255),
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+    ]
+
     phase4_statements = [
         """
         CREATE TABLE IF NOT EXISTS "tabFieldPermission" (
@@ -467,6 +504,8 @@ def create_core_tables(engine: Engine) -> None:
             conn.execute(text(stmt))
         for stmt in phase4_statements:
             conn.execute(text(stmt))
+        for stmt in phase5_statements:
+            conn.execute(text(stmt))
         for stmt in portal_statements:
             conn.execute(text(stmt))
         for stmt in alter_statements:
@@ -498,6 +537,8 @@ def drop_core_tables(engine: Engine) -> None:
         "tabFieldPermission",
         "tabDataMaskRule",
         "tabPermissionRule",
+        "tabDisplayLogic",
+        "tabDynamicFieldSource",
         "tabPortalSession",
         "tabPortalPermission",
         "tabPortalRole",

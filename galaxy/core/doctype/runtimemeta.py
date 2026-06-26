@@ -21,6 +21,9 @@ class RuntimeMeta:
     data_mask_rules: list[dict[str, Any]] = field(default_factory=list)
     data_mask_map: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
     permission_rules: list[dict[str, Any]] = field(default_factory=list)
+    display_logic: list[dict[str, Any]] = field(default_factory=list)
+    display_logic_map: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    dynamic_sources: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
 
     def get_field(self, fieldname: str) -> dict[str, Any] | None:
         return self.field_map.get(fieldname)
@@ -149,6 +152,8 @@ def merge_meta(
     field_permissions: list[dict[str, Any]] | None = None,
     data_mask_rules: list[dict[str, Any]] | None = None,
     permission_rules: list[dict[str, Any]] | None = None,
+    display_logic: list[dict[str, Any]] | None = None,
+    dynamic_sources: list[dict[str, Any]] | None = None,
 ) -> RuntimeMeta | None:
     if doctype is None:
         return None
@@ -188,6 +193,14 @@ def merge_meta(
     fp_list = [dict(p) for p in (field_permissions or [])]
     dm_list = [dict(r) for r in (data_mask_rules or [])]
     pr_list = [dict(r) for r in (permission_rules or [])]
+    dl_list = [dict(d) for d in (display_logic or [])]
+    ds_list = [dict(s) for s in (dynamic_sources or [])]
+
+    ds_map: dict[str, list[dict]] = {}
+    for s in ds_list:
+        fname = s.get("field_name", "")
+        if fname:
+            ds_map.setdefault(fname, []).append(s)
 
     return RuntimeMeta(
         doctype=merged_doctype,
@@ -207,4 +220,7 @@ def merge_meta(
         data_mask_rules=dm_list,
         data_mask_map=_build_field_index_map(dm_list),
         permission_rules=pr_list,
+        display_logic=dl_list,
+        display_logic_map=_build_field_index_map(dl_list),
+        dynamic_sources=ds_map,
     )
