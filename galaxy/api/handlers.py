@@ -1,7 +1,7 @@
 import urllib.parse
 
 from sqlalchemy import text
-from starlette.responses import JSONResponse
+from starlette.responses import HTMLResponse, JSONResponse
 
 from galaxy.auth import create_session, delete_session, get_session, verify_password
 from galaxy.config import load_site_config
@@ -668,6 +668,49 @@ async def handle_resource_export(request):
         content=content,
         media_type=content_type,
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+async def handle_print_html(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
+    raw_dt = request.path_params.get("doctype", "")
+    raw_name = request.path_params.get("name", "")
+    doctype = urllib.parse.unquote(raw_dt)
+    name = urllib.parse.unquote(raw_name)
+    fmt = request.query_params.get("format", "Standard")
+    lh = request.query_params.get("letterhead", None)
+    from galaxy.model.print_engine import render_print_html
+    try:
+        html = render_print_html(doctype, name, format_name=fmt, letterhead=lh)
+    except ValueError as e:
+        return _err(404, str(e))
+    except RuntimeError as e:
+        return _err(400, str(e))
+    return HTMLResponse(html)
+
+
+async def handle_print_pdf(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
+    raw_dt = request.path_params.get("doctype", "")
+    raw_name = request.path_params.get("name", "")
+    doctype = urllib.parse.unquote(raw_dt)
+    name = urllib.parse.unquote(raw_name)
+    fmt = request.query_params.get("format", "Standard")
+    lh = request.query_params.get("letterhead", None)
+    from galaxy.model.print_engine import render_print_pdf
+    from starlette.responses import Response
+    try:
+        pdf = render_print_pdf(doctype, name, format_name=fmt, letterhead=lh)
+    except ValueError as e:
+        return _err(404, str(e))
+    except RuntimeError as e:
+        return _err(400, str(e))
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{name}.pdf"'},
     )
 
 

@@ -377,6 +377,30 @@ def create_core_tables(engine: Engine) -> None:
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabPrintFormat" (
+            name VARCHAR(255) PRIMARY KEY,
+            doctype VARCHAR(255) NOT NULL,
+            template_html TEXT NOT NULL,
+            template_css TEXT,
+            font_family VARCHAR(255),
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabLetterhead" (
+            name VARCHAR(255) PRIMARY KEY,
+            letterhead_html TEXT NOT NULL,
+            is_default BOOLEAN DEFAULT FALSE,
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
     ]
 
     phase5_statements = [
@@ -580,6 +604,8 @@ def drop_core_tables(engine: Engine) -> None:
         "tabPortalUser",
         "tabPortalProfileLink",
         "tabPortalFieldPermission",
+        "tabPrintFormat",
+        "tabLetterhead",
     ]
 
     with engine.begin() as conn:

@@ -1275,3 +1275,155 @@ def seed_portal_field_permissions(engine) -> None:
                     """),
                     {"name": fp[0], "parent": fp[1], "portal_role": fp[2], "field_name": fp[3], "read": fp[4], "write": fp[5], "permlevel": fp[6], "idx": fp[7]},
                 )
+
+
+PRINT_DOCTYPES = [
+    "PrintFormat",
+    "Letterhead",
+]
+
+
+def seed_print_doctypes(engine: Engine) -> None:
+    print_dt = [
+        ("PrintFormat", "Core", "core", "tabPrintFormat", False, False, False, False, 28),
+        ("Letterhead", "Core", "core", "tabLetterhead", False, False, False, False, 29),
+    ]
+    with engine.begin() as conn:
+        for dt in print_dt:
+            result = conn.execute(
+                text("""SELECT COUNT(*) FROM "tabDocType" WHERE name = :name"""),
+                {"name": dt[0]},
+            )
+            if result.scalar() == 0:
+                conn.execute(
+                    text("""
+                        INSERT INTO "tabDocType"
+                        (name, module, app_name, table_name, is_single, is_submittable, is_child_table, is_tree, idx)
+                        VALUES (:name, :module, :app_name, :table_name, :is_single, :is_submittable, :is_child_table, :is_tree, :idx)
+                    """),
+                    {"name": dt[0], "module": dt[1], "app_name": dt[2], "table_name": dt[3],
+                     "is_single": dt[4], "is_submittable": dt[5], "is_child_table": dt[6], "is_tree": dt[7], "idx": dt[8]},
+                )
+
+    with engine.begin() as conn:
+        for parent in PRINT_DOCTYPES:
+            perm_name = f"{parent}-System Manager"
+            result = conn.execute(
+                text("""SELECT COUNT(*) FROM "tabDocPerm" WHERE name = :name"""),
+                {"name": perm_name},
+            )
+            if result.scalar() == 0:
+                conn.execute(
+                    text("""
+                        INSERT INTO "tabDocPerm"
+                        (name, parent, role, permlevel, "read", "write", "create", "delete", idx)
+                        VALUES (:name, :parent, :role, :permlevel, :read, :write, :create, :delete, :idx)
+                    """),
+                    {"name": perm_name, "parent": parent, "role": "System Manager",
+                     "permlevel": 0, "read": True, "write": True, "create": True, "delete": True, "idx": 0},
+                )
+
+
+PRINT_DOCFIELDS = {
+    "PrintFormat": [
+        ("name", "Name", "Data", None, True, False, False, True, 0),
+        ("doctype", "DocType", "Link", "DocType", True, False, False, True, 1),
+        ("template_html", "Template HTML", "Code", "HTML", True, False, False, False, 2),
+        ("template_css", "Template CSS", "Code", "CSS", False, False, False, False, 3),
+        ("font_family", "Font Family", "Data", None, False, False, False, False, 4),
+        ("enabled", "Enabled", "Check", None, False, False, False, True, 5),
+        ("idx", "Idx", "Int", None, False, False, False, False, 6),
+    ],
+    "Letterhead": [
+        ("name", "Name", "Data", None, True, False, False, True, 0),
+        ("letterhead_html", "Letterhead HTML", "Code", "HTML", True, False, False, False, 1),
+        ("is_default", "Is Default", "Check", None, False, False, False, True, 2),
+        ("enabled", "Enabled", "Check", None, False, False, False, True, 3),
+        ("idx", "Idx", "Int", None, False, False, False, False, 4),
+    ],
+}
+
+
+def seed_print_docfields(engine: Engine) -> None:
+    with engine.begin() as conn:
+        for parent, fields in PRINT_DOCFIELDS.items():
+            for (fieldname, label, fieldtype, options, reqd, hidden, read_only, in_list_view, idx) in fields:
+                docfield_name = f"{parent}.{fieldname}"
+                result = conn.execute(
+                    text("""SELECT COUNT(*) FROM "tabDocField" WHERE name = :name"""),
+                    {"name": docfield_name},
+                )
+                if result.scalar() == 0:
+                    conn.execute(
+                        text("""
+                            INSERT INTO "tabDocField"
+                            (name, parent, fieldname, label, fieldtype, options, reqd, hidden, read_only, in_list_view, idx)
+                            VALUES (:name, :parent, :fieldname, :label, :fieldtype, :options, :reqd, :hidden, :read_only, :in_list_view, :idx)
+                        """),
+                        {"name": docfield_name, "parent": parent, "fieldname": fieldname, "label": label,
+                         "fieldtype": fieldtype, "options": options, "reqd": reqd, "hidden": hidden,
+                         "read_only": read_only, "in_list_view": in_list_view, "idx": idx},
+                    )
+
+
+def seed_default_printformat(engine: Engine) -> None:
+    standard_html = """<!DOCTYPE html>
+<html dir="auto">
+<head>
+<meta charset="utf-8">
+<style>
+body { font-family: 'Segoe UI', Tahoma, 'Noto Naskh Arabic', sans-serif; margin: 40px; color: #222; }
+.header { text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 16px; margin-bottom: 24px; }
+.header h1 { margin: 0; font-size: 22px; color: #2563eb; }
+.header p { margin: 4px 0 0; color: #666; font-size: 13px; }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+th { background: #f3f4f6; font-weight: 600; font-size: 12px; text-transform: uppercase; color: #6b7280; }
+.footer { text-align: center; margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af; }
+</style>
+</head>
+<body>
+<div class="header">
+<h1>{{ doctype }}</h1>
+<p>{{ doc.name }}</p>
+</div>
+<table>
+{% for field in fields %}
+<tr><th>{{ field.label }}</th><td>{{ doc[field.fieldname] }}</td></tr>
+{% endfor %}
+</table>
+<div class="footer">Generated by Galaxy on {{ now }}</div>
+</body>
+</html>"""
+    with engine.begin() as conn:
+        result = conn.execute(
+            text("""SELECT COUNT(*) FROM "tabPrintFormat" WHERE name = 'Standard'"""),
+        )
+        if result.scalar() == 0:
+            conn.execute(
+                text("""
+                    INSERT INTO "tabPrintFormat" (name, doctype, template_html, template_css, font_family, enabled, idx)
+                    VALUES (:name, :doctype, :template_html, :template_css, :font_family, TRUE, 0)
+                """),
+                {"name": "Standard", "doctype": "*", "template_html": standard_html,
+                 "template_css": "", "font_family": "'Segoe UI', Tahoma, 'Noto Naskh Arabic', sans-serif"},
+            )
+
+
+def seed_default_letterhead(engine: Engine) -> None:
+    letterhead_html = """<div style="text-align:center;padding:16px 0;border-bottom:2px solid #2563eb;">
+<h2 style="margin:0;color:#2563eb;">{{ company_name or 'Galaxy' }}</h2>
+<p style="margin:4px 0 0;color:#666;font-size:12px;">{{ address or '' }}</p>
+</div>"""
+    with engine.begin() as conn:
+        result = conn.execute(
+            text("""SELECT COUNT(*) FROM "tabLetterhead" WHERE name = 'Default'"""),
+        )
+        if result.scalar() == 0:
+            conn.execute(
+                text("""
+                    INSERT INTO "tabLetterhead" (name, letterhead_html, is_default, enabled, idx)
+                    VALUES (:name, :letterhead_html, TRUE, TRUE, 0)
+                """),
+                {"name": "Default", "letterhead_html": letterhead_html},
+            )

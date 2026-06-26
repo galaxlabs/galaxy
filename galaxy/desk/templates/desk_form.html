@@ -9,6 +9,8 @@
   <div class="page-actions">
     <a href="/desk/resource/{{ doctype }}" class="galaxy-btn galaxy-btn-outline galaxy-btn-neutral galaxy-btn-md">← Back to List</a>
     {% if record %}
+    <a href="/api/print/{{ doctype }}/{{ record.name }}" class="galaxy-btn galaxy-btn-soft galaxy-btn-secondary galaxy-btn-md">PDF</a>
+    <a href="/api/print/{{ doctype }}/{{ record.name }}/html" class="galaxy-btn galaxy-btn-soft galaxy-btn-secondary galaxy-btn-md" target="_blank">Print</a>
     <button class="galaxy-btn galaxy-btn-solid galaxy-btn-primary galaxy-btn-md" onclick="galaxy.saveForm('{{ doctype }}', '{{ record.name }}')">Save</button>
     {% endif %}
   </div>
@@ -68,6 +70,7 @@
   {% if record and record.name %}
   <div class="form-actions-bar">
     <button class="galaxy-btn galaxy-btn-solid galaxy-btn-primary galaxy-btn-md" onclick="galaxy.saveForm('{{ doctype }}', '{{ record.name }}')">Save</button>
+    <a href="/api/print/{{ doctype }}/{{ record.name }}" class="galaxy-btn galaxy-btn-soft galaxy-btn-secondary galaxy-btn-md">Download PDF</a>
     <button class="galaxy-btn galaxy-btn-outline galaxy-btn-neutral galaxy-btn-md" onclick="window.location='/desk/resource/{{ doctype }}'">Cancel</button>
     <button class="galaxy-btn galaxy-btn-ghost galaxy-btn-danger galaxy-btn-md" style="margin-left:auto"
       onclick="galaxy.confirm('Delete {{ record.name }}?',{tone:'danger',confirmText:'Delete'}).then(r=>r&&fetch('/api/resource/{{ doctype }}/{{ record.name }}',{method:'DELETE'}).then(()=>window.location='/desk/resource/{{ doctype }}'))">Delete</button>

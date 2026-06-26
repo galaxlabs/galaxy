@@ -22,6 +22,10 @@ from galaxy.database.seed import (
     seed_portal_module,
     seed_portal_profile_links,
     seed_portal_roles,
+    seed_print_doctypes,
+    seed_print_docfields,
+    seed_default_printformat,
+    seed_default_letterhead,
     seed_roles,
     seed_tenant,
 )
@@ -153,6 +157,26 @@ def run_install(site_name: str | None = None):
     print("Seeding Portal field permissions...")
     seed_portal_field_permissions(engine)
     print("Portal field permissions seed: OK")
+    print()
+
+    print("Seeding Print DocType metadata records...")
+    seed_print_doctypes(engine)
+    print("Print DocType metadata seed: OK")
+    print()
+
+    print("Seeding Print DocField records...")
+    seed_print_docfields(engine)
+    print("Print DocField metadata seed: OK")
+    print()
+
+    print("Seeding default print format...")
+    seed_default_printformat(engine)
+    print("Default print format seed: OK")
+    print()
+
+    print("Seeding default letterhead...")
+    seed_default_letterhead(engine)
+    print("Default letterhead seed: OK")
     print()
 
     print("Administrator username: Administrator")
