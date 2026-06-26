@@ -6,6 +6,9 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from galaxy.config import load_site_config
+from galaxy.core.doctype.computed_field_engine import evaluate_and_apply_computed_fields
+from galaxy.core.doctype.field_rule_engine import validate_field_rules
+from galaxy.core.doctype.runtimemeta import RuntimeMeta
 from galaxy.core.repository import get_doctype, get_doctype_fields, get_runtime_meta
 from galaxy.core.script_engine import run_scripts
 from galaxy.core.tenant import current_tenant
@@ -31,18 +34,25 @@ def _tenant_where(table_name: str) -> tuple[str, dict]:
     return "", {}
 
 
-def get_doctype_for_crud(doctype_name: str) -> dict | None:
+def _get_crud_meta(doctype_name: str) -> RuntimeMeta | None:
     meta = get_runtime_meta(doctype_name)
     if meta is None:
         return None
     dt = meta.doctype
     if dt.get("migration_status") != "applied":
         return None
-    return dt
+    return meta
+
+
+def get_doctype_for_crud(doctype_name: str) -> dict | None:
+    meta = _get_crud_meta(doctype_name)
+    if meta is None:
+        return None
+    return meta.doctype
 
 
 def get_crud_fields(doctype_name: str) -> list[dict]:
-    meta = get_runtime_meta(doctype_name)
+    meta = _get_crud_meta(doctype_name)
     if meta is None:
         return []
     return [f for f in meta.fields if f["fieldtype"] not in SKIP_FIELDTYPES and f["fieldname"] != "name"]
@@ -102,11 +112,12 @@ def _make_document_name(doctype_name: str) -> str:
 
 
 def create_document(doctype_name: str, payload: dict) -> dict:
-    doctype = get_doctype_for_crud(doctype_name)
-    if doctype is None:
+    meta = _get_crud_meta(doctype_name)
+    if meta is None:
         return {"success": False, "error": f"DocType '{doctype_name}' not found or migration not applied."}
 
-    fields = get_crud_fields(doctype_name)
+    doctype = meta.doctype
+    fields = [f for f in meta.fields if f["fieldtype"] not in SKIP_FIELDTYPES and f["fieldname"] != "name"]
     errors, cleaned = validate_create_payload(doctype, fields, payload)
     if errors:
         return {"success": False, "error": "Validation failed.", "errors": errors}
@@ -114,6 +125,18 @@ def create_document(doctype_name: str, payload: dict) -> dict:
     doc_name = cleaned.pop("name", None) or _make_document_name(doctype_name)
     table_name = doctype["table_name"]
     quoted_table = _quote(table_name)
+
+    doc_data = {"doctype": doctype_name, "name": doc_name}
+    for f in fields:
+        fname = f["fieldname"]
+        if fname in cleaned:
+            doc_data[fname] = cleaned[fname]
+
+    doc_data = evaluate_and_apply_computed_fields(meta, doc_data)
+
+    rule_errors = validate_field_rules(meta, doc_data)
+    if rule_errors:
+        return {"success": False, "error": "Field rule validation failed.", "errors": rule_errors}
 
     col_names = ["name"]
     col_values = [doc_name]
@@ -125,10 +148,10 @@ def create_document(doctype_name: str, payload: dict) -> dict:
 
     for f in fields:
         fname = f["fieldname"]
-        if fname not in cleaned:
+        if fname not in doc_data:
             continue
         try:
-            val = _coerce_value(f, cleaned[fname])
+            val = _coerce_value(f, doc_data[fname])
         except ValueError as e:
             return {"success": False, "error": str(e)}
         col_names.append(fname)
@@ -143,11 +166,6 @@ def create_document(doctype_name: str, payload: dict) -> dict:
     from sqlalchemy.exc import IntegrityError
 
     engine = _get_engine()
-
-    doc_data = {"doctype": doctype_name, "name": doc_name}
-    for f in fields:
-        if f["fieldname"] in col_names[1:]:
-            doc_data[f["fieldname"]] = col_values[col_names.index(f["fieldname"])]
 
     script_errors = run_scripts(doctype_name, "before_save", doc_data)
     if script_errors:
@@ -222,15 +240,16 @@ def get_document(doctype_name: str, name: str) -> dict | None:
 
 
 def update_document(doctype_name: str, name: str, payload: dict) -> dict:
-    doctype = get_doctype_for_crud(doctype_name)
-    if doctype is None:
+    meta = _get_crud_meta(doctype_name)
+    if meta is None:
         return {"success": False, "error": f"DocType '{doctype_name}' not found or migration not applied."}
 
+    doctype = meta.doctype
     existing = get_document(doctype_name, name)
     if existing is None:
         return {"success": False, "error": f"Document '{name}' not found."}
 
-    fields = get_crud_fields(doctype_name)
+    fields = [f for f in meta.fields if f["fieldtype"] not in SKIP_FIELDTYPES and f["fieldname"] != "name"]
     valid_fieldnames = {f["fieldname"] for f in fields}
     hidden_readonly = {f["fieldname"] for f in fields if f.get("hidden") or f.get("read_only")}
     errors: list[str] = []
@@ -253,6 +272,19 @@ def update_document(doctype_name: str, name: str, payload: dict) -> dict:
     if not cleaned:
         return {"success": True, "message": "No changes.", "data": {"doctype": doctype_name, "name": name}}
 
+    doc_data = {"doctype": doctype_name, "name": name, **existing}
+    doc_data.update(cleaned)
+
+    doc_data = evaluate_and_apply_computed_fields(meta, doc_data)
+
+    rule_errors = validate_field_rules(meta, doc_data)
+    if rule_errors:
+        return {"success": False, "error": "Field rule validation failed.", "errors": rule_errors}
+
+    update_fields = set(cleaned.keys())
+    computed_cf = {cf["field_name"] for cf in meta.computed_fields if cf.get("enabled", True)}
+    update_fields.update(computed_cf)
+
     table_name = doctype["table_name"]
     quoted_table = _quote(table_name)
     set_parts: list[str] = []
@@ -260,10 +292,10 @@ def update_document(doctype_name: str, name: str, payload: dict) -> dict:
 
     for f in fields:
         fname = f["fieldname"]
-        if fname not in cleaned:
+        if fname not in update_fields or fname not in doc_data:
             continue
         try:
-            val = _coerce_value(f, cleaned[fname])
+            val = _coerce_value(f, doc_data[fname])
         except ValueError as e:
             return {"success": False, "error": str(e)}
         pname = f"p_{fname}"
@@ -276,9 +308,6 @@ def update_document(doctype_name: str, name: str, payload: dict) -> dict:
     params.update(extra_params)
 
     engine = _get_engine()
-
-    doc_data = {"doctype": doctype_name, "name": name, **existing}
-    doc_data.update(cleaned)
 
     script_errors = run_scripts(doctype_name, "before_save", doc_data)
     if script_errors:
