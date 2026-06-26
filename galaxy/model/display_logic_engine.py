@@ -1,5 +1,5 @@
-from galaxy.core.doctype.field_dependency_engine import _compare_values
-from galaxy.core.doctype.runtimemeta import RuntimeMeta
+from galaxy.model.field_dependency_engine import _compare_values
+from galaxy.model.runtimemeta import RuntimeMeta
 
 
 def resolve_display_logic(meta: RuntimeMeta, doc_data: dict) -> dict[str, list[dict]]:

@@ -2,7 +2,7 @@ import threading
 import time
 from typing import Any
 
-from galaxy.core.doctype.runtimemeta import RuntimeMeta
+from galaxy.model.runtimemeta import RuntimeMeta
 
 
 class MetaCache:

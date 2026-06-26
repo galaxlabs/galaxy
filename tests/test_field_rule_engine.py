@@ -1,5 +1,5 @@
-from galaxy.core.doctype.field_rule_engine import _safe_eval, validate_field_rules
-from galaxy.core.doctype.runtimemeta import merge_meta
+from galaxy.model.field_rule_engine import _safe_eval, validate_field_rules
+from galaxy.model.runtimemeta import merge_meta
 
 
 DT = {"name": "Invoice", "module": "Accounting", "app_name": "erp",

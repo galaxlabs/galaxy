@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from sqlalchemy import text
 
 from galaxy.config import load_common_config
-from galaxy.db.connection import get_engine
+from galaxy.database.connection import get_engine
 
 
 def get_security_settings() -> dict:

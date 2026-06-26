@@ -3,8 +3,8 @@ from sqlalchemy import text
 from starlette.testclient import TestClient
 
 from galaxy.config import load_site_config
-from galaxy.db.connection import get_engine
-from galaxy.server import app
+from galaxy.database.connection import get_engine
+from galaxy.app import app
 
 
 def _cleanup_test_user():

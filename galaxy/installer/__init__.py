@@ -1,7 +1,7 @@
 from galaxy.config import load_site_config
-from galaxy.db.connection import get_engine, test_connection
-from galaxy.db.core_tables import create_core_tables
-from galaxy.db.seed import (
+from galaxy.database.connection import get_engine, test_connection
+from galaxy.database.core_tables import create_core_tables
+from galaxy.database.seed import (
     seed_administrator,
     seed_docfields,
     seed_docperms,
@@ -177,7 +177,7 @@ def run_doctor():
 
     print()
     print("Security settings:")
-    from galaxy.core.security import get_security_settings
+    from galaxy.security import get_security_settings
     sec = get_security_settings()
     for key, val in sec.items():
         print(f"  {key}: {val}")
@@ -267,7 +267,7 @@ def run_reset():
     engine = get_engine(site)
 
     print("Dropping all core tables...")
-    from galaxy.db.core_tables import drop_core_tables
+    from galaxy.database.core_tables import drop_core_tables
     drop_core_tables(engine)
     print("Core tables dropped: OK")
     print()

@@ -1,6 +1,6 @@
 
 from galaxy.config import load_site_config
-from galaxy.core.tenant import (
+from galaxy.tenant import (
     create_tenant,
     current_tenant,
     delete_tenant,
@@ -9,7 +9,7 @@ from galaxy.core.tenant import (
     resolve_tenant,
     update_tenant,
 )
-from galaxy.db.connection import get_engine
+from galaxy.database.connection import get_engine
 
 
 def _engine():

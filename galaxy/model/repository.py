@@ -4,10 +4,10 @@ from sqlalchemy.engine import Engine
 from typing import TYPE_CHECKING
 
 from galaxy.config import load_site_config
-from galaxy.db.connection import get_engine
+from galaxy.database.connection import get_engine
 
 if TYPE_CHECKING:
-    from galaxy.core.doctype.runtimemeta import RuntimeMeta
+    from galaxy.model.runtimemeta import RuntimeMeta
 
 
 def _get_engine() -> Engine:
@@ -257,7 +257,7 @@ def get_dynamic_sources(doctype_name: str) -> list[dict]:
 
 
 def clear_meta_cache(doctype_name: str | None = None) -> None:
-    from galaxy.core.doctype.meta_cache import meta_cache
+    from galaxy.model.meta_cache import meta_cache
     if doctype_name:
         meta_cache.invalidate_doctype(doctype_name)
     else:
@@ -265,8 +265,8 @@ def clear_meta_cache(doctype_name: str | None = None) -> None:
 
 
 def get_runtime_meta(doctype_name: str) -> RuntimeMeta | None:
-    from galaxy.core.doctype.meta_cache import meta_cache
-    from galaxy.core.doctype.runtimemeta import merge_meta
+    from galaxy.model.meta_cache import meta_cache
+    from galaxy.model.runtimemeta import merge_meta
 
     cached = meta_cache.get(doctype_name)
     if cached is not None:

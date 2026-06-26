@@ -122,7 +122,7 @@ def delete(name: str = typer.Argument(help="Site name")):
 def doctor():
     """Check status of all managed sites."""
     from galaxy.config import load_site_config
-    from galaxy.db.connection import get_engine, test_connection
+    from galaxy.database.connection import get_engine, test_connection
 
     print("Galaxy Bench Doctor")
     print()

@@ -1,5 +1,5 @@
 from galaxy.config import load_site_config
-from galaxy.core.crud import (
+from galaxy.model.document import (
     create_document,
     get_crud_fields,
     get_doctype_for_crud,
@@ -7,7 +7,7 @@ from galaxy.core.crud import (
     list_documents,
     validate_create_payload,
 )
-from galaxy.db.connection import get_engine
+from galaxy.database.connection import get_engine
 from sqlalchemy import text
 
 DOCTYPE = "Module Def"

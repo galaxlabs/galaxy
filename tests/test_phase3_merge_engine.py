@@ -1,4 +1,4 @@
-from galaxy.core.doctype.runtimemeta import RuntimeMeta, merge_meta
+from galaxy.model.runtimemeta import RuntimeMeta, merge_meta
 
 
 SAMPLE_DOCTYPE = {

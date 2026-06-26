@@ -1,4 +1,4 @@
-from galaxy.db.seed import PHASE2_DOCFIELDS, PHASE2_DOCTYPES
+from galaxy.database.seed import PHASE2_DOCFIELDS, PHASE2_DOCTYPES
 
 
 def test_phase2_doctypes_count():

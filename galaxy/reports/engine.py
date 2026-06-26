@@ -4,8 +4,8 @@ import traceback
 from sqlalchemy import text
 
 from galaxy.config import load_site_config
-from galaxy.core.security import get_security_settings, log_security_event
-from galaxy.db.connection import get_engine
+from galaxy.security import get_security_settings, log_security_event
+from galaxy.database.connection import get_engine
 
 
 def _get_engine():
@@ -97,7 +97,7 @@ def run_script_report(report: dict) -> dict:
 
     engine = _get_engine()
     globals_dict = {"engine": engine, "frappe_db": None}
-    from galaxy.core.script_engine import FrappeDB
+    from galaxy.model.script_engine import FrappeDB
 
     globals_dict["frappe_db"] = FrappeDB(engine)
 

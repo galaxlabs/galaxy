@@ -1,7 +1,7 @@
 from galaxy.config import load_site_config
-from galaxy.core.crud import create_document, update_document, get_document
-from galaxy.core.doctype.meta_cache import meta_cache
-from galaxy.db.connection import get_engine
+from galaxy.model.document import create_document, update_document, get_document
+from galaxy.model.meta_cache import meta_cache
+from galaxy.database.connection import get_engine
 from sqlalchemy import text
 
 DOCTYPE = "Module Def"

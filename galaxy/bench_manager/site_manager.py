@@ -15,7 +15,7 @@ from galaxy.bench_manager.platform_db import (
     site_exists,
 )
 from galaxy.config import load_site_config
-from galaxy.db.connection import get_engine
+from galaxy.database.connection import get_engine
 
 
 def _get_sites_dir():
@@ -196,7 +196,7 @@ def _load_site(site_name: str) -> dict:
 
 
 def _site_engine(site_name: str):
-    from galaxy.db.connection import get_engine
+    from galaxy.database.connection import get_engine
     site = _load_site(site_name)
     return get_engine(site)
 

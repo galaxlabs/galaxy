@@ -1,9 +1,9 @@
-from galaxy.core.doctype.field_dependency_engine import (
+from galaxy.model.field_dependency_engine import (
     evaluate_dependency,
     get_effective_field_states,
     resolve_field_dependencies,
 )
-from galaxy.core.doctype.runtimemeta import merge_meta
+from galaxy.model.runtimemeta import merge_meta
 
 
 DT = {"name": "Invoice", "module": "Accounting", "app_name": "erp",

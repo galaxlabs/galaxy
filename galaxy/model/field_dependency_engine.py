@@ -1,7 +1,7 @@
 from typing import Any
 
-from galaxy.core.doctype.field_rule_engine import _safe_eval
-from galaxy.core.doctype.runtimemeta import RuntimeMeta
+from galaxy.model.field_rule_engine import _safe_eval
+from galaxy.model.runtimemeta import RuntimeMeta
 
 
 def _compare_values(actual: Any, operator: str, expected: Any) -> bool:

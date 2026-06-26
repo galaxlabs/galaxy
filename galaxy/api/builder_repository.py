@@ -2,8 +2,8 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from galaxy.config import load_site_config
-from galaxy.core.builder import build_doctype_json, validate_doctype_payload
-from galaxy.db.connection import get_engine
+from galaxy.api.builder import build_doctype_json, validate_doctype_payload
+from galaxy.database.connection import get_engine
 
 
 def _get_engine() -> Engine:

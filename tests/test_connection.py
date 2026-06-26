@@ -1,4 +1,4 @@
-from galaxy.db.connection import build_connection_string, get_engine
+from galaxy.database.connection import build_connection_string, get_engine
 
 SITE_CONFIG = {
     "db_type": "postgres",

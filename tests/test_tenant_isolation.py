@@ -1,8 +1,8 @@
 from galaxy.auth import create_session, get_session
 from galaxy.config import load_site_config
-from galaxy.core.crud import create_document, delete_document, get_document, list_documents
-from galaxy.core.tenant import create_tenant, current_tenant, delete_tenant
-from galaxy.db.connection import get_engine
+from galaxy.model.document import create_document, delete_document, get_document, list_documents
+from galaxy.tenant import create_tenant, current_tenant, delete_tenant
+from galaxy.database.connection import get_engine
 from sqlalchemy import text
 
 

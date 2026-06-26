@@ -6,14 +6,14 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from galaxy.config import load_site_config
-from galaxy.core.doctype.computed_field_engine import evaluate_and_apply_computed_fields
-from galaxy.core.doctype.field_rule_engine import validate_field_rules
-from galaxy.core.doctype.runtimemeta import RuntimeMeta
-from galaxy.core.repository import get_doctype, get_doctype_fields, get_runtime_meta
-from galaxy.core.script_engine import run_scripts
-from galaxy.core.tenant import current_tenant
-from galaxy.db.connection import get_engine
-from galaxy.db.core_tables import TENANT_TABLES
+from galaxy.model.computed_field_engine import evaluate_and_apply_computed_fields
+from galaxy.model.field_rule_engine import validate_field_rules
+from galaxy.model.runtimemeta import RuntimeMeta
+from galaxy.model.repository import get_doctype, get_doctype_fields, get_runtime_meta
+from galaxy.model.script_engine import run_scripts
+from galaxy.tenant import current_tenant
+from galaxy.database.connection import get_engine
+from galaxy.database.core_tables import TENANT_TABLES
 
 
 def _get_engine() -> Engine:

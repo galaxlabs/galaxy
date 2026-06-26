@@ -10,7 +10,7 @@ from starlette.templating import Jinja2Templates
 from starlette.types import ASGIApp
 
 from galaxy.config import load_site_config
-from galaxy.core.api import (
+from galaxy.api.handlers import (
     handle_auth_me,
     handle_builder_preview,
     handle_builder_save,
@@ -35,7 +35,7 @@ from galaxy.core.api import (
     handle_summary,
     require_auth,
 )
-from galaxy.core.bench_api import (
+from galaxy.api.bench import (
     handle_bench_backup,
     handle_bench_create_site,
     handle_bench_install_app,
@@ -47,10 +47,10 @@ from galaxy.core.bench_api import (
     handle_bench_sites,
     handle_bench_uninstall_app,
 )
-from galaxy.core.crud import get_crud_fields, get_doctype_for_crud
-from galaxy.core.crud import get_document as crud_get_document
-from galaxy.core.migration_planner import plan_doctype_migration
-from galaxy.core.repository import (
+from galaxy.model.document import get_crud_fields, get_doctype_for_crud
+from galaxy.model.document import get_document as crud_get_document
+from galaxy.model.migration_planner import plan_doctype_migration
+from galaxy.model.repository import (
     get_core_summary,
     get_doctype,
     get_doctype_fields,
@@ -58,7 +58,7 @@ from galaxy.core.repository import (
     get_doctypes,
     get_runtime_meta,
 )
-from galaxy.core.tenant import (
+from galaxy.tenant import (
     current_tenant,
     get_tenant_id,
     handle_tenant_create,
@@ -100,7 +100,7 @@ async def homepage(request):
 
 async def health(request):
     try:
-        from galaxy.db.connection import get_engine, test_connection
+        from galaxy.database.connection import get_engine, test_connection
         _, site = load_site_config()
         engine = get_engine(site)
         db_ok = test_connection(engine)
@@ -136,27 +136,27 @@ async def api_version(request):
 
 
 async def login_page(request):
-    return templates.TemplateResponse(request, "login.html", {})
+    return await _desk_render(request, "login.html", {})
 
 
 async def desk_dashboard(request):
     if require_auth(request) is None:
         return RedirectResponse(url="/login", status_code=302)
     summary = get_core_summary()
-    return templates.TemplateResponse(request, "desk.html", {"summary": summary})
+    return await _desk_render(request, "desk.html", {"summary": summary})
 
 
 async def desk_doctypes(request):
     if require_auth(request) is None:
         return RedirectResponse(url="/login", status_code=302)
     doctypes = get_doctypes()
-    return templates.TemplateResponse(request, "doctypes.html", {"doctypes": doctypes})
+    return await _desk_render(request, "doctypes.html", {"doctypes": doctypes})
 
 
 async def desk_builder_new(request):
     if require_auth(request) is None:
         return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse(request, "doctype_builder_new.html", {})
+    return await _desk_render(request, "doctype_builder_new.html", {})
 
 
 async def desk_doctype_detail(request):
@@ -180,7 +180,7 @@ async def desk_doctype_detail(request):
 async def desk_ui_guide(request):
     if require_auth(request) is None:
         return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse(request, "ui_guide.html", {})
+    return await _desk_render(request, "ui_guide.html", {})
 
 
 async def desk_reports(request):
@@ -188,7 +188,7 @@ async def desk_reports(request):
         return RedirectResponse(url="/login", status_code=302)
     from sqlalchemy import text
 
-    from galaxy.db.connection import get_engine
+    from galaxy.database.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -196,7 +196,7 @@ async def desk_reports(request):
             text('SELECT name, ref_doctype, report_type, enabled FROM "tabReport" ORDER BY idx')
         ).mappings().all()
     reports = [dict(r) for r in rows]
-    return templates.TemplateResponse(request, "reports.html", {"reports": reports})
+    return await _desk_render(request, "reports.html", {"reports": reports})
 
 
 async def desk_report_detail(request):
@@ -206,7 +206,7 @@ async def desk_report_detail(request):
     name = urllib.parse.unquote(raw)
     from sqlalchemy import text
 
-    from galaxy.db.connection import get_engine
+    from galaxy.database.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -217,7 +217,7 @@ async def desk_report_detail(request):
     if row is None:
         return JSONResponse({"error": "Report not found"}, status_code=404)
     report = dict(row)
-    return templates.TemplateResponse(request, "report_detail.html", {"report": report})
+    return await _desk_render(request, "report_detail.html", {"report": report})
 
 
 async def desk_scripts(request):
@@ -225,7 +225,7 @@ async def desk_scripts(request):
         return RedirectResponse(url="/login", status_code=302)
     from sqlalchemy import text
 
-    from galaxy.db.connection import get_engine
+    from galaxy.database.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -233,7 +233,7 @@ async def desk_scripts(request):
             text('SELECT name, ref_doctype, doctype_event, enabled FROM "tabServer Script" ORDER BY idx')
         ).mappings().all()
     scripts = [dict(r) for r in rows]
-    return templates.TemplateResponse(request, "server_scripts.html", {"scripts": scripts})
+    return await _desk_render(request, "server_scripts.html", {"scripts": scripts})
 
 
 async def desk_script_new(request):
@@ -241,7 +241,7 @@ async def desk_script_new(request):
         return RedirectResponse(url="/login", status_code=302)
     doctypes = get_doctypes()
     events = ["before_save", "after_save", "before_delete", "after_delete", "on_load"]
-    return templates.TemplateResponse(request, "server_script_form.html", {"title": "New Server Script", "script": None, "doctypes": doctypes, "events": events})
+    return await _desk_render(request, "server_script_form.html", {"title": "New Server Script", "script": None, "doctypes": doctypes, "events": events})
 
 
 async def desk_script_edit(request):
@@ -251,7 +251,7 @@ async def desk_script_edit(request):
     name = urllib.parse.unquote(raw)
     from sqlalchemy import text
 
-    from galaxy.db.connection import get_engine
+    from galaxy.database.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:
@@ -264,14 +264,14 @@ async def desk_script_edit(request):
     script = dict(row)
     doctypes = get_doctypes()
     events = ["before_save", "after_save", "before_delete", "after_delete", "on_load"]
-    return templates.TemplateResponse(request, "server_script_form.html", {"title": f"Edit: {name}", "script": script, "doctypes": doctypes, "events": events})
+    return await _desk_render(request, "server_script_form.html", {"title": f"Edit: {name}", "script": script, "doctypes": doctypes, "events": events})
 
 
 async def desk_bench(request):
     from galaxy.bench_manager.platform_db import init_platform_db, list_sites
     init_platform_db()
     sites = list_sites()
-    return templates.TemplateResponse(request, "bench.html", {"sites": sites})
+    return await _desk_render(request, "bench.html", {"sites": sites})
 
 
 async def desk_bench_site(request):
@@ -281,15 +281,15 @@ async def desk_bench_site(request):
     site = get_site(name)
     if site is None:
         return JSONResponse({"error": "Site not found."}, status_code=404)
-    return templates.TemplateResponse(request, "bench_site.html", {"site": site})
+    return await _desk_render(request, "bench_site.html", {"site": site})
 
 
 async def desk_bench_new(request):
-    return templates.TemplateResponse(request, "bench_new.html", {})
+    return await _desk_render(request, "bench_new.html", {})
 
 
 async def desk_tenants(request):
-    return templates.TemplateResponse(request, "tenants.html", {})
+    return await _desk_render(request, "tenants.html", {})
 
 
 def _get_table_columns(doctype_name):
@@ -311,8 +311,8 @@ def _list_records(doctype_name, page=1, limit=20, sort_by="name", sort_order="as
     from sqlalchemy import text
 
     from galaxy.config import load_site_config
-    from galaxy.db.connection import get_engine
-    from galaxy.db.core_tables import TENANT_TABLES
+    from galaxy.database.connection import get_engine
+    from galaxy.database.core_tables import TENANT_TABLES
 
     _, site = load_site_config()
     engine = get_engine(site)
@@ -371,7 +371,7 @@ async def desk_resource_list(request):
         html = datatable(doctype_name, columns, records, total, page, limit, sort_by, sort_order, search)
         return HTMLResponse(html)
 
-    return templates.TemplateResponse(request, "desk_list.html", {
+    return await _desk_render(request, "desk_list.html", {
         "doctype": doctype_name,
         "columns": columns,
         "records": records,
@@ -394,7 +394,7 @@ async def desk_resource_new(request):
     if meta is None:
         return JSONResponse({"error": "DocType not found"}, status_code=404)
 
-    return templates.TemplateResponse(request, "desk_form.html", {
+    return await _desk_render(request, "desk_form.html", {
         "doctype": doctype_name, "title": f"New {doctype_name}",
         "fields": meta.fields, "record": None,
         "meta": meta,
@@ -417,7 +417,7 @@ async def desk_resource_detail(request):
     if doc is None:
         return JSONResponse({"error": "Record not found"}, status_code=404)
 
-    return templates.TemplateResponse(request, "desk_form.html", {
+    return await _desk_render(request, "desk_form.html", {
         "doctype": doctype_name, "title": f"{name}",
         "fields": meta.fields, "record": doc,
         "meta": meta,
@@ -530,7 +530,7 @@ class RequireSessionMiddleware:
             return
 
         tenant_id = get_tenant_id(request)
-        from galaxy.core.tenant import current_tenant
+        from galaxy.tenant import current_tenant
         current_tenant.set(tenant_id)
         request.state.tenant_id = tenant_id
 
@@ -624,7 +624,46 @@ routes = [
     Mount("/static", app=StaticFiles(directory=STATIC_DIR), name="static"),
 ]
 
-app: ASGIApp = RequireSessionMiddleware(Starlette(routes=routes))
+async def _desk_render(request, template_name: str, context: dict, status_code: int = 200):
+    try:
+        return templates.TemplateResponse(request, template_name, context, status_code=status_code)
+    except Exception as e:
+        import traceback
+        tb = traceback.format_exc()
+        print(f"Template render error [{template_name}]: {e}\n{tb}")
+        return HTMLResponse(
+            f"""<!DOCTYPE html>
+<html><head><title>Galaxy — Error</title>
+<link rel="stylesheet" href="/static/desk.css">
+</head><body style="padding:40px;font-family:system-ui;">
+<h1>Internal Server Error</h1>
+<pre style="background:#f8d7da;padding:16px;border-radius:8px;white-space:pre-wrap;word-break:break-all;">{e}</pre>
+<p><a href="/desk">← Back to Desk</a></p>
+</body></html>""",
+            status_code=500,
+        )
+
+
+async def server_error_handler(request, exc):
+    import traceback
+    tb = traceback.format_exc()
+    print(f"Unhandled 500 [{request.method} {request.url.path}]: {exc}\n{tb}")
+    return HTMLResponse(
+        f"""<!DOCTYPE html>
+<html><head><title>Galaxy — Error</title>
+<link rel="stylesheet" href="/static/desk.css">
+</head><body style="padding:40px;font-family:system-ui;">
+<h1>Internal Server Error</h1>
+<pre style="background:#f8d7da;padding:16px;border-radius:8px;white-space:pre-wrap;word-break:break-all;">{exc}</pre>
+<p><a href="/desk">← Back to Desk</a></p>
+</body></html>""",
+        status_code=500,
+    )
+
+
+starlette_app = Starlette(routes=routes, exception_handlers={500: server_error_handler})
+
+app: ASGIApp = RequireSessionMiddleware(starlette_app)
 
 
 def run_server(host="127.0.0.1", port=8080):

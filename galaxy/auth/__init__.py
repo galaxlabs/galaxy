@@ -5,8 +5,8 @@ from passlib.hash import bcrypt as passlib_bcrypt
 from sqlalchemy import text
 
 from galaxy.config import load_site_config
-from galaxy.core.tenant import current_tenant
-from galaxy.db.connection import get_engine
+from galaxy.tenant import current_tenant
+from galaxy.database.connection import get_engine
 
 
 def _get_engine():

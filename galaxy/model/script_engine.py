@@ -4,7 +4,7 @@ from datetime import UTC
 from sqlalchemy import text
 
 from galaxy.config import load_site_config
-from galaxy.db.connection import get_engine
+from galaxy.database.connection import get_engine
 
 VALID_EVENTS = {"before_save", "after_save", "before_delete", "after_delete", "on_load"}
 
@@ -79,7 +79,7 @@ class FrappeAPI:
         self._engine = engine
 
     def get_doc(self, doctype: str, name: str) -> dict | None:
-        from galaxy.core.crud import get_document as _get_doc
+        from galaxy.model.document import get_document as _get_doc
         return _get_doc(doctype, name)
 
     def log_error(self, message: str):
@@ -115,7 +115,7 @@ def get_scripts_for_event(doctype_name: str, event: str) -> list[dict]:
 def run_scripts(doctype_name: str, event: str, doc: dict) -> list[str]:
     errors: list[str] = []
 
-    from galaxy.core.security import get_security_settings, log_security_event
+    from galaxy.security import get_security_settings, log_security_event
 
     sec = get_security_settings()
     if not sec["allow_server_scripts"]:

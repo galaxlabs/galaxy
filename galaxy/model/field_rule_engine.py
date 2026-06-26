@@ -4,7 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
-from galaxy.core.doctype.runtimemeta import RuntimeMeta
+from galaxy.model.runtimemeta import RuntimeMeta
 
 _UNARY_OPS = {ast.UAdd: py_operator.pos, ast.USub: py_operator.neg, ast.Not: py_operator.not_}
 _BIN_OPS = {
@@ -162,7 +162,7 @@ def validate_field_rules(meta: RuntimeMeta, doc_data: dict) -> list[str]:
             except re.error:
                 pass
         elif rule_type == "unique" and value is not None:
-            from galaxy.core.repository import _count_field_value
+            from galaxy.model.repository import _count_field_value
             doctype_name = meta.doctype.get("name", "")
             name = doc_data.get("name")
             try:

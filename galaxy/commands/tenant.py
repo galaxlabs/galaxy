@@ -1,14 +1,14 @@
 import typer
 
 from galaxy.config import load_site_config
-from galaxy.core.tenant import (
+from galaxy.tenant import (
     create_tenant,
     delete_tenant,
     get_tenants,
     resolve_tenant,
     update_tenant,
 )
-from galaxy.db.connection import get_engine
+from galaxy.database.connection import get_engine
 
 tenant_app = typer.Typer(name="tenant", help="Manage multi-tenant tenants.")
 
@@ -19,7 +19,7 @@ def _require_engine():
 
 
 def _ensure_db():
-    from galaxy.db.core_tables import create_core_tables
+    from galaxy.database.core_tables import create_core_tables
     engine = _require_engine()
     create_core_tables(engine)
     return engine

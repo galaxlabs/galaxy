@@ -1,4 +1,4 @@
-from galaxy.db.seed import DOCFIELDS, DOCTYPES
+from galaxy.database.seed import DOCFIELDS, DOCTYPES
 
 
 def test_doctypes_count():

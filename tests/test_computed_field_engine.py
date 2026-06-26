@@ -1,9 +1,9 @@
-from galaxy.core.doctype.computed_field_engine import (
+from galaxy.model.computed_field_engine import (
     evaluate_computed_field,
     evaluate_computed_fields,
     evaluate_and_apply_computed_fields,
 )
-from galaxy.core.doctype.runtimemeta import merge_meta
+from galaxy.model.runtimemeta import merge_meta
 
 
 DT = {"name": "Invoice", "module": "Accounting", "app_name": "erp",

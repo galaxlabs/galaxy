@@ -5,19 +5,19 @@ from starlette.responses import JSONResponse
 
 from galaxy.auth import create_session, delete_session, get_session, verify_password
 from galaxy.config import load_site_config
-from galaxy.core.builder import build_doctype_json, validate_doctype_payload
-from galaxy.core.builder_repository import save_doctype_metadata
-from galaxy.core.crud import (
+from galaxy.api.builder import build_doctype_json, validate_doctype_payload
+from galaxy.api.builder_repository import save_doctype_metadata
+from galaxy.model.document import (
     create_document,
     delete_document,
     get_document,
     list_documents,
     update_document,
 )
-from galaxy.core.migration_applier import apply_doctype_migration
-from galaxy.core.migration_planner import plan_doctype_migration
-from galaxy.core.report_engine import run_report
-from galaxy.core.repository import (
+from galaxy.model.migration_applier import apply_doctype_migration
+from galaxy.model.migration_planner import plan_doctype_migration
+from galaxy.reports.engine import run_report
+from galaxy.model.repository import (
     get_core_summary,
     get_doctype,
     get_doctype_fields,
@@ -27,7 +27,7 @@ from galaxy.core.repository import (
     get_installed_modules,
     get_modules,
 )
-from galaxy.core.security import (
+from galaxy.security import (
     check_login_rate_limit,
     clear_login_rate_limit,
     generate_csrf_token,
@@ -35,7 +35,7 @@ from galaxy.core.security import (
     log_security_event,
     validate_csrf_token,
 )
-from galaxy.db.connection import get_engine
+from galaxy.database.connection import get_engine
 from galaxy.permissions import authorize
 
 

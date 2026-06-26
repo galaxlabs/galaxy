@@ -1,8 +1,8 @@
 import time
 from unittest.mock import MagicMock
 
-from galaxy.core.doctype.meta_cache import MetaCache
-from galaxy.core.doctype.runtimemeta import RuntimeMeta
+from galaxy.model.meta_cache import MetaCache
+from galaxy.model.runtimemeta import RuntimeMeta
 
 
 def _make_meta(name: str = "TestDoc") -> RuntimeMeta:

@@ -1,4 +1,4 @@
-from galaxy.core.repository import get_doctype, get_doctype_fields, table_exists
+from galaxy.model.repository import get_doctype, get_doctype_fields, table_exists
 
 PG_TYPE_MAP = {
     "Data": "TEXT",

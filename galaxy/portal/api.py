@@ -76,7 +76,7 @@ async def handle_portal_profile(request):
         return JSONResponse({"success": False, "error": "Not authenticated"}, status_code=401)
     from sqlalchemy import text
     from galaxy.config import load_site_config
-    from galaxy.db.connection import get_engine
+    from galaxy.database.connection import get_engine
     _, site = load_site_config()
     engine = get_engine(site)
     with engine.connect() as conn:

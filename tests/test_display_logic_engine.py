@@ -1,5 +1,5 @@
-from galaxy.core.doctype.display_logic_engine import get_effective_visibility, resolve_display_logic
-from galaxy.core.doctype.runtimemeta import RuntimeMeta
+from galaxy.model.display_logic_engine import get_effective_visibility, resolve_display_logic
+from galaxy.model.runtimemeta import RuntimeMeta
 
 
 def _meta(display_logic: list[dict] | None = None) -> RuntimeMeta:

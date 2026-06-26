@@ -1,4 +1,4 @@
-from galaxy.core.doctype.runtimemeta import merge_meta
+from galaxy.model.runtimemeta import merge_meta
 
 
 DT = {"name": "Invoice", "module": "Accounting", "app_name": "erp",

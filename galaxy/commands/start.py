@@ -1,5 +1,5 @@
 from galaxy.config import load_common_config
-from galaxy.server import run_server
+from galaxy.app import run_server
 
 
 def start():

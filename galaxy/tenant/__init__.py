@@ -3,7 +3,7 @@ import contextvars
 from sqlalchemy import text
 from starlette.responses import JSONResponse
 
-from galaxy.db.connection import get_engine
+from galaxy.database.connection import get_engine
 
 current_tenant: contextvars.ContextVar[str] = contextvars.ContextVar("current_tenant", default="Default")
 
@@ -97,12 +97,12 @@ AUTH_REQUIRED = {"success": False, "error": "Authentication required."}
 
 
 def _require_session(request):
-    from galaxy.core.api import require_auth
+    from galaxy.api.handlers import require_auth
     return require_auth(request)
 
 
 def _require_csrf(request):
-    from galaxy.core.api import _require_csrf
+    from galaxy.api.handlers import _require_csrf
     return _require_csrf(request)
 
 
