@@ -381,12 +381,7 @@ async def desk_resource_list(request):
 
     columns = _get_table_columns(doctype_name)
 
-    if request.headers.get("HX-Request") == "true":
-        from galaxy.desk.components.table import datatable
-        html = datatable(doctype_name, columns, records, total, page, limit, sort_by, sort_order, search)
-        return HTMLResponse(html)
-
-    return await _desk_render(request, "desk_list.html", {
+    ctx = {
         "doctype": doctype_name,
         "columns": columns,
         "records": records,
@@ -396,7 +391,13 @@ async def desk_resource_list(request):
         "sort_by": sort_by,
         "sort_order": sort_order,
         "search": search,
-    })
+    }
+
+    if request.headers.get("HX-Request") == "true":
+        html = templates.TemplateResponse(request, "desk_list.html", ctx)
+        return HTMLResponse(html.body.decode() if hasattr(html, 'body') else str(html))
+
+    return await _desk_render(request, "desk_list.html", ctx)
 
 
 async def desk_resource_new(request):

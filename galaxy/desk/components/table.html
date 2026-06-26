@@ -48,9 +48,9 @@
           {% for col in columns %}
           <td class="galaxy-table-td">
             {% if loop.first %}
-            <a href="/desk/resource/{{ doctype }}/{{ row.name }}" class="galaxy-record-link">{{ row[col.key] }}</a>
+            <a href="/desk/resource/{{ doctype }}/{{ row.name }}" class="galaxy-record-link">{% if col.type in ("HTML", "Code") %}{{ row[col.key]|safe }}{% else %}{{ row[col.key] }}{% endif %}</a>
             {% else %}
-            <span class="galaxy-cell-{{ col.type | lower }}">{{ row[col.key] }}</span>
+            <span class="galaxy-cell-{{ col.type | lower }}">{% if col.type in ("HTML", "Code") %}{{ row[col.key]|safe }}{% else %}{{ row[col.key] }}{% endif %}</span>
             {% endif %}
           </td>
           {% endfor %}
