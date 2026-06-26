@@ -37,6 +37,13 @@ from galaxy.security import (
 )
 from galaxy.database.connection import get_engine
 from galaxy.permissions import authorize
+from galaxy.api.phase4 import (
+    enforce_phase4_get,
+    enforce_phase4_list,
+    enforce_phase4_create,
+    enforce_phase4_update,
+    enforce_phase4_delete,
+)
 
 
 async def handle_installed_apps(request):
@@ -362,6 +369,9 @@ async def handle_resource_create(request):
     if not isinstance(payload, dict):
         return _err(400, "Request body must be a JSON object.")
 
+    if not enforce_phase4_create(doctype, user, payload):
+        return _err(403, f"Permission rule denied create on '{doctype}'.")
+
     try:
         result = create_document(doctype, payload)
     except Exception:
@@ -416,6 +426,9 @@ async def handle_resource_list(request):
     if isinstance(result, dict) and not result.get("success", True):
         return _err(404, result.get("error", "Not found"))
 
+    if isinstance(result, list):
+        result = enforce_phase4_list(doctype, user, result)
+
     return _ok({"items": result, "limit": limit, "offset": offset})
 
 
@@ -441,6 +454,8 @@ async def handle_resource_get(request):
 
     if doc is None:
         return _err(404, "Document not found.")
+
+    doc = enforce_phase4_get(doctype, user, doc)
 
     return _ok(doc)
 
@@ -542,6 +557,13 @@ async def handle_resource_update(request):
     if not isinstance(payload, dict):
         return _err(400, "Request body must be a JSON object.")
 
+    existing = get_document(doctype, name)
+    if isinstance(existing, dict) and existing.get("success") is False:
+        pass
+    elif existing:
+        if not enforce_phase4_update(doctype, user, existing):
+            return _err(403, f"Permission rule denied update on '{doctype}'.")
+
     try:
         result = update_document(doctype, name, payload)
     except Exception:
@@ -570,6 +592,13 @@ async def handle_resource_delete(request):
     ok, msg = authorize(doctype, user, "delete")
     if not ok:
         return _err(403, msg)
+
+    existing = get_document(doctype, name)
+    if isinstance(existing, dict) and existing.get("success") is False:
+        pass
+    elif existing:
+        if not enforce_phase4_delete(doctype, user, existing):
+            return _err(403, f"Permission rule denied delete on '{doctype}'.")
 
     try:
         result = delete_document(doctype, name)

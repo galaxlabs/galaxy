@@ -18,7 +18,9 @@ from galaxy.database.seed import (
     seed_phase5_doctypes,
     seed_portal_docfields,
     seed_portal_doctypes,
+    seed_portal_field_permissions,
     seed_portal_module,
+    seed_portal_profile_links,
     seed_portal_roles,
     seed_roles,
     seed_tenant,
@@ -143,6 +145,16 @@ def run_install(site_name: str | None = None):
     print("Portal roles seed: OK")
     print()
 
+    print("Seeding Portal profile links...")
+    seed_portal_profile_links(engine)
+    print("Portal profile links seed: OK")
+    print()
+
+    print("Seeding Portal field permissions...")
+    seed_portal_field_permissions(engine)
+    print("Portal field permissions seed: OK")
+    print()
+
     print("Administrator username: Administrator")
     print("Administrator password: admin")
     print()
@@ -220,6 +232,8 @@ def run_doctor():
     portal_roles = count_table("tabPortalRole")
     portal_perms = count_table("tabPortalPermission")
     portal_sessions = count_table("tabPortalSession")
+    portal_profile_links = count_table("tabPortalProfileLink")
+    portal_field_permissions = count_table("tabPortalFieldPermission")
 
     print()
     print(f"Installed apps: {installed_apps}")
@@ -244,6 +258,8 @@ def run_doctor():
     print(f"PortalRoles: {portal_roles}")
     print(f"PortalPermissions: {portal_perms}")
     print(f"PortalSessions: {portal_sessions}")
+    print(f"PortalProfileLinks: {portal_profile_links}")
+    print(f"PortalFieldPermissions: {portal_field_permissions}")
     print()
 
     if (installed_apps >= 1 and installed_modules >= 6 and users >= 1

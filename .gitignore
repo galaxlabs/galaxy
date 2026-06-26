@@ -8,5 +8,7 @@ venv/
 .env
 sites/*/site_config.json
 !sites/common_site_config.json
+sites/platform.db
 sites/platform.db-shm
 sites/platform.db-wal
+.agents/

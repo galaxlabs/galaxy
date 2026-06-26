@@ -329,3 +329,83 @@ def get_core_summary():
         "users": users,
         "roles": roles,
     }
+
+
+def get_portal_user_roles(portal_user: str) -> list[dict]:
+    with _get_engine().connect() as conn:
+        rows = conn.execute(
+            text("""
+                SELECT pu.portal_role, pr.description, pr.enabled
+                FROM "tabPortalUser" pu
+                JOIN "tabPortalRole" pr ON pr.name = pu.portal_role
+                WHERE pu.user_name = :user_name AND pu.enabled = TRUE
+            """),
+            {"user_name": portal_user},
+        ).mappings().all()
+    return [dict(r) for r in rows]
+
+
+def get_portal_permissions_for_doctype(portal_role: str, doctype: str) -> list[dict]:
+    with _get_engine().connect() as conn:
+        rows = conn.execute(
+            text("""
+                SELECT "read", "write", "create", "delete", permlevel
+                FROM "tabPortalPermission"
+                WHERE portal_role = :portal_role AND parent = :parent
+            """),
+            {"portal_role": portal_role, "parent": doctype},
+        ).mappings().all()
+    return [dict(r) for r in rows]
+
+
+def get_portal_profile_links(portal_user: str) -> list[dict]:
+    with _get_engine().connect() as conn:
+        rows = conn.execute(
+            text("""
+                SELECT doctype, docname, link_field, relationship
+                FROM "tabPortalProfileLink"
+                WHERE portal_user = :portal_user AND enabled = TRUE
+                  AND (expires_on IS NULL OR expires_on > CURRENT_TIMESTAMP)
+            """),
+            {"portal_user": portal_user},
+        ).mappings().all()
+    return [dict(r) for r in rows]
+
+
+def get_portal_field_permissions(portal_role: str) -> list[dict]:
+    with _get_engine().connect() as conn:
+        rows = conn.execute(
+            text("""
+                SELECT parent AS doctype, field_name, "read", "write", permlevel
+                FROM "tabPortalFieldPermission"
+                WHERE portal_role = :portal_role AND enabled = TRUE
+            """),
+            {"portal_role": portal_role},
+        ).mappings().all()
+    return [dict(r) for r in rows]
+
+
+def get_portal_user_by_credentials(email: str) -> dict | None:
+    with _get_engine().connect() as conn:
+        row = conn.execute(
+            text("""
+                SELECT name, email, password_hash, account_status, portal_role
+                FROM "tabPortalUser"
+                WHERE email = :email AND enabled = TRUE
+            """),
+            {"email": email},
+        ).mappings().one_or_none()
+    return dict(row) if row else None
+
+
+def get_portal_user_by_name(name: str) -> dict | None:
+    with _get_engine().connect() as conn:
+        row = conn.execute(
+            text("""
+                SELECT name, email, portal_role, account_status
+                FROM "tabPortalUser"
+                WHERE name = :name AND enabled = TRUE
+            """),
+            {"name": name},
+        ).mappings().one_or_none()
+    return dict(row) if row else None

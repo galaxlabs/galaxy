@@ -78,6 +78,13 @@ from galaxy.portal.api import (
     handle_portal_signup,
     handle_portal_signup_page,
 )
+from galaxy.portal.resource import (
+    portal_create,
+    portal_list,
+    portal_get,
+    portal_update,
+    portal_delete,
+)
 
 
 def _slugify(name):
@@ -456,7 +463,7 @@ PUBLIC_EXACT = {
     "/api/portal/auth/logout",
 }
 PUBLIC_PREFIXES = ["/static", "/assets", "/favicon.ico", "/desk/assets"]
-PORTAL_PROTECTED_PREFIXES = ["/api/portal/auth/me", "/api/portal/auth/logout", "/api/portal/profile"]
+PORTAL_PROTECTED_PREFIXES = ["/api/portal/auth/me", "/api/portal/auth/logout", "/api/portal/profile", "/api/portal/resource"]
 PORTAL_PAGE_PREFIXES = ["/portal"]
 
 ALLOWED_CORE_PREFIXES = [
@@ -621,6 +628,11 @@ routes = [
     Route("/api/portal/auth/logout", endpoint=handle_portal_logout, methods=["POST"]),
     Route("/api/portal/auth/me", endpoint=handle_portal_me),
     Route("/api/portal/profile", endpoint=handle_portal_profile),
+    Route("/api/portal/resource/{doctype}", endpoint=portal_list),
+    Route("/api/portal/resource/{doctype}", endpoint=portal_create, methods=["POST"]),
+    Route("/api/portal/resource/{doctype}/{docname}", endpoint=portal_get),
+    Route("/api/portal/resource/{doctype}/{docname}", endpoint=portal_update, methods=["PUT"]),
+    Route("/api/portal/resource/{doctype}/{docname}", endpoint=portal_delete, methods=["DELETE"]),
     Mount("/static", app=StaticFiles(directory=STATIC_DIR), name="static"),
 ]
 

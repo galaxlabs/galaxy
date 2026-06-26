@@ -344,6 +344,37 @@ def create_core_tables(engine: Engine) -> None:
             expires_at TIMESTAMP NOT NULL
         );
         """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabPortalProfileLink" (
+            name VARCHAR(255) PRIMARY KEY,
+            parent VARCHAR(255) NOT NULL,
+            portal_user VARCHAR(255) NOT NULL,
+            doctype VARCHAR(255),
+            docname VARCHAR(255),
+            link_field VARCHAR(255),
+            relationship VARCHAR(50) DEFAULT 'member',
+            expires_on TIMESTAMP,
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabPortalFieldPermission" (
+            name VARCHAR(255) PRIMARY KEY,
+            parent VARCHAR(255) NOT NULL,
+            portal_role VARCHAR(255) NOT NULL,
+            field_name VARCHAR(255) NOT NULL,
+            "read" BOOLEAN DEFAULT TRUE,
+            "write" BOOLEAN DEFAULT FALSE,
+            permlevel INTEGER DEFAULT 0,
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
     ]
 
     phase5_statements = [
@@ -543,6 +574,8 @@ def drop_core_tables(engine: Engine) -> None:
         "tabPortalPermission",
         "tabPortalRole",
         "tabPortalUser",
+        "tabPortalProfileLink",
+        "tabPortalFieldPermission",
     ]
 
     with engine.begin() as conn:

@@ -702,6 +702,58 @@ def seed_phase4_doctypes(engine: Engine) -> None:
         ("DataMaskRule", "Core", "core", "tabDataMaskRule", False, False, False, False, 20),
         ("PermissionRule", "Core", "core", "tabPermissionRule", False, False, False, False, 21),
     ]
+    with engine.begin() as conn:
+        for dt in phase4:
+            result = conn.execute(
+                text("""SELECT COUNT(*) FROM "tabDocType" WHERE name = :name"""),
+                {"name": dt[0]},
+            )
+            if result.scalar() == 0:
+                conn.execute(
+                    text("""
+                        INSERT INTO "tabDocType"
+                        (name, module, app_name, table_name, is_single, is_submittable, is_child_table, is_tree, idx)
+                        VALUES (:name, :module, :app_name, :table_name, :is_single, :is_submittable, :is_child_table, :is_tree, :idx)
+                    """),
+                    {
+                        "name": dt[0],
+                        "module": dt[1],
+                        "app_name": dt[2],
+                        "table_name": dt[3],
+                        "is_single": dt[4],
+                        "is_submittable": dt[5],
+                        "is_child_table": dt[6],
+                        "is_tree": dt[7],
+                        "idx": dt[8],
+                    },
+                )
+
+    with engine.begin() as conn:
+        for parent in PHASE4_DOCTYPES:
+            perm_name = f"{parent}-System Manager"
+            result = conn.execute(
+                text("""SELECT COUNT(*) FROM "tabDocPerm" WHERE name = :name"""),
+                {"name": perm_name},
+            )
+            if result.scalar() == 0:
+                conn.execute(
+                    text("""
+                        INSERT INTO "tabDocPerm"
+                        (name, parent, role, permlevel, "read", "write", "create", "delete", idx)
+                        VALUES (:name, :parent, :role, :permlevel, :read, :write, :create, :delete, :idx)
+                    """),
+                    {
+                        "name": perm_name,
+                        "parent": parent,
+                        "role": "System Manager",
+                        "permlevel": 0,
+                        "read": True,
+                        "write": True,
+                        "create": True,
+                        "delete": True,
+                        "idx": 0,
+                    },
+                )
 
 
 PHASE5_DOCTYPES = [
@@ -863,6 +915,8 @@ PHASE_PORTAL_DOCTYPES = [
     "PortalRole",
     "PortalPermission",
     "PortalSession",
+    "PortalProfileLink",
+    "PortalFieldPermission",
 ]
 
 
@@ -872,6 +926,8 @@ def seed_portal_doctypes(engine: Engine) -> None:
         ("PortalRole", "Portal", "core", "tabPortalRole", False, False, False, False, 23),
         ("PortalPermission", "Portal", "core", "tabPortalPermission", False, False, False, False, 24),
         ("PortalSession", "Portal", "core", "tabPortalSession", False, False, False, False, 25),
+        ("PortalProfileLink", "Portal", "core", "tabPortalProfileLink", False, False, False, False, 26),
+        ("PortalFieldPermission", "Portal", "core", "tabPortalFieldPermission", False, False, False, False, 27),
     ]
     with engine.begin() as conn:
         for dt in portal_dt:
@@ -948,6 +1004,31 @@ def seed_portal_roles(engine: Engine) -> None:
                 )
 
 
+PHASE_PORTAL_PROFILELINK_FIELDS = [
+    ("name", "Name", "Data", None, True, False, False, True, 0),
+    ("parent", "Parent", "Data", None, True, False, False, True, 1),
+    ("portal_user", "Portal User", "Link", "PortalUser", True, False, False, True, 2),
+    ("doctype", "DocType", "Link", "DocType", False, False, False, True, 3),
+    ("docname", "DocName", "Data", None, False, False, False, True, 4),
+    ("link_field", "Link Field", "Data", None, False, False, False, False, 5),
+    ("relationship", "Relationship", "Select", "owner\nmember\nassigned\ncustom", False, False, False, True, 6),
+    ("expires_on", "Expires On", "Date", None, False, False, False, False, 7),
+    ("enabled", "Enabled", "Check", None, False, False, False, True, 8),
+    ("idx", "Idx", "Int", None, False, False, False, False, 9),
+]
+
+PHASE_PORTAL_FIELD_PERMISSION_FIELDS = [
+    ("name", "Name", "Data", None, True, False, False, True, 0),
+    ("parent", "Parent", "Data", None, True, False, False, True, 1),
+    ("portal_role", "Portal Role", "Link", "PortalRole", True, False, False, True, 2),
+    ("field_name", "Field Name", "Data", None, True, False, False, True, 3),
+    ("read", "Read", "Check", None, False, False, False, True, 4),
+    ("write", "Write", "Check", None, False, False, False, True, 5),
+    ("permlevel", "Perm Level", "Int", None, False, False, False, False, 6),
+    ("enabled", "Enabled", "Check", None, False, False, False, True, 7),
+    ("idx", "Idx", "Int", None, False, False, False, False, 8),
+]
+
 PHASE_PORTAL_DOCFIELDS = {
     "PortalUser": [
         ("name", "Name", "Data", None, True, False, False, True, 0),
@@ -998,6 +1079,8 @@ PHASE_PORTAL_DOCFIELDS = {
         ("expires_at", "Expires At", "Datetime", None, True, False, False, False, 3),
         ("idx", "Idx", "Int", None, False, False, False, False, 4),
     ],
+    "PortalProfileLink": PHASE_PORTAL_PROFILELINK_FIELDS,
+    "PortalFieldPermission": PHASE_PORTAL_FIELD_PERMISSION_FIELDS,
 }
 
 
@@ -1143,3 +1226,50 @@ def seed_phase4_docfields(engine: Engine) -> None:
                             "idx": idx,
                         },
                     )
+
+
+def seed_portal_profile_links(engine) -> None:
+    from sqlalchemy import text
+    links = [
+        ("pl-DocType-Portal Admin", "DocType", "portal@example.com", "DocType", None, None, "member", 0),
+        ("pl-Role-Portal Admin", "Role", "portal@example.com", "Role", None, None, "member", 1),
+    ]
+    with engine.begin() as conn:
+        for link in links:
+            result = conn.execute(
+                text("""SELECT COUNT(*) FROM "tabPortalProfileLink" WHERE name = :name"""),
+                {"name": link[0]},
+            )
+            if result.scalar() == 0:
+                conn.execute(
+                    text("""
+                        INSERT INTO "tabPortalProfileLink"
+                        (name, parent, portal_user, doctype, docname, link_field, relationship, enabled, idx)
+                        VALUES (:name, :parent, :portal_user, :doctype, :docname, :link_field, :relationship, TRUE, :idx)
+                    """),
+                    {"name": link[0], "parent": link[1], "portal_user": link[2], "doctype": link[3], "docname": link[4], "link_field": link[5], "relationship": link[6], "idx": link[7]},
+                )
+
+
+def seed_portal_field_permissions(engine) -> None:
+    from sqlalchemy import text
+    fps = [
+        ("fp-DocType-name-Portal Admin", "DocType", "Portal Admin", "name", True, True, 0, 0),
+        ("fp-DocType-module-Portal Admin", "DocType", "Portal Admin", "module", True, False, 0, 1),
+        ("fp-Role-name-Portal Admin", "Role", "Portal Admin", "name", True, True, 0, 2),
+    ]
+    with engine.begin() as conn:
+        for fp in fps:
+            result = conn.execute(
+                text("""SELECT COUNT(*) FROM "tabPortalFieldPermission" WHERE name = :name"""),
+                {"name": fp[0]},
+            )
+            if result.scalar() == 0:
+                conn.execute(
+                    text("""
+                        INSERT INTO "tabPortalFieldPermission"
+                        (name, parent, portal_role, field_name, "read", "write", permlevel, enabled, idx)
+                        VALUES (:name, :parent, :portal_role, :field_name, :read, :write, :permlevel, TRUE, :idx)
+                    """),
+                    {"name": fp[0], "parent": fp[1], "portal_role": fp[2], "field_name": fp[3], "read": fp[4], "write": fp[5], "permlevel": fp[6], "idx": fp[7]},
+                )
