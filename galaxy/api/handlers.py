@@ -680,7 +680,7 @@ async def handle_print_html(request):
     name = urllib.parse.unquote(raw_name)
     fmt = request.query_params.get("format", "Standard")
     lh = request.query_params.get("letterhead", None)
-    from galaxy.model.print_engine import render_print_html
+    from galaxy.printing import render_print_html
     try:
         html = render_print_html(doctype, name, format_name=fmt, letterhead=lh)
     except ValueError as e:
@@ -699,7 +699,7 @@ async def handle_print_pdf(request):
     name = urllib.parse.unquote(raw_name)
     fmt = request.query_params.get("format", "Standard")
     lh = request.query_params.get("letterhead", None)
-    from galaxy.model.print_engine import render_print_pdf
+    from galaxy.printing import render_print_pdf
     from starlette.responses import Response
     try:
         pdf = render_print_pdf(doctype, name, format_name=fmt, letterhead=lh)

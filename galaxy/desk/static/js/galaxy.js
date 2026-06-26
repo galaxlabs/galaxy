@@ -329,3 +329,146 @@ galaxy.initNavActive = function () {
     else a.classList.remove("active");
   });
 };
+
+// ── Code Editor ──
+galaxy.codeEditor = {};
+
+galaxy.codeEditor.init = function () {
+  document.querySelectorAll("textarea.galaxy-code-editor, textarea[data-code-editor]").forEach(function (ta) {
+    if (ta.dataset.codeInited) return;
+    ta.dataset.codeInited = "1";
+    galaxy.codeEditor._enhance(ta);
+  });
+};
+
+galaxy.codeEditor._enhance = function (ta) {
+  var wrapper = document.createElement("div");
+  wrapper.className = "code-editor-wrapper";
+  ta.parentNode.insertBefore(wrapper, ta);
+  wrapper.appendChild(ta);
+
+  var toolbar = document.createElement("div");
+  toolbar.className = "code-editor-toolbar";
+  wrapper.insertBefore(toolbar, ta);
+
+  var findBtn = document.createElement("button");
+  findBtn.type = "button";
+  findBtn.className = "galaxy-btn galaxy-btn-ghost galaxy-btn-neutral galaxy-btn-xs";
+  findBtn.textContent = "Find";
+  findBtn.onclick = function () { galaxy.codeEditor._findReplace(ta, "find"); };
+  toolbar.appendChild(findBtn);
+
+  var replaceBtn = document.createElement("button");
+  replaceBtn.type = "button";
+  replaceBtn.className = "galaxy-btn galaxy-btn-ghost galaxy-btn-neutral galaxy-btn-xs";
+  replaceBtn.textContent = "Replace";
+  replaceBtn.onclick = function () { galaxy.codeEditor._findReplace(ta, "replace"); };
+  toolbar.appendChild(replaceBtn);
+
+  var expandBtn = document.createElement("button");
+  expandBtn.type = "button";
+  expandBtn.className = "galaxy-btn galaxy-btn-ghost galaxy-btn-neutral galaxy-btn-xs";
+  expandBtn.textContent = "⛶ Expand";
+  expandBtn.onclick = function () { galaxy.codeEditor._toggleExpand(ta, wrapper); };
+  toolbar.appendChild(expandBtn);
+
+  var autoHint = document.createElement("button");
+  autoHint.type = "button";
+  autoHint.className = "galaxy-btn galaxy-btn-ghost galaxy-btn-neutral galaxy-btn-xs";
+  autoHint.textContent = "Hints";
+  autoHint.onclick = function () { galaxy.codeEditor._showHints(ta); };
+  toolbar.appendChild(autoHint);
+
+  ta.addEventListener("keydown", function (e) {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      var start = ta.selectionStart, end = ta.selectionEnd;
+      ta.value = ta.value.substring(0, start) + "  " + ta.value.substring(end);
+      ta.selectionStart = ta.selectionEnd = start + 2;
+    }
+    if (e.key === "f" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      galaxy.codeEditor._findReplace(ta, "find");
+    }
+    if (e.key === "h" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      galaxy.codeEditor._findReplace(ta, "replace");
+    }
+  });
+
+  ta.style.minHeight = "200px";
+  ta.style.width = "100%";
+  ta.style.fontFamily = "'Cascadia Code', 'Fira Code', 'Consolas', monospace";
+  ta.style.fontSize = "13px";
+  ta.style.lineHeight = "1.5";
+  ta.style.tabSize = "2";
+};
+
+galaxy.codeEditor._findReplace = function (ta, mode) {
+  var q = prompt(mode === "find" ? "Find:" : "Find:");
+  if (!q) return;
+  if (mode === "find") {
+    var idx = ta.value.indexOf(q);
+    if (idx >= 0) { ta.focus(); ta.selectionStart = idx; ta.selectionEnd = idx + q.length; }
+    else { galaxy.toast("Not found", { tone: "warning" }); }
+  } else {
+    var r = prompt("Replace with:");
+    if (r === null) return;
+    ta.value = ta.value.split(q).join(r);
+    galaxy.toast("Replaced all occurrences", { tone: "success" });
+  }
+};
+
+galaxy.codeEditor._toggleExpand = function (ta, wrapper) {
+  var isExpanded = wrapper.classList.toggle("code-editor-expanded");
+  if (isExpanded) {
+    ta.style.position = "fixed";
+    ta.style.top = "10px";
+    ta.style.left = "10px";
+    ta.style.width = "calc(100vw - 40px)";
+    ta.style.height = "calc(100vh - 80px)";
+    ta.style.zIndex = "9999";
+    ta.style.maxWidth = "none";
+  } else {
+    ta.style.position = "";
+    ta.style.top = "";
+    ta.style.left = "";
+    ta.style.width = "100%";
+    ta.style.height = "";
+    ta.style.zIndex = "";
+    ta.style.maxWidth = "";
+  }
+};
+
+galaxy.codeEditor._showHints = function (ta) {
+  var fields = ta.dataset.fields || "";
+  if (!fields) {
+    galaxy.toast("No field hints available. Add data-fields='field1,field2' to the textarea.", { tone: "info" });
+    return;
+  }
+  var list = fields.split(",").map(function (f) { return f.trim(); }).filter(Boolean);
+  var insert = "{{ doc." + list[0] + " }}";
+  if (list.length > 1) {
+    var msg = "Available fields:\n" + list.map(function (f, i) { return (i + 1) + ". {{ doc." + f + " }}"; }).join("\n");
+    var choice = prompt(msg + "\n\nEnter field number to insert (or 0 for all):");
+    if (choice === null) return;
+    var n = parseInt(choice, 10);
+    if (n > 0 && n <= list.length) { insert = "{{ doc." + list[n - 1] + " }}"; }
+    else if (n === 0) { insert = list.map(function (f) { return "{{ doc." + f + " }}"; }).join("\n"); }
+    else return;
+  }
+  var start = ta.selectionStart;
+  ta.value = ta.value.substring(0, start) + insert + ta.value.substring(ta.selectionEnd);
+  ta.selectionStart = ta.selectionEnd = start + insert.length;
+  ta.focus();
+};
+
+// ── Init code editors on DOM ready ──
+document.addEventListener("DOMContentLoaded", function () {
+  galaxy.codeEditor.init();
+});
+
+// Re-init after HTMX swaps
+document.addEventListener("htmx:afterSwap", function () {
+  galaxy.codeEditor.init();
+});

@@ -41,8 +41,10 @@
               hx-get="/api/core/doctypes/{{ field.options }}/list?q="
               hx-trigger="keyup delay:300ms" hx-target="#link-suggest-{{ field.fieldname }}">
             <div id="link-suggest-{{ field.fieldname }}" class="link-suggestions"></div>
-          {% elif field.fieldtype == "Text" %}
+          {% elif field.fieldtype in ("Text", "Small Text", "Long Text") %}
             <textarea id="field-{{ field.fieldname }}" name="{{ field.fieldname }}" class="galaxy-textarea" rows="3">{{ record[field.fieldname] if record else '' }}</textarea>
+          {% elif field.fieldtype in ("Code", "HTML") %}
+            <textarea id="field-{{ field.fieldname }}" name="{{ field.fieldname }}" class="galaxy-code-editor" rows="8" data-fields="{% for f in meta.fields %}{{ f.fieldname }}{% if not loop.last %},{% endif %}{% endfor %}">{{ record[field.fieldname] if record else '' }}</textarea>
           {% elif field.fieldtype == "Int" %}
             <input type="number" id="field-{{ field.fieldname }}" name="{{ field.fieldname }}"
               value="{{ record[field.fieldname] if record else '' }}" class="galaxy-input">
