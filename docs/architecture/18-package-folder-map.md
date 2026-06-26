@@ -61,7 +61,7 @@ E:\Projects\galaxy\
 │           │       ├── mysql.py
 │           │       └── mariadb.py
 │           │
-│           ├── desk\          ← Galaxy Desk UI
+│           ├── desk\          ← Galaxy Desk UI (admin/operator)
 │           │   ├── __init__.py
 │           │   ├── routes.py
 │           │   ├── layout.py
@@ -76,6 +76,36 @@ E:\Projects\galaxy\
 │           │   │   └── ...      (per component)
 │           │   ├── templates\   ← Desk Jinja2 templates
 │           │   └── static\      ← Desk CSS/JS
+│           │
+│           ├── portal\        ← Galaxy Portal UI (external users)
+│           │   ├── __init__.py
+│           │   ├── routes.py
+│           │   ├── auth.py
+│           │   ├── profile.py
+│           │   ├── dashboard.py
+│           │   ├── widgets.py
+│           │   ├── permissions.py
+│           │   ├── page_builder.py
+│           │   ├── theme.py
+│           │   ├── notifications.py
+│           │   ├── public_actions.py
+│           │   ├── resource.py
+│           │   ├── templates\
+│           │   │   ├── dashboard.html
+│           │   │   ├── profile.html
+│           │   │   ├── resource_list.html
+│           │   │   ├── resource_form.html
+│           │   │   ├── page.html
+│           │   │   └── widgets/
+│           │   └── static\
+│           │       ├── css/
+│           │       │   ├── portal.css
+│           │       │   ├── theme.css
+│           │       │   └── components/
+│           │       └── js/
+│           │           ├── portal.js
+│           │           ├── dashboard.js
+│           │           └── components/
 │           │
 │           ├── email\         ← Email sending
 │           │   ├── __init__.py
@@ -188,11 +218,19 @@ E:\Projects\galaxy\
 │           │   ├── security.py
 │           │   └── logging.py
 │           │
-│           ├── website\       ← Public website routes
+│           ├── website\       ← Public website engine (guests)
 │           │   ├── __init__.py
 │           │   ├── routes.py
 │           │   ├── renderer.py
-│           │   └── templates\
+│           │   ├── seo.py
+│           │   ├── sitemap.py
+│           │   ├── public_forms.py
+│           │   ├── templates\
+│           │   │   ├── landing.html
+│           │   │   ├── page.html
+│           │   │   ├── docs.html
+│           │   │   └── components/
+│           │   └── static\
 │           │
 │           ├── workflow\      ← Workflow engine
 │           │   ├── __init__.py
@@ -200,11 +238,13 @@ E:\Projects\galaxy\
 │           │   ├── state.py
 │           │   └── transition.py
 │           │
-│           └── www\           ← Public HTML pages
-│               ├── index.html
-│               ├── login.html
-│               ├── setup.html
-│               └── not_found.html
+│           └── www\           ← Public HTML shell pages
+│               ├── index.html         ← Landing entry
+│               ├── login.html         ← Login shell
+│               ├── signup.html        ← Signup shell
+│               ├── portal.html        ← Portal entry
+│               ├── not_found.html     ← 404 fallback
+│               └── error.html         ← 500 fallback
 │
 ├── sites\                     ← Site configurations + data
 │   ├── common_site_config.json
@@ -214,12 +254,16 @@ E:\Projects\galaxy\
 │       ├── logs\
 │       └── backups\
 │
-├── public\                    ← Public web assets
-│   ├── desk\
-│   ├── studio\
-│   ├── assets\
-│   ├── icons\
-│   └── images\
+├── public\                    ← Public static assets
+│   ├── assets\                ← Generated/compiled CSS/JS
+│   ├── icons\                 ← Icon sets (Lucide SVGs, etc.)
+│   ├── images\                ← Public images
+│   ├── fonts\                 ← Font files
+│   ├── uploads\               ← User-uploaded public files
+│   ├── portal\                ← Portal-specific assets
+│   ├── desk\                  ← Desk-specific assets
+│   ├── studio\                ← Studio-specific assets
+│   └── themes\                ← Generated theme CSS files
 │
 ├── docs\                      ← Documentation
 │   └── architecture\

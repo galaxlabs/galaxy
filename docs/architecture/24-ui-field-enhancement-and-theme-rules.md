@@ -401,7 +401,57 @@ class GalaxyField {
 }
 ```
 
-## 9. Theme Switching Flow
+## 9. Portal Theme System
+
+Portal UI is themeable independently from Desk. Portal themes use a separate set of CSS variables (`--portal-*`) and a separate resolution pipeline.
+
+### Portal Theme CSS Variables
+
+```css
+:root {
+  --portal-primary: #4f46e5;
+  --portal-accent: #06b6d4;
+  --portal-bg: #f8fafc;
+  --portal-surface: #ffffff;
+  --portal-text: #0f172a;
+  --portal-muted: #64748b;
+  --portal-border: #e2e8f0;
+  --portal-card: #ffffff;
+  --portal-field-bg: #ffffff;
+  --portal-field-text: #0f172a;
+  --portal-field-border: #cbd5e1;
+  --portal-radius: 8px;
+  --portal-density: 1;
+  --portal-font: 'Inter', system-ui, sans-serif;
+}
+```
+
+### Portal Theme Resolution Order
+
+1. User-specific theme preference (stored in Portal User profile)
+2. Role-specific theme (stored in Portal Role)
+3. Portal-specific theme (stored in Portal metadata)
+4. Page-specific theme override (stored in Portal Page)
+5. System default portal theme
+6. Light mode fallback
+
+### Field-level styling in portal forms
+
+Portal form fields use the same `ui_config` properties as Desk fields (see §2) but rendered with `--portal-*` CSS variables. Portal field rendering can be customized further through:
+
+- `PortalFieldPermission` — overrides field-level read/write/mask behavior for portal users
+- `ui_variant` / `ui_tone` / `ui_size` — same field UI properties apply in portal context
+- Portal-specific field components — configured via `PortalTheme` component overrides
+
+### Dark mode for portal
+
+Portal supports dark mode independently from Desk. When portal dark mode is active, `--portal-*` variables switch to dark values. The portal theme system supports:
+
+- `mode: light` — always light
+- `mode: dark` — always dark
+- `mode: system` — follow OS/browser preference
+
+## 10. Theme Switching Flow
 
 ```
 Desk UI → User clicks theme switcher

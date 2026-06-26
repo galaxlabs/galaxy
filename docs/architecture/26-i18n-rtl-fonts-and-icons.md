@@ -398,7 +398,48 @@ Every component that displays an icon should accept icon metadata:
 ) }}
 ```
 
-## 9. Accessibility Rules
+## 9. Portal Language, RTL, and Icons
+
+Portal UI has its own i18n, RTL, and icon strategy, separate from Desk.
+
+### Portal language switching
+
+Portal users can set their language preference independent of the system language. The portal resolves language in this order:
+
+1. Portal user's `language` field on `tabPortalUser`
+2. Portal default language (set in Portal metadata)
+3. Browser `Accept-Language` header
+4. System default language
+
+Portal translations use the same `tabTranslation` table as Desk, scoped by context. Portal-specific translation keys use the `portal` context prefix.
+
+### Portal RTL layout
+
+Portal supports RTL layout independent from Desk. When the user's language is RTL (Urdu, Arabic, etc.):
+
+- The `<html>` `dir` attribute is set to `rtl`
+- `--portal-*` CSS variables adjust spacing and alignment directionally
+- Portal components use logical CSS properties (`margin-inline-start`, `padding-inline-end`)
+- Portal navigation reverses order (sidebar on the right)
+- Portal form fields mirror layout
+- Portal dashboard grid reverses
+
+The portal RTL system is a subset of the Desk RTL system (see §5–6) but applied to `--portal-*` CSS variables and portal components.
+
+### Portal icon strategy
+
+Portal reuses the same icon provider system as Desk (see §4). The default portal icon provider is also Lucide. Portal components accept icon metadata in the same format:
+
+```jinja
+{{ portal.icon("user", size=20) }}
+{{ portal.button("Profile", icon={"provider": "lucide", "name": "user"}) }}
+```
+
+Portal can optionally use a different icon provider than Desk (e.g., Desk uses Lucide, Portal uses Heroicons). This is configured per Portal metadata.
+
+The same universal icon name mapping (see §6.3) applies to portal icons.
+
+## 10. Accessibility Rules
 
 | Rule | Description |
 |------|-------------|

@@ -274,15 +274,15 @@ Each DocType can target one or more user worlds for access. Exposure is controll
 | `allow_web_view` | Check | false | Enable public read access |
 | `allow_public_api` | Check | false | Enable public REST API access |
 
-- **`exposure = system`** — DocType only accessible via Desk and internal API. No portal or public access.
-- **`exposure = portal`** — DocType accessible via portal routes and portal API, in addition to system.
+- **`exposure = system`** — DocType only accessible via Desk, Studio, and internal API. No portal or public access.
+- **`exposure = portal`** — DocType accessible via portal routes and portal API, in addition to Desk/Studio.
 - **`exposure = public`** — DocType accessible to guests via public routes (read-only unless public forms are configured).
-- **`exposure = all`** — DocType accessible across all three worlds with appropriate restrictions per world.
+- **`exposure = all`** — DocType accessible across all four UIs (Desk, Studio, Portal, Website) with appropriate restrictions per world.
 
 Each exposure level uses its own permission/view layer:
-- System access → evaluated through DocPerm + FieldPermission + PermissionRule (see Doc 28 §3.4)
-- Portal access → evaluated through PortalPermission + PortalFieldPermission + PortalProfileLink (see Doc 28 §4.4)
-- Public access → evaluated through PublicViewRule + PublicForm + PublicAccessToken (see Doc 28 §5.4)
+- Desk/Studio access → evaluated through DocPerm + FieldPermission + PermissionRule (see Doc 28 §3.4)
+- Portal access → evaluated through PortalPermission + PortalFieldPermission + PortalProfileLink (see Doc 27 §5–6)
+- Website/Public access → evaluated through PublicViewRule + PublicForm + PublicAccessToken (see Doc 27 §11)
 
 ## 10. Field Type Dictionary Extension
 
