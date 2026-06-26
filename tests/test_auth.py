@@ -98,7 +98,7 @@ def test_login_then_protected_api():
     login_resp = client.post("/api/auth/login", json={"username": "Administrator", "password": "admin"})
     assert login_resp.status_code == 200
 
-    resp = client.get("/api/resource/Supplier", cookies=login_resp.cookies)
+    resp = client.get("/api/resource/DocType", cookies=login_resp.cookies)
     assert resp.status_code == 200
     data = resp.json()
     assert data["success"] is True
@@ -153,13 +153,13 @@ def test_logout_invalidates_session():
     assert login_resp.status_code == 200
     cookie_jar = login_resp.cookies
 
-    resp_before = client.get("/api/resource/Supplier", cookies=cookie_jar)
+    resp_before = client.get("/api/resource/DocType", cookies=cookie_jar)
     assert resp_before.status_code == 200
 
     logout_resp = client.post("/api/auth/logout", cookies=cookie_jar)
     assert logout_resp.status_code == 200
 
-    resp_after = client.get("/api/resource/Supplier", cookies=cookie_jar)
+    resp_after = client.get("/api/resource/DocType", cookies=cookie_jar)
     assert resp_after.status_code == 401
     data = resp_after.json()
     assert data["success"] is False
@@ -176,7 +176,7 @@ def test_desk_doctypes_redirects_without_session():
 
 
 def test_api_resource_post_returns_401_without_session():
-    resp = client.post("/api/resource/Supplier", json={"supplier_name": "Test"})
+    resp = client.post("/api/resource/DocType", json={"module": "Test", "app_name": "test"})
     assert resp.status_code == 401
     data = resp.json()
     assert data["success"] is False
@@ -184,7 +184,7 @@ def test_api_resource_post_returns_401_without_session():
 
 
 def test_migration_apply_returns_401_without_session():
-    resp = client.post("/api/migration/doctype/Customer/apply")
+    resp = client.post("/api/migration/doctype/DocType/apply")
     assert resp.status_code == 401
     data = resp.json()
     assert data["success"] is False
@@ -220,7 +220,7 @@ def test_logout_without_session_safe():
 
 def test_migration_preview_public():
     """Migration preview is read-only, should be accessible without auth."""
-    resp = client.get("/api/migration/doctype/Supplier/preview")
+    resp = client.get("/api/migration/doctype/DocType/preview")
     assert resp.status_code == 200
 
 

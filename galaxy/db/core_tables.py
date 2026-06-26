@@ -173,7 +173,7 @@ def create_core_tables(engine: Engine) -> None:
             stack_trace TEXT,
             source VARCHAR(255),
             request_path VARCHAR(255),
-            method VARCHAR(10),
+            method VARCHAR(255),
             user_name VARCHAR(255),
             status VARCHAR(50),
             tenant_id VARCHAR(255) NOT NULL DEFAULT 'Default',
@@ -455,6 +455,7 @@ def create_core_tables(engine: Engine) -> None:
         _tenant_alter("tabServer Script"),
         _tenant_alter("tabReport"),
         _tenant_alter("tabError Log"),
+        'ALTER TABLE "tabError Log" ALTER COLUMN method TYPE VARCHAR(255);',
     ]
 
     with engine.begin() as conn:

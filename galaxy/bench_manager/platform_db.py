@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 
 
 def get_platform_db_path():
-    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     return os.path.join(root, "sites", "platform.db")
 
 

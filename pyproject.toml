@@ -72,10 +72,10 @@ requires = ["hatchling>=1.25,<2"]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]
-path = "apps/galaxy/galaxy/__init__.py"
+path = "galaxy/__init__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["apps/galaxy/galaxy"]
+packages = ["galaxy"]
 
 [tool.ruff]
 line-length = 110

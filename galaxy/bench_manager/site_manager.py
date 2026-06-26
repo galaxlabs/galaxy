@@ -19,7 +19,7 @@ from galaxy.db.connection import get_engine
 
 
 def _get_sites_dir():
-    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     return os.path.join(root, "sites")
 
 

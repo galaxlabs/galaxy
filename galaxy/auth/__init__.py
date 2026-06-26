@@ -76,12 +76,12 @@ def get_session(token: str) -> dict | None:
     session = dict(row)
     expires_at = session["expires_at"]
 
-    now = datetime.now(UTC)
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=UTC)
-
-    if now > expires_at:
-        return None
+    if expires_at.tzinfo is not None:
+        if datetime.now(UTC) > expires_at:
+            return None
+    else:
+        if datetime.now().replace(tzinfo=None) > expires_at:
+            return None
 
     if not session.get("enabled", True):
         return None
