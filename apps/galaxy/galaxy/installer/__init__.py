@@ -14,6 +14,10 @@ from galaxy.db.seed import (
     seed_phase3_doctypes,
     seed_phase4_docfields,
     seed_phase4_doctypes,
+    seed_portal_docfields,
+    seed_portal_doctypes,
+    seed_portal_module,
+    seed_portal_roles,
     seed_roles,
     seed_tenant,
 )
@@ -107,6 +111,26 @@ def run_install(site_name: str | None = None):
     print("Phase 4 DocField metadata seed: OK")
     print()
 
+    print("Registering Portal module...")
+    seed_portal_module(engine)
+    print("Portal module: OK")
+    print()
+
+    print("Seeding Portal DocType metadata records...")
+    seed_portal_doctypes(engine)
+    print("Portal DocType metadata seed: OK")
+    print()
+
+    print("Seeding Portal DocField records...")
+    seed_portal_docfields(engine)
+    print("Portal DocField metadata seed: OK")
+    print()
+
+    print("Seeding Portal roles...")
+    seed_portal_roles(engine)
+    print("Portal roles seed: OK")
+    print()
+
     print("Administrator username: Administrator")
     print("Administrator password: admin")
     print()
@@ -178,6 +202,10 @@ def run_doctor():
     field_perms = count_table("tabFieldPermission")
     data_masks = count_table("tabDataMaskRule")
     permission_rules = count_table("tabPermissionRule")
+    portal_users = count_table("tabPortalUser")
+    portal_roles = count_table("tabPortalRole")
+    portal_perms = count_table("tabPortalPermission")
+    portal_sessions = count_table("tabPortalSession")
 
     print()
     print(f"Installed apps: {installed_apps}")
@@ -196,6 +224,10 @@ def run_doctor():
     print(f"FieldPermissions: {field_perms}")
     print(f"DataMaskRules: {data_masks}")
     print(f"PermissionRules: {permission_rules}")
+    print(f"PortalUsers: {portal_users}")
+    print(f"PortalRoles: {portal_roles}")
+    print(f"PortalPermissions: {portal_perms}")
+    print(f"PortalSessions: {portal_sessions}")
     print()
 
     if (installed_apps >= 1 and installed_modules >= 6 and users >= 1

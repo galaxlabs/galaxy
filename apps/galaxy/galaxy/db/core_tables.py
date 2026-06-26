@@ -279,6 +279,73 @@ def create_core_tables(engine: Engine) -> None:
         """,
     ]
 
+    portal_statements = [
+        """
+        CREATE TABLE IF NOT EXISTS "tabPortalUser" (
+            name VARCHAR(255) PRIMARY KEY,
+            email VARCHAR(255) NOT NULL UNIQUE,
+            phone VARCHAR(50),
+            display_name VARCHAR(255),
+            username VARCHAR(255) UNIQUE,
+            avatar VARCHAR(512),
+            language VARCHAR(10) DEFAULT 'en',
+            timezone VARCHAR(50) DEFAULT 'UTC',
+            portal_role VARCHAR(255),
+            linked_doctype VARCHAR(255),
+            linked_docname VARCHAR(255),
+            account_status VARCHAR(50) NOT NULL DEFAULT 'active',
+            email_verified BOOLEAN DEFAULT FALSE,
+            phone_verified BOOLEAN DEFAULT FALSE,
+            password_hash VARCHAR(255) NOT NULL,
+            last_login TIMESTAMP,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabPortalRole" (
+            name VARCHAR(255) PRIMARY KEY,
+            role_name VARCHAR(255) NOT NULL UNIQUE,
+            description TEXT,
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabPortalPermission" (
+            name VARCHAR(255) PRIMARY KEY,
+            parent VARCHAR(255) NOT NULL,
+            portal_role VARCHAR(255) NOT NULL,
+            permlevel INTEGER DEFAULT 0,
+            "read" BOOLEAN DEFAULT FALSE,
+            "write" BOOLEAN DEFAULT FALSE,
+            "create" BOOLEAN DEFAULT FALSE,
+            "delete" BOOLEAN DEFAULT FALSE,
+            "comment" BOOLEAN DEFAULT FALSE,
+            "upload" BOOLEAN DEFAULT FALSE,
+            "download" BOOLEAN DEFAULT FALSE,
+            "export" BOOLEAN DEFAULT FALSE,
+            "run_action" BOOLEAN DEFAULT FALSE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabPortalSession" (
+            name VARCHAR(255) PRIMARY KEY,
+            user_name VARCHAR(255) NOT NULL,
+            token VARCHAR(255) NOT NULL UNIQUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP NOT NULL
+        );
+        """,
+    ]
+
     phase4_statements = [
         """
         CREATE TABLE IF NOT EXISTS "tabFieldPermission" (
@@ -399,6 +466,8 @@ def create_core_tables(engine: Engine) -> None:
             conn.execute(text(stmt))
         for stmt in phase4_statements:
             conn.execute(text(stmt))
+        for stmt in portal_statements:
+            conn.execute(text(stmt))
         for stmt in alter_statements:
             conn.execute(text(stmt))
 
@@ -428,6 +497,10 @@ def drop_core_tables(engine: Engine) -> None:
         "tabFieldPermission",
         "tabDataMaskRule",
         "tabPermissionRule",
+        "tabPortalSession",
+        "tabPortalPermission",
+        "tabPortalRole",
+        "tabPortalUser",
     ]
 
     with engine.begin() as conn:

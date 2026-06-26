@@ -68,6 +68,16 @@ from galaxy.core.tenant import (
     handle_tenant_update,
 )
 from galaxy.desk.components import ui
+from galaxy.portal.api import (
+    handle_portal_home,
+    handle_portal_login,
+    handle_portal_login_page,
+    handle_portal_logout,
+    handle_portal_me,
+    handle_portal_profile,
+    handle_portal_signup,
+    handle_portal_signup_page,
+)
 
 
 def _slugify(name):
@@ -441,8 +451,14 @@ PUBLIC_EXACT = {
     "/login",
     "/api/auth/login",
     "/api/auth/logout",
+    "/api/portal/auth/login",
+    "/api/portal/auth/signup",
+    "/api/portal/auth/logout",
 }
 PUBLIC_PREFIXES = ["/static", "/assets", "/favicon.ico", "/desk/assets"]
+PORTAL_PROTECTED_PREFIXES = ["/api/portal/auth/me", "/api/portal/auth/logout", "/api/portal/profile"]
+PORTAL_PAGE_PREFIXES = ["/portal"]
+
 ALLOWED_CORE_PREFIXES = [
     "/api/core/installed-apps",
     "/api/core/installed-modules",
@@ -471,6 +487,10 @@ def _is_protected(path: str) -> tuple[bool, bool]:
         if _path_matches(path, p):
             return True, True
 
+    for p in PORTAL_PROTECTED_PREFIXES:
+        if _path_matches(path, p):
+            return True, True
+
     if path.startswith("/api/migration/") and path.endswith("/apply"):
         return True, True
 
@@ -480,10 +500,12 @@ def _is_protected(path: str) -> tuple[bool, bool]:
 class RequireSessionMiddleware:
     def __init__(self, app):
         self.app = app
+        self._portal_prefixes = ["/api/portal", "/portal"]
 
     async def __call__(self, scope, receive, send):
         path = scope.get("path", "")
         protected, is_api = _is_protected(path)
+        is_portal = any(path.startswith(p) for p in self._portal_prefixes)
 
         if not protected:
             await self.app(scope, receive, send)
@@ -491,6 +513,22 @@ class RequireSessionMiddleware:
 
         from starlette.requests import Request
         request = Request(scope, receive)
+
+        if is_portal:
+            from galaxy.portal.auth import portal_require_session
+            session = portal_require_session(request)
+            if session is not None:
+                request.state.portal_session = session
+                await self.app(scope, receive, send)
+                return
+            if is_api:
+                response = JSONResponse({"success": False, "error": "Portal authentication required."}, status_code=401)
+                await response(scope, receive, send)
+            else:
+                response = RedirectResponse(url="/portal/login", status_code=302)
+                await response(scope, receive, send)
+            return
+
         tenant_id = get_tenant_id(request)
         from galaxy.core.tenant import current_tenant
         current_tenant.set(tenant_id)
@@ -575,6 +613,14 @@ routes = [
     Route("/desk/bench/sites/new", endpoint=desk_bench_new),
     Route("/desk/bench/sites/{name}", endpoint=desk_bench_site),
     Route("/desk/tenants", endpoint=desk_tenants),
+    Route("/portal", endpoint=handle_portal_home),
+    Route("/portal/login", endpoint=handle_portal_login_page),
+    Route("/portal/signup", endpoint=handle_portal_signup_page),
+    Route("/api/portal/auth/login", endpoint=handle_portal_login, methods=["POST"]),
+    Route("/api/portal/auth/signup", endpoint=handle_portal_signup, methods=["POST"]),
+    Route("/api/portal/auth/logout", endpoint=handle_portal_logout, methods=["POST"]),
+    Route("/api/portal/auth/me", endpoint=handle_portal_me),
+    Route("/api/portal/profile", endpoint=handle_portal_profile),
     Mount("/static", app=StaticFiles(directory=STATIC_DIR), name="static"),
 ]
 

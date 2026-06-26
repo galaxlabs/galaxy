@@ -756,6 +756,217 @@ def seed_phase4_doctypes(engine: Engine) -> None:
                 )
 
 
+PHASE_PORTAL_DOCTYPES = [
+    "PortalUser",
+    "PortalRole",
+    "PortalPermission",
+    "PortalSession",
+]
+
+
+def seed_portal_doctypes(engine: Engine) -> None:
+    portal_dt = [
+        ("PortalUser", "Portal", "core", "tabPortalUser", False, False, False, False, 22),
+        ("PortalRole", "Portal", "core", "tabPortalRole", False, False, False, False, 23),
+        ("PortalPermission", "Portal", "core", "tabPortalPermission", False, False, False, False, 24),
+        ("PortalSession", "Portal", "core", "tabPortalSession", False, False, False, False, 25),
+    ]
+    with engine.begin() as conn:
+        for dt in portal_dt:
+            result = conn.execute(
+                text("""SELECT COUNT(*) FROM "tabDocType" WHERE name = :name"""),
+                {"name": dt[0]},
+            )
+            if result.scalar() == 0:
+                conn.execute(
+                    text("""
+                        INSERT INTO "tabDocType"
+                        (name, module, app_name, table_name, is_single, is_submittable, is_child_table, is_tree, idx)
+                        VALUES (:name, :module, :app_name, :table_name, :is_single, :is_submittable, :is_child_table, :is_tree, :idx)
+                    """),
+                    {
+                        "name": dt[0],
+                        "module": dt[1],
+                        "app_name": dt[2],
+                        "table_name": dt[3],
+                        "is_single": dt[4],
+                        "is_submittable": dt[5],
+                        "is_child_table": dt[6],
+                        "is_tree": dt[7],
+                        "idx": dt[8],
+                    },
+                )
+
+    with engine.begin() as conn:
+        for parent in PHASE_PORTAL_DOCTYPES:
+            perm_name = f"{parent}-System Manager"
+            result = conn.execute(
+                text("""SELECT COUNT(*) FROM "tabDocPerm" WHERE name = :name"""),
+                {"name": perm_name},
+            )
+            if result.scalar() == 0:
+                conn.execute(
+                    text("""
+                        INSERT INTO "tabDocPerm"
+                        (name, parent, role, permlevel, "read", "write", "create", "delete", idx)
+                        VALUES (:name, :parent, :role, :permlevel, :read, :write, :create, :delete, :idx)
+                    """),
+                    {
+                        "name": perm_name,
+                        "parent": parent,
+                        "role": "System Manager",
+                        "permlevel": 0,
+                        "read": True,
+                        "write": True,
+                        "create": True,
+                        "delete": True,
+                        "idx": 0,
+                    },
+                )
+
+
+def seed_portal_roles(engine: Engine) -> None:
+    portal_roles = [
+        ("Portal User", "Portal User", "Default portal user role", 0),
+        ("Portal Admin", "Portal Admin", "Portal administrator role", 1),
+    ]
+    with engine.begin() as conn:
+        for role in portal_roles:
+            result = conn.execute(
+                text("""SELECT COUNT(*) FROM "tabPortalRole" WHERE name = :name"""),
+                {"name": role[0]},
+            )
+            if result.scalar() == 0:
+                conn.execute(
+                    text("""
+                        INSERT INTO "tabPortalRole" (name, role_name, description, enabled, idx)
+                        VALUES (:name, :role_name, :description, :enabled, :idx)
+                    """),
+                    {"name": role[0], "role_name": role[0], "description": role[2], "enabled": True, "idx": role[3]},
+                )
+
+
+PHASE_PORTAL_DOCFIELDS = {
+    "PortalUser": [
+        ("name", "Name", "Data", None, True, False, False, True, 0),
+        ("email", "Email", "Data", None, True, False, False, True, 1),
+        ("phone", "Phone", "Data", None, False, False, False, False, 2),
+        ("display_name", "Display Name", "Data", None, False, False, False, True, 3),
+        ("username", "Username", "Data", None, False, False, False, True, 4),
+        ("avatar", "Avatar", "Attach Image", None, False, False, False, False, 5),
+        ("language", "Language", "Data", None, False, False, False, False, 6),
+        ("timezone", "Timezone", "Data", None, False, False, False, False, 7),
+        ("portal_role", "Portal Role", "Link", "PortalRole", False, False, False, True, 8),
+        ("linked_doctype", "Linked DocType", "Data", None, False, False, False, False, 9),
+        ("linked_docname", "Linked Document", "Data", None, False, False, False, False, 10),
+        ("account_status", "Account Status", "Select", "active\nsuspended\ndisabled\npending_verification", True, False, False, True, 11),
+        ("email_verified", "Email Verified", "Check", None, False, False, False, False, 12),
+        ("phone_verified", "Phone Verified", "Check", None, False, False, False, False, 13),
+        ("password_hash", "Password Hash", "Data", None, True, False, True, False, 14),
+        ("last_login", "Last Login", "Datetime", None, False, False, False, False, 15),
+        ("idx", "Idx", "Int", None, False, False, False, False, 16),
+    ],
+    "PortalRole": [
+        ("name", "Name", "Data", None, True, False, False, True, 0),
+        ("role_name", "Role Name", "Data", None, True, False, False, True, 1),
+        ("description", "Description", "Text", None, False, False, False, False, 2),
+        ("enabled", "Enabled", "Check", None, False, False, False, True, 3),
+        ("idx", "Idx", "Int", None, False, False, False, False, 4),
+    ],
+    "PortalPermission": [
+        ("name", "Name", "Data", None, True, False, False, True, 0),
+        ("parent", "Parent", "Data", None, True, False, False, True, 1),
+        ("portal_role", "Portal Role", "Link", "PortalRole", True, False, False, True, 2),
+        ("permlevel", "Permission Level", "Int", None, False, False, False, False, 3),
+        ("read", "Read", "Check", None, True, False, False, True, 4),
+        ("write", "Write", "Check", None, True, False, False, True, 5),
+        ("create", "Create", "Check", None, True, False, False, True, 6),
+        ("delete", "Delete", "Check", None, True, False, False, True, 7),
+        ("comment", "Comment", "Check", None, False, False, False, False, 8),
+        ("upload", "Upload", "Check", None, False, False, False, False, 9),
+        ("download", "Download", "Check", None, False, False, False, False, 10),
+        ("export", "Export", "Check", None, False, False, False, False, 11),
+        ("run_action", "Run Action", "Check", None, False, False, False, False, 12),
+        ("idx", "Idx", "Int", None, False, False, False, False, 13),
+    ],
+    "PortalSession": [
+        ("name", "Name", "Data", None, True, False, False, True, 0),
+        ("user_name", "User Name", "Data", None, True, False, False, True, 1),
+        ("token", "Token", "Data", None, True, False, False, False, 2),
+        ("expires_at", "Expires At", "Datetime", None, True, False, False, False, 3),
+        ("idx", "Idx", "Int", None, False, False, False, False, 4),
+    ],
+}
+
+
+def seed_portal_docfields(engine: Engine) -> None:
+    with engine.begin() as conn:
+        for parent, fields in PHASE_PORTAL_DOCFIELDS.items():
+            for (fieldname, label, fieldtype, options, reqd, hidden, read_only, in_list_view, idx) in fields:
+                docfield_name = f"{parent}.{fieldname}"
+                result = conn.execute(
+                    text("""SELECT COUNT(*) FROM "tabDocField" WHERE name = :name"""),
+                    {"name": docfield_name},
+                )
+                if result.scalar() == 0:
+                    conn.execute(
+                        text("""
+                            INSERT INTO "tabDocField"
+                            (name, parent, fieldname, label, fieldtype, options, reqd, hidden, read_only, in_list_view, idx)
+                            VALUES (:name, :parent, :fieldname, :label, :fieldtype, :options, :reqd, :hidden, :read_only, :in_list_view, :idx)
+                        """),
+                        {
+                            "name": docfield_name,
+                            "parent": parent,
+                            "fieldname": fieldname,
+                            "label": label,
+                            "fieldtype": fieldtype,
+                            "options": options,
+                            "reqd": reqd,
+                            "hidden": hidden,
+                            "read_only": read_only,
+                            "in_list_view": in_list_view,
+                            "idx": idx,
+                        },
+                    )
+
+
+def seed_portal_module(engine: Engine) -> None:
+    with engine.begin() as conn:
+        result = conn.execute(
+            text("""SELECT COUNT(*) FROM "tabInstalled Module" WHERE name = :name"""),
+            {"name": "Portal"},
+        )
+        if result.scalar() == 0:
+            conn.execute(
+                text("""
+                    INSERT INTO "tabInstalled Module" (name, module_name, app_name, enabled, idx)
+                    VALUES (:name, :module_name, :app_name, :enabled, :idx)
+                """),
+                {"name": "Portal", "module_name": "Portal", "app_name": "core", "enabled": True, "idx": 6},
+            )
+        result = conn.execute(
+            text("""SELECT COUNT(*) FROM "tabModule Def" WHERE name = :name"""),
+            {"name": "Portal"},
+        )
+        if result.scalar() == 0:
+            conn.execute(
+                text("""
+                    INSERT INTO "tabModule Def" (name, module_name, app_name, label, description, enabled, idx)
+                    VALUES (:name, :module_name, :app_name, :label, :description, :enabled, :idx)
+                """),
+                {
+                    "name": "Portal",
+                    "module_name": "Portal",
+                    "app_name": "core",
+                    "label": "Portal",
+                    "description": "Portal module for external user access",
+                    "enabled": True,
+                    "idx": 6,
+                },
+            )
+
+
 PHASE4_DOCFIELDS = {
     "FieldPermission": [
         ("name", "Name", "Data", None, True, False, False, True, 0),
