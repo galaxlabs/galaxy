@@ -666,6 +666,29 @@ async def handle_resource_export(request):
     )
 
 
+async def handle_resource_import(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
+    if not _require_csrf(request):
+        return _err(403, "Invalid CSRF token.")
+    raw = request.path_params.get("doctype", "")
+    doctype = urllib.parse.unquote(raw)
+    user = _get_user(request)
+    ok, msg = authorize(doctype, user, "create")
+    if not ok:
+        return _err(403, msg)
+    fmt = request.query_params.get("format", "csv")
+    body = await request.body()
+    if not body:
+        return _err(400, "No data provided.")
+    from galaxy.model.import_engine import import_docs
+    try:
+        result = import_docs(doctype, fmt, body)
+    except (ValueError, RuntimeError) as e:
+        return _err(400, str(e))
+    return _ok(result)
+
+
 async def handle_resource_delete(request):
     if require_auth(request) is None:
         return JSONResponse(AUTH_REQUIRED, status_code=401)

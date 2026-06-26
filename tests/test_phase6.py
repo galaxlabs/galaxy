@@ -8,6 +8,18 @@ from galaxy.model.field_type_registry import (
 )
 
 
+@pytest.fixture
+def authed_client(client):
+    from galaxy.auth import create_session
+    session = create_session("Administrator")
+    client.cookies.set("galaxy_session", session)
+    return client
+
+@pytest.fixture
+def client():
+    return TestClient(app)
+
+
 class TestFieldTypeRegistry:
     def test_builtin_types_have_expected_names(self):
         types = get_all_types()
@@ -141,13 +153,87 @@ class TestExportEngine:
         lines = resp.text.strip().split("\n")
         assert len(lines) <= 6
 
-    @pytest.fixture
-    def authed_client(self, client):
-        from galaxy.auth import create_session
-        session = create_session("Administrator")
-        client.cookies.set("galaxy_session", session)
-        return client
+def _cleanup_import_test_data():
+    from galaxy.config import load_site_config
+    from galaxy.database.connection import get_engine
+    from sqlalchemy import text
+    _, site = load_site_config()
+    engine = get_engine(site)
+    with engine.begin() as conn:
+        conn.execute(text("""DELETE FROM "tabRole" WHERE name LIKE 'imp-%'"""))
 
-    @pytest.fixture
-    def client(self):
-        return TestClient(app)
+_cleanup_import_test_data()
+
+
+class TestImportEngine:
+    def test_import_csv_requires_auth(self, client):
+        resp = client.post("/api/resource/Role/import?format=csv", content="name,role_name\nx,test")
+        assert resp.status_code == 401
+
+    def test_import_csv_creates_docs(self, authed_client):
+        from galaxy.security import generate_csrf_token
+        from galaxy.auth import create_session
+        import json
+
+        _cleanup_import_test_data()
+        session = create_session("Administrator")
+        csrf = generate_csrf_token(session)
+        authed_client.cookies.set("galaxy_session", session)
+        csv_data = "name,role_name\nimp-test-role,Import Test Role"
+        resp = authed_client.post(
+            "/api/resource/Role/import?format=csv",
+            content=csv_data,
+            headers={"Content-Type": "text/plain", "X-CSRF-Token": csrf},
+        )
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert data["success_count"] >= 1
+        assert data["error_count"] == 0
+        assert "imp-test-role" in data["created"]
+
+    def test_import_json_creates_docs(self, authed_client):
+        from galaxy.security import generate_csrf_token
+        from galaxy.auth import create_session
+        import json
+
+        _cleanup_import_test_data()
+        session = create_session("Administrator")
+        csrf = generate_csrf_token(session)
+        authed_client.cookies.set("galaxy_session", session)
+        payload = json.dumps([{"name": "imp-json-role", "role_name": "Import JSON Role"}])
+        resp = authed_client.post(
+            "/api/resource/Role/import?format=json",
+            content=payload,
+            headers={"Content-Type": "application/json", "X-CSRF-Token": csrf},
+        )
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert data["success_count"] >= 1
+        assert data["error_count"] == 0
+
+    def test_import_invalid_format(self, authed_client):
+        from galaxy.security import generate_csrf_token
+        from galaxy.auth import create_session
+
+        session = create_session("Administrator")
+        csrf = generate_csrf_token(session)
+        authed_client.cookies.set("galaxy_session", session)
+        resp = authed_client.post(
+            "/api/resource/Role/import?format=pdf",
+            content="x",
+            headers={"X-CSRF-Token": csrf},
+        )
+        assert resp.status_code == 400
+
+    def test_import_no_body(self, authed_client):
+        from galaxy.security import generate_csrf_token
+        from galaxy.auth import create_session
+
+        session = create_session("Administrator")
+        csrf = generate_csrf_token(session)
+        authed_client.cookies.set("galaxy_session", session)
+        resp = authed_client.post(
+            "/api/resource/Role/import?format=csv",
+            headers={"X-CSRF-Token": csrf},
+        )
+        assert resp.status_code == 400
