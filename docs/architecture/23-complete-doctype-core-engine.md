@@ -1269,7 +1269,21 @@ tests/
 - Process model with background execution.
 - Test: script loading, action triggers, process execution.
 
-### Phase 6: Version, Comments, Mentions, Notifications
+### Phase 6: Master Field Engine and Export Model
+
+- FieldType registry service — catalog of all field types as metadata (see Doc 29 §4–5).
+- Code-aware field types — language mode, editor, lint, security (see Doc 29 §6).
+- Enhanced FieldDependency — multi-condition AND/OR groups, expanded operators, UI effects (see Doc 29 §7).
+- FieldRule engine — validation, visibility, required, readonly, formatting, styling rules (see Doc 29 §8).
+- Safe expression computed field engine — no eval, whitelisted functions (see Doc 29 §10).
+- Field permission and data masking engine — role/user level field access (see Doc 29 §12).
+- Dynamic options and dynamic source engine — query, API, script, integration sources (see Doc 29 §13).
+- Structured export engine — TypeScript, Zod, Yup, Pydantic, Go struct, JSON Schema, OpenAPI (see Doc 29 §14–15).
+- React/Vue/Svelte/Next frontend model generation (see Doc 29 §16).
+- Code generation blocks integration with protected regions (see Doc 29 §18).
+- Tests: FieldType registry, dependencies, rules, computed fields, permissions, masking, export, generation.
+
+### Phase 7: Version, Comments, Mentions, Notifications
 
 - Version history recording with diff generation.
 - Comment model with CRUD and permissions.
@@ -1277,14 +1291,14 @@ tests/
 - Notification Rule model with delivery.
 - Test: versions, comments, mentions, notifications.
 
-### Phase 7: Integrations and Code Generation
+### Phase 8: Integrations and Code Generation
 
 - DocType Integration model with webhook/API handlers.
 - Code Generation Block model with template rendering.
 - Generated script templates (disabled by default).
 - Test: integration hooks, code generation blocks, generated script safety.
 
-### Phase 8: Remaining Components
+### Phase 9: Remaining Components
 
 - DocType Web View with public routing.
 - DocType Override with controller replacement.

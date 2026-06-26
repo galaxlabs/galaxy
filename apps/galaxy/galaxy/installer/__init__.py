@@ -8,6 +8,12 @@ from galaxy.db.seed import (
     seed_doctypes,
     seed_installed_app,
     seed_modules,
+    seed_phase2_docfields,
+    seed_phase2_doctypes,
+    seed_phase3_docfields,
+    seed_phase3_doctypes,
+    seed_phase4_docfields,
+    seed_phase4_doctypes,
     seed_roles,
     seed_tenant,
 )
@@ -69,6 +75,36 @@ def run_install(site_name: str | None = None):
     print("Seeding default DocPerm records...")
     seed_docperms(engine)
     print("Default DocPerm seed: OK")
+    print()
+
+    print("Seeding Phase 2 DocType metadata records...")
+    seed_phase2_doctypes(engine)
+    print("Phase 2 DocType metadata seed: OK")
+    print()
+
+    print("Seeding Phase 2 DocField records...")
+    seed_phase2_docfields(engine)
+    print("Phase 2 DocField metadata seed: OK")
+    print()
+
+    print("Seeding Phase 3 DocType metadata records...")
+    seed_phase3_doctypes(engine)
+    print("Phase 3 DocType metadata seed: OK")
+    print()
+
+    print("Seeding Phase 3 DocField records...")
+    seed_phase3_docfields(engine)
+    print("Phase 3 DocField metadata seed: OK")
+    print()
+
+    print("Seeding Phase 4 DocType metadata records...")
+    seed_phase4_doctypes(engine)
+    print("Phase 4 DocType metadata seed: OK")
+    print()
+
+    print("Seeding Phase 4 DocField records...")
+    seed_phase4_docfields(engine)
+    print("Phase 4 DocField metadata seed: OK")
     print()
 
     print("Administrator username: Administrator")
@@ -133,6 +169,15 @@ def run_doctor():
     doctypes = count_table("tabDocType")
     docfields = count_table("tabDocField")
     docperms = count_table("tabDocPerm")
+    custom_fields = count_table("tabCustomField")
+    property_setters = count_table("tabPropertySetter")
+    doctype_settings = count_table("tabDocTypeSetting")
+    field_rules = count_table("tabFieldRule")
+    field_deps = count_table("tabFieldDependency")
+    computed_fields = count_table("tabComputedField")
+    field_perms = count_table("tabFieldPermission")
+    data_masks = count_table("tabDataMaskRule")
+    permission_rules = count_table("tabPermissionRule")
 
     print()
     print(f"Installed apps: {installed_apps}")
@@ -142,6 +187,15 @@ def run_doctor():
     print(f"DocTypes: {doctypes}")
     print(f"DocFields: {docfields}")
     print(f"DocPerms: {docperms}")
+    print(f"CustomFields: {custom_fields}")
+    print(f"PropertySetters: {property_setters}")
+    print(f"DocTypeSettings: {doctype_settings}")
+    print(f"FieldRules: {field_rules}")
+    print(f"FieldDependencies: {field_deps}")
+    print(f"ComputedFields: {computed_fields}")
+    print(f"FieldPermissions: {field_perms}")
+    print(f"DataMaskRules: {data_masks}")
+    print(f"PermissionRules: {permission_rules}")
     print()
 
     if (installed_apps >= 1 and installed_modules >= 6 and users >= 1

@@ -56,6 +56,7 @@ from galaxy.core.repository import (
     get_doctype_fields,
     get_doctype_permissions,
     get_doctypes,
+    get_runtime_meta,
 )
 from galaxy.core.tenant import (
     current_tenant,
@@ -282,8 +283,10 @@ async def desk_tenants(request):
 
 
 def _get_table_columns(doctype_name):
-    fields = get_crud_fields(doctype_name)
-    cols = [{"key": f["fieldname"], "label": f.get("label") or f["fieldname"], "type": f["fieldtype"], "sortable": f["fieldtype"] not in ("Text", "Table", "Code")} for f in fields]
+    meta = get_runtime_meta(doctype_name)
+    if meta is None:
+        return []
+    cols = [{"key": f["fieldname"], "label": f.get("label") or f["fieldname"], "type": f["fieldtype"], "sortable": f["fieldtype"] not in ("Text", "Table", "Code")} for f in meta.fields if f["fieldname"] != "name"]
     cols.insert(0, {"key": "name", "label": "Name", "type": "Data", "sortable": True})
     return cols
 
@@ -291,9 +294,9 @@ def _list_records(doctype_name, page=1, limit=20, sort_by="name", sort_order="as
     doctype = get_doctype_for_crud(doctype_name)
     if doctype is None:
         return [], 0, doctype
+    meta = get_runtime_meta(doctype_name)
     table_name = doctype["table_name"]
-    fields = get_crud_fields(doctype_name)
-    col_names = ["name"] + [f["fieldname"] for f in fields]
+    col_names = ["name"] + [f["fieldname"] for f in (meta.fields if meta else []) if f["fieldname"] != "name"]
 
     from sqlalchemy import text
 
@@ -377,14 +380,14 @@ async def desk_resource_new(request):
     raw = request.path_params.get("doctype", "")
     doctype_name = urllib.parse.unquote(raw)
 
-    doctype = get_doctype(doctype_name)
-    if doctype is None:
+    meta = get_runtime_meta(doctype_name)
+    if meta is None:
         return JSONResponse({"error": "DocType not found"}, status_code=404)
 
-    fields = get_crud_fields(doctype_name)
     return templates.TemplateResponse(request, "desk_form.html", {
         "doctype": doctype_name, "title": f"New {doctype_name}",
-        "fields": fields, "record": None,
+        "fields": meta.fields, "record": None,
+        "meta": meta,
     })
 
 
@@ -396,18 +399,18 @@ async def desk_resource_detail(request):
     doctype_name = urllib.parse.unquote(raw_dt)
     name = urllib.parse.unquote(raw_name)
 
-    doctype = get_doctype(doctype_name)
-    if doctype is None:
+    meta = get_runtime_meta(doctype_name)
+    if meta is None:
         return JSONResponse({"error": "DocType not found"}, status_code=404)
 
     doc = crud_get_document(doctype_name, name)
     if doc is None:
         return JSONResponse({"error": "Record not found"}, status_code=404)
 
-    fields = get_crud_fields(doctype_name)
     return templates.TemplateResponse(request, "desk_form.html", {
         "doctype": doctype_name, "title": f"{name}",
-        "fields": fields, "record": doc,
+        "fields": meta.fields, "record": doc,
+        "meta": meta,
     })
 
 

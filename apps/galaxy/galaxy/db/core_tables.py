@@ -206,6 +206,181 @@ def create_core_tables(engine: Engine) -> None:
         """,
     ]
 
+    phase2_statements = [
+        """
+        CREATE TABLE IF NOT EXISTS "tabCustomField" (
+            name VARCHAR(255) PRIMARY KEY,
+            parent VARCHAR(255) NOT NULL,
+            fieldname VARCHAR(255) NOT NULL,
+            label VARCHAR(255),
+            fieldtype VARCHAR(100) DEFAULT 'Data',
+            options TEXT,
+            reqd BOOLEAN DEFAULT FALSE,
+            hidden BOOLEAN DEFAULT FALSE,
+            read_only BOOLEAN DEFAULT FALSE,
+            in_list_view BOOLEAN DEFAULT FALSE,
+            in_standard_filter BOOLEAN DEFAULT FALSE,
+            search_index BOOLEAN DEFAULT FALSE,
+            allow_on_submit BOOLEAN DEFAULT FALSE,
+            depends_on TEXT,
+            mandatory_depends_on TEXT,
+            read_only_depends_on TEXT,
+            translatable BOOLEAN DEFAULT FALSE,
+            description TEXT,
+            "default" TEXT,
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabPropertySetter" (
+            name VARCHAR(255) PRIMARY KEY,
+            parent VARCHAR(255) NOT NULL,
+            property VARCHAR(255) NOT NULL,
+            value TEXT,
+            field_name VARCHAR(255),
+            property_type VARCHAR(50) DEFAULT 'Text',
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabDocTypeSetting" (
+            name VARCHAR(255) PRIMARY KEY,
+            parent VARCHAR(255) NOT NULL,
+            icon VARCHAR(255),
+            icon_provider VARCHAR(50) DEFAULT 'lucide',
+            color VARCHAR(50),
+            theme VARCHAR(100),
+            default_view VARCHAR(50) DEFAULT 'list',
+            max_attachments INTEGER DEFAULT 5,
+            allow_rename BOOLEAN DEFAULT TRUE,
+            allow_copy BOOLEAN DEFAULT FALSE,
+            track_changes BOOLEAN DEFAULT FALSE,
+            track_seen BOOLEAN DEFAULT FALSE,
+            queue_documents BOOLEAN DEFAULT FALSE,
+            quick_entry BOOLEAN DEFAULT FALSE,
+            sort_field VARCHAR(255),
+            sort_order VARCHAR(10) DEFAULT 'ASC',
+            search_fields TEXT,
+            title_field VARCHAR(255),
+            image_field VARCHAR(255),
+            enable_auto_repeat BOOLEAN DEFAULT FALSE,
+            document_type_class VARCHAR(255),
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+    ]
+
+    phase4_statements = [
+        """
+        CREATE TABLE IF NOT EXISTS "tabFieldPermission" (
+            name VARCHAR(255) PRIMARY KEY,
+            parent VARCHAR(255) NOT NULL,
+            field_name VARCHAR(255) NOT NULL,
+            role VARCHAR(255) NOT NULL,
+            permlevel INTEGER DEFAULT 0,
+            "read" BOOLEAN DEFAULT TRUE,
+            "write" BOOLEAN DEFAULT TRUE,
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabDataMaskRule" (
+            name VARCHAR(255) PRIMARY KEY,
+            parent VARCHAR(255) NOT NULL,
+            field_name VARCHAR(255) NOT NULL,
+            role VARCHAR(255),
+            mask_type VARCHAR(50) NOT NULL DEFAULT 'partial',
+            mask_character VARCHAR(10) DEFAULT '*',
+            unmasked_prefix_len INTEGER DEFAULT 0,
+            unmasked_suffix_len INTEGER DEFAULT 0,
+            condition TEXT,
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabPermissionRule" (
+            name VARCHAR(255) PRIMARY KEY,
+            parent VARCHAR(255) NOT NULL,
+            role VARCHAR(255) NOT NULL,
+            permlevel INTEGER DEFAULT 0,
+            "read" BOOLEAN DEFAULT FALSE,
+            "write" BOOLEAN DEFAULT FALSE,
+            "create" BOOLEAN DEFAULT FALSE,
+            "delete" BOOLEAN DEFAULT FALSE,
+            "select" BOOLEAN DEFAULT FALSE,
+            "amend" BOOLEAN DEFAULT FALSE,
+            "condition" TEXT,
+            apply_to_child BOOLEAN DEFAULT FALSE,
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+    ]
+
+    phase3_statements = [
+        """
+        CREATE TABLE IF NOT EXISTS "tabFieldRule" (
+            name VARCHAR(255) PRIMARY KEY,
+            parent VARCHAR(255) NOT NULL,
+            field_name VARCHAR(255) NOT NULL,
+            rule_type VARCHAR(50) NOT NULL DEFAULT 'mandatory_if',
+            "value" TEXT,
+            condition TEXT,
+            error_message TEXT,
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabFieldDependency" (
+            name VARCHAR(255) PRIMARY KEY,
+            parent VARCHAR(255) NOT NULL,
+            field_name VARCHAR(255) NOT NULL,
+            depends_on_field VARCHAR(255) NOT NULL,
+            depends_on_value TEXT,
+            action VARCHAR(50) NOT NULL DEFAULT 'show',
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabComputedField" (
+            name VARCHAR(255) PRIMARY KEY,
+            parent VARCHAR(255) NOT NULL,
+            field_name VARCHAR(255) NOT NULL,
+            formula TEXT NOT NULL,
+            fieldtype VARCHAR(100) DEFAULT 'Data',
+            options TEXT,
+            script_type VARCHAR(20) DEFAULT 'Python',
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+    ]
+
     alter_statements = [
         _tenant_alter("tabUser"),
         _tenant_alter("tabHas Role"),
@@ -217,6 +392,12 @@ def create_core_tables(engine: Engine) -> None:
 
     with engine.begin() as conn:
         for stmt in statements:
+            conn.execute(text(stmt))
+        for stmt in phase2_statements:
+            conn.execute(text(stmt))
+        for stmt in phase3_statements:
+            conn.execute(text(stmt))
+        for stmt in phase4_statements:
             conn.execute(text(stmt))
         for stmt in alter_statements:
             conn.execute(text(stmt))
@@ -238,6 +419,15 @@ def drop_core_tables(engine: Engine) -> None:
         "tabError Log",
         "tabSession",
         "tabTenant",
+        "tabCustomField",
+        "tabPropertySetter",
+        "tabDocTypeSetting",
+        "tabFieldRule",
+        "tabFieldDependency",
+        "tabComputedField",
+        "tabFieldPermission",
+        "tabDataMaskRule",
+        "tabPermissionRule",
     ]
 
     with engine.begin() as conn:

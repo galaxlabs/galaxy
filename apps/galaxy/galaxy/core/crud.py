@@ -6,7 +6,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from galaxy.config import load_site_config
-from galaxy.core.repository import get_doctype, get_doctype_fields
+from galaxy.core.repository import get_doctype, get_doctype_fields, get_runtime_meta
 from galaxy.core.script_engine import run_scripts
 from galaxy.core.tenant import current_tenant
 from galaxy.db.connection import get_engine
@@ -32,16 +32,20 @@ def _tenant_where(table_name: str) -> tuple[str, dict]:
 
 
 def get_doctype_for_crud(doctype_name: str) -> dict | None:
-    doctype = get_doctype(doctype_name)
-    if doctype is None:
+    meta = get_runtime_meta(doctype_name)
+    if meta is None:
         return None
-    if doctype.get("migration_status") != "applied":
+    dt = meta.doctype
+    if dt.get("migration_status") != "applied":
         return None
-    return doctype
+    return dt
 
 
 def get_crud_fields(doctype_name: str) -> list[dict]:
-    return [f for f in get_doctype_fields(doctype_name) if f["fieldtype"] not in SKIP_FIELDTYPES and f["fieldname"] != "name"]
+    meta = get_runtime_meta(doctype_name)
+    if meta is None:
+        return []
+    return [f for f in meta.fields if f["fieldtype"] not in SKIP_FIELDTYPES and f["fieldname"] != "name"]
 
 
 def validate_create_payload(doctype: dict, fields: list[dict], payload: dict) -> tuple[list[str], dict]:

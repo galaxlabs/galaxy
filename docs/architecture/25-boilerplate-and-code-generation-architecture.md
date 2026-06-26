@@ -380,7 +380,15 @@ Generated server scripts and client scripts require explicit activation.
 - Generated app targets (React, Vue, Next.js, Svelte)
 - Framework-level templates
 
-### Phase 5
+### Phase 5 — Field Engine Export Integration
+- Connect Code Generation Block to Field Engine export schemas (see Doc 29 §14–18)
+- Template generators consume Field Engine `export_field_schema()` and `export_doctype_schema()` APIs
+- Frontend model generation targets: React, Vue, Svelte, Next.js
+- Structured schema package export with manifest (see Doc 29 §17)
+- Generated file hash tracking and overwrite protection
+- Tests: Field Engine → template → generated file pipeline
+
+### Phase 6
 - Desk UI for code generation management
 - In-browser diff viewer
 - One-click generation from DocType Builder
