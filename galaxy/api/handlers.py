@@ -579,6 +579,38 @@ async def handle_resource_update(request):
     return _ok(result["data"])
 
 
+async def handle_resource_export(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
+    raw = request.path_params.get("doctype", "")
+    doctype = urllib.parse.unquote(raw)
+    user = _get_user(request)
+    ok, msg = authorize(doctype, user, "read")
+    if not ok:
+        return _err(403, msg)
+    fmt = request.query_params.get("format", "csv")
+    limit = min(int(request.query_params.get("limit", 1000)), 10000)
+    offset = int(request.query_params.get("offset", 0))
+    search = request.query_params.get("search", "")
+
+    from galaxy.model.export_engine import export_docs
+    try:
+        content, content_type, filename = export_docs(doctype, fmt=fmt, role=user, limit=limit, offset=offset, search=search)
+    except ValueError as e:
+        return _err(400, str(e))
+    except RuntimeError as e:
+        return _err(400, str(e))
+
+    from starlette.responses import Response
+    if isinstance(content, str):
+        content = content.encode("utf-8")
+    return Response(
+        content=content,
+        media_type=content_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 async def handle_resource_delete(request):
     if require_auth(request) is None:
         return JSONResponse(AUTH_REQUIRED, status_code=401)

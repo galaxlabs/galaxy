@@ -8,6 +8,7 @@ from sqlalchemy.engine import Engine
 from galaxy.config import load_site_config
 from galaxy.model.computed_field_engine import evaluate_and_apply_computed_fields
 from galaxy.model.field_rule_engine import validate_field_rules
+from galaxy.model.field_type_registry import coerce as registry_coerce, skip_in_crud
 from galaxy.model.runtimemeta import RuntimeMeta
 from galaxy.model.repository import get_doctype, get_doctype_fields, get_runtime_meta
 from galaxy.model.script_engine import run_scripts
@@ -23,9 +24,6 @@ def _get_engine() -> Engine:
 
 def _quote(name: str) -> str:
     return f'"{name}"'
-
-
-SKIP_FIELDTYPES = {"Table"}
 
 
 def _tenant_where(table_name: str) -> tuple[str, dict]:
@@ -55,7 +53,7 @@ def get_crud_fields(doctype_name: str) -> list[dict]:
     meta = _get_crud_meta(doctype_name)
     if meta is None:
         return []
-    return [f for f in meta.fields if f["fieldtype"] not in SKIP_FIELDTYPES and f["fieldname"] != "name"]
+    return [f for f in meta.fields if not skip_in_crud(f["fieldtype"]) and f["fieldname"] != "name"]
 
 
 def validate_create_payload(doctype: dict, fields: list[dict], payload: dict) -> tuple[list[str], dict]:
@@ -84,25 +82,11 @@ def validate_create_payload(doctype: dict, fields: list[dict], payload: dict) ->
     return errors, cleaned
 
 
-def _coerce_value(field: dict, value) -> tuple:
-    ftype = field["fieldtype"]
-    if ftype in ("Check",):
-        return int(bool(value))
-    if ftype in ("Int",):
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            raise ValueError(f"Invalid integer value for '{field['fieldname']}': {value!r}") from None
-    if ftype in ("Float", "Currency"):
-        try:
-            return float(value)
-        except (TypeError, ValueError):
-            raise ValueError(f"Invalid number value for '{field['fieldname']}': {value!r}") from None
-    if ftype in ("JSON",):
-        if not isinstance(value, str):
-            return json.dumps(value, ensure_ascii=False, default=str)
-        return value
-    return value
+def _coerce_value(field: dict, value):
+    try:
+        return registry_coerce(field["fieldtype"], value)
+    except ValueError:
+        raise ValueError(f"Invalid value for '{field['fieldname']}': {value!r}") from None
 
 
 def _make_document_name(doctype_name: str) -> str:
@@ -117,7 +101,7 @@ def create_document(doctype_name: str, payload: dict) -> dict:
         return {"success": False, "error": f"DocType '{doctype_name}' not found or migration not applied."}
 
     doctype = meta.doctype
-    fields = [f for f in meta.fields if f["fieldtype"] not in SKIP_FIELDTYPES and f["fieldname"] != "name"]
+    fields = [f for f in meta.fields if not skip_in_crud(f["fieldtype"]) and f["fieldname"] != "name"]
     errors, cleaned = validate_create_payload(doctype, fields, payload)
     if errors:
         return {"success": False, "error": "Validation failed.", "errors": errors}
@@ -249,7 +233,7 @@ def update_document(doctype_name: str, name: str, payload: dict) -> dict:
     if existing is None:
         return {"success": False, "error": f"Document '{name}' not found."}
 
-    fields = [f for f in meta.fields if f["fieldtype"] not in SKIP_FIELDTYPES and f["fieldname"] != "name"]
+    fields = [f for f in meta.fields if not skip_in_crud(f["fieldtype"]) and f["fieldname"] != "name"]
     valid_fieldnames = {f["fieldname"] for f in fields}
     hidden_readonly = {f["fieldname"] for f in fields if f.get("hidden") or f.get("read_only")}
     errors: list[str] = []

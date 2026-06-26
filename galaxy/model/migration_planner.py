@@ -1,26 +1,10 @@
 from galaxy.model.repository import get_doctype, get_doctype_fields, table_exists
-
-PG_TYPE_MAP = {
-    "Data": "TEXT",
-    "Small Text": "TEXT",
-    "Long Text": "TEXT",
-    "Int": "INTEGER",
-    "Float": "DOUBLE PRECISION",
-    "Currency": "DOUBLE PRECISION",
-    "Check": "SMALLINT",
-    "Date": "DATE",
-    "Datetime": "TIMESTAMP",
-    "Select": "TEXT",
-    "Link": "TEXT",
-    "Attach": "TEXT",
-    "JSON": "JSONB",
-    "Code": "TEXT",
-}
+from galaxy.model.field_type_registry import sql_type
 
 
 def map_fieldtype_to_sql(field: dict) -> str:
     ftype = field.get("fieldtype", "Data")
-    return PG_TYPE_MAP.get(ftype, "TEXT")
+    return sql_type(ftype)
 
 
 def generate_create_table_plan(doctype: dict, fields: list[dict]) -> str:

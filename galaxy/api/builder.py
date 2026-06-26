@@ -1,10 +1,7 @@
-VALID_FIELDTYPES = {
-    "Data", "Small Text", "Long Text", "Int", "Float", "Currency",
-    "Check", "Date", "Datetime", "Select", "Link", "Table",
-    "Attach", "JSON", "Code",
-}
+from galaxy.model.field_type_registry import get_all_types, options_required
 
-OPTIONS_REQUIRED = {"Link", "Select", "Table"}
+VALID_FIELDTYPES = set(get_all_types().keys())
+OPTIONS_REQUIRED = {name for name, td in get_all_types().items() if td.options_required}
 
 DEFAULT_DOCTYPE_FIELDS = {
     "is_single": False,
