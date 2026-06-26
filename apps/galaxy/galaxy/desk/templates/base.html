@@ -88,7 +88,7 @@
           </button>
         </div>
         <div class="topbar-right">
-          {{ ui.theme_switcher() }}
+          {{ ui.theme_switcher() | safe }}
           <div class="topbar-user-menu">
             <button class="topbar-user-btn" id="user-menu-btn">
               <span class="topbar-user-avatar">A</span>
@@ -110,7 +110,7 @@
     </main>
   </div>
 
-  {{ ui.toast_container() }}
+  {{ ui.toast_container() | safe }}
   <div id="modal-root"></div>
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>
   <script src="/static/js/galaxy.js"></script>

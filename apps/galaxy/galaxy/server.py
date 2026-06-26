@@ -10,7 +10,6 @@ from starlette.templating import Jinja2Templates
 from starlette.types import ASGIApp
 
 from galaxy.config import load_site_config
-from galaxy.core.crud import get_doctype_for_crud, get_crud_fields, list_documents, get_document as crud_get_document
 from galaxy.core.api import (
     handle_auth_me,
     handle_builder_preview,
@@ -48,7 +47,8 @@ from galaxy.core.bench_api import (
     handle_bench_sites,
     handle_bench_uninstall_app,
 )
-from galaxy.core.crud import list_documents
+from galaxy.core.crud import get_crud_fields, get_doctype_for_crud
+from galaxy.core.crud import get_document as crud_get_document
 from galaxy.core.migration_planner import plan_doctype_migration
 from galaxy.core.repository import (
     get_core_summary,
@@ -68,14 +68,17 @@ from galaxy.core.tenant import (
 )
 from galaxy.desk.components import ui
 
+
 def _slugify(name):
     import re
     return re.sub(r"[^a-z0-9]", "-", name.lower()).strip("-")
 
-TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "desk", "templates")
-STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "desk", "static")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATES_DIR = os.path.join(BASE_DIR, "desk", "templates")
+COMPONENTS_DIR = os.path.join(BASE_DIR, "desk", "components")
+STATIC_DIR = os.path.join(BASE_DIR, "desk", "static")
 
-templates = Jinja2Templates(directory=TEMPLATES_DIR)
+templates = Jinja2Templates(directory=[TEMPLATES_DIR, COMPONENTS_DIR])
 templates.env.globals["ui"] = ui
 templates.env.filters["slugify"] = _slugify
 
@@ -160,56 +163,6 @@ async def desk_doctype_detail(request):
         request,
         "doctype_detail.html",
         {"doctype": doctype, "fields": fields, "permissions": permissions, "migration_preview": migration_preview},
-    )
-
-
-async def desk_resource_list(request):
-    if require_auth(request) is None:
-        return RedirectResponse(url="/login", status_code=302)
-    raw = request.path_params.get("doctype", "")
-    doctype_name = urllib.parse.unquote(raw)
-    doctype = get_doctype(doctype_name)
-    if doctype is None:
-        return JSONResponse({"error": "DocType not found"}, status_code=404)
-    if doctype.get("migration_status") != "applied":
-        return templates.TemplateResponse(
-            request,
-            "resource_list.html",
-            {"doctype": doctype, "columns": [], "records": [], "limit": 0, "total": 0},
-        )
-
-    try:
-        limit = int(request.query_params.get("limit", 20))
-    except Exception:
-        limit = 20
-    if limit < 1:
-        limit = 1
-    if limit > 100:
-        limit = 100
-
-    try:
-        offset = int(request.query_params.get("offset", 0))
-    except Exception:
-        offset = 0
-    if offset < 0:
-        offset = 0
-
-    all_fields = get_doctype_fields(doctype_name)
-    columns = [
-        {"fieldname": f["fieldname"], "label": f["label"] or f["fieldname"]}
-        for f in all_fields
-        if f.get("in_list_view") and not f.get("hidden") and f["fieldtype"] != "Table"
-    ]
-    columns.insert(0, {"fieldname": "name", "label": "Name"})
-
-    records = list_documents(doctype_name, limit=limit, offset=offset)
-    if isinstance(records, dict):
-        records = []
-
-    return templates.TemplateResponse(
-        request,
-        "resource_list.html",
-        {"doctype": doctype, "columns": columns, "records": records, "limit": limit, "total": len(records)},
     )
 
 
@@ -342,10 +295,11 @@ def _list_records(doctype_name, page=1, limit=20, sort_by="name", sort_order="as
     fields = get_crud_fields(doctype_name)
     col_names = ["name"] + [f["fieldname"] for f in fields]
 
-    from galaxy.core.tenant import current_tenant
     from sqlalchemy import text
-    from galaxy.db.connection import get_engine
+
     from galaxy.config import load_site_config
+    from galaxy.db.connection import get_engine
+    from galaxy.db.core_tables import TENANT_TABLES
 
     _, site = load_site_config()
     engine = get_engine(site)
@@ -353,7 +307,7 @@ def _list_records(doctype_name, page=1, limit=20, sort_by="name", sort_order="as
 
     params = {}
     where_parts = []
-    if tenant_id:
+    if tenant_id and table_name in TENANT_TABLES:
         where_parts.append('tenant_id = :_tenant')
         params['_tenant'] = tenant_id
     if search:
@@ -534,7 +488,6 @@ class RequireSessionMiddleware:
 
         from starlette.requests import Request
         request = Request(scope, receive)
-        from galaxy.core.tenant import get_tenant_id
         tenant_id = get_tenant_id(request)
         from galaxy.core.tenant import current_tenant
         current_tenant.set(tenant_id)
