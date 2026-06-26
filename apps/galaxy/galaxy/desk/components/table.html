@@ -1,0 +1,88 @@
+{% macro datatable(doctype, columns, records, total, page=1, limit=20, sort_by="", sort_order="asc", search="") %}
+<div class="galaxy-table-wrap" id="table-{{ doctype | slugify }}">
+  <div class="galaxy-table-toolbar">
+    <div class="galaxy-table-search">
+      <input type="text" class="galaxy-table-search-input" placeholder="Search {{ doctype }}..."
+        hx-get="/desk/resource/{{ doctype }}/list?page=1&limit={{ limit }}&sort_by={{ sort_by }}&sort_order={{ sort_order }}"
+        hx-trigger="keyup delay:300ms" hx-target="#table-{{ doctype | slugify }}" hx-swap="outerHTML"
+        name="search" value="{{ search }}">
+    </div>
+    <div class="galaxy-table-actions">
+      <span class="galaxy-table-count">{{ total }} records</span>
+      <button class="galaxy-btn galaxy-btn-soft galaxy-btn-primary galaxy-btn-sm" onclick="galaxy.bulkActions('{{ doctype }}')" id="bulk-action-btn" style="display:none">
+        Bulk Actions ▼
+      </button>
+      <a href="/desk/resource/{{ doctype }}/new" class="galaxy-btn galaxy-btn-solid galaxy-btn-primary galaxy-btn-sm">+ New</a>
+    </div>
+  </div>
+  <div class="galaxy-table-scroll">
+    <table class="galaxy-table">
+      <thead>
+        <tr>
+          <th class="galaxy-table-check"><input type="checkbox" onchange="galaxy.toggleAll(this, '{{ doctype }}')"></th>
+          {% for col in columns %}
+          <th class="galaxy-table-th {{ 'galaxy-table-sortable' if col.sortable }}" 
+            {% if col.sortable %}
+            hx-get="/desk/resource/{{ doctype }}/list?page=1&limit={{ limit }}&sort_by={{ col.key }}&sort_order={% if sort_by == col.key and sort_order == 'asc' %}desc{% else %}asc{% endif %}&search={{ search }}"
+            hx-target="#table-{{ doctype | slugify }}" hx-swap="outerHTML"
+            {% endif %}>
+            <span class="galaxy-th-content">
+              {{ col.label }}
+              {% if sort_by == col.key %}
+              <span class="galaxy-sort-icon">{{ '▲' if sort_order == 'asc' else '▼' }}</span>
+              {% endif %}
+            </span>
+          </th>
+          {% endfor %}
+          <th class="galaxy-table-th galaxy-table-actions-th">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in records %}
+        <tr class="galaxy-table-tr" data-record="{{ row.name }}">
+          <td class="galaxy-table-check"><input type="checkbox" class="galaxy-row-check" data-doctype="{{ doctype }}" value="{{ row.name }}" onchange="galaxy.onRowCheck()"></td>
+          {% for col in columns %}
+          <td class="galaxy-table-td">
+            {% if loop.first %}
+            <a href="/desk/resource/{{ doctype }}/{{ row.name }}" class="galaxy-record-link">{{ row[col.key] }}</a>
+            {% else %}
+            <span class="galaxy-cell-{{ col.type | lower }}">{{ row[col.key] }}</span>
+            {% endif %}
+          </td>
+          {% endfor %}
+          <td class="galaxy-table-td galaxy-table-actions-td">
+            <a href="/desk/resource/{{ doctype }}/{{ row.name }}" class="galaxy-btn galaxy-btn-ghost galaxy-btn-neutral galaxy-btn-xs">Edit</a>
+            <button class="galaxy-btn galaxy-btn-ghost galaxy-btn-danger galaxy-btn-xs" 
+              onclick="galaxy.confirm('Delete {{ row.name }}?',{tone:'danger',confirmText:'Delete'}).then(r=>r&&fetch('/api/resource/{{ doctype }}/{{ row.name }}',{method:'DELETE'}).then(()=>{galaxy.toast('Deleted',{tone:'success'});htmx.trigger('#table-{{ doctype | slugify }}','htmx:load')}))">Delete</button>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="{{ columns|length + 2 }}" class="galaxy-table-empty">No {{ doctype }} records found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% set total_pages = ((total - 1) // limit) + 1 if total > 0 else 1 %}
+  <div class="galaxy-table-footer">
+    <div class="galaxy-table-pagination">
+      {% if page > 1 %}
+      <button class="galaxy-btn galaxy-btn-ghost galaxy-btn-neutral galaxy-btn-sm"
+        hx-get="/desk/resource/{{ doctype }}/list?page=1&limit={{ limit }}&sort_by={{ sort_by }}&sort_order={{ sort_order }}&search={{ search }}"
+        hx-target="#table-{{ doctype | slugify }}" hx-swap="outerHTML">««</button>
+      <button class="galaxy-btn galaxy-btn-ghost galaxy-btn-neutral galaxy-btn-sm"
+        hx-get="/desk/resource/{{ doctype }}/list?page={{ page - 1 }}&limit={{ limit }}&sort_by={{ sort_by }}&sort_order={{ sort_order }}&search={{ search }}"
+        hx-target="#table-{{ doctype | slugify }}" hx-swap="outerHTML">«</button>
+      {% endif %}
+      <span class="galaxy-table-page-info">Page {{ page }} of {{ total_pages }} ({{ total }} total)</span>
+      {% if page < total_pages %}
+      <button class="galaxy-btn galaxy-btn-ghost galaxy-btn-neutral galaxy-btn-sm"
+        hx-get="/desk/resource/{{ doctype }}/list?page={{ page + 1 }}&limit={{ limit }}&sort_by={{ sort_by }}&sort_order={{ sort_order }}&search={{ search }}"
+        hx-target="#table-{{ doctype | slugify }}" hx-swap="outerHTML">»</button>
+      <button class="galaxy-btn galaxy-btn-ghost galaxy-btn-neutral galaxy-btn-sm"
+        hx-get="/desk/resource/{{ doctype }}/list?page={{ total_pages }}&limit={{ limit }}&sort_by={{ sort_by }}&sort_order={{ sort_order }}&search={{ search }}"
+        hx-target="#table-{{ doctype | slugify }}" hx-swap="outerHTML">»»</button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endmacro %}

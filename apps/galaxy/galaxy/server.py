@@ -3,13 +3,14 @@ import urllib.parse
 
 import uvicorn
 from starlette.applications import Starlette
-from starlette.responses import JSONResponse, RedirectResponse
+from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from starlette.types import ASGIApp
 
 from galaxy.config import load_site_config
+from galaxy.core.crud import get_doctype_for_crud, get_crud_fields, list_documents, get_document as crud_get_document
 from galaxy.core.api import (
     handle_auth_me,
     handle_builder_preview,
@@ -67,11 +68,16 @@ from galaxy.core.tenant import (
 )
 from galaxy.desk.components import ui
 
+def _slugify(name):
+    import re
+    return re.sub(r"[^a-z0-9]", "-", name.lower()).strip("-")
+
 TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "desk", "templates")
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "desk", "static")
 
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 templates.env.globals["ui"] = ui
+templates.env.filters["slugify"] = _slugify
 
 
 async def homepage(request):
@@ -322,6 +328,112 @@ async def desk_tenants(request):
     return templates.TemplateResponse(request, "tenants.html", {})
 
 
+def _get_table_columns(doctype_name):
+    fields = get_crud_fields(doctype_name)
+    cols = [{"key": f["fieldname"], "label": f.get("label") or f["fieldname"], "type": f["fieldtype"], "sortable": f["fieldtype"] not in ("Text", "Table", "Code")} for f in fields]
+    cols.insert(0, {"key": "name", "label": "Name", "type": "Data", "sortable": True})
+    return cols
+
+def _list_records(doctype_name, page=1, limit=20, sort_by="name", sort_order="asc", search=""):
+    doctype = get_doctype_for_crud(doctype_name)
+    if doctype is None:
+        return [], 0, doctype
+    table_name = doctype["table_name"]
+    fields = get_crud_fields(doctype_name)
+    col_names = ["name"] + [f["fieldname"] for f in fields]
+
+    from galaxy.core.tenant import current_tenant
+    from sqlalchemy import text
+    from galaxy.db.connection import get_engine
+    from galaxy.config import load_site_config
+
+    _, site = load_site_config()
+    engine = get_engine(site)
+    tenant_id = current_tenant.get()
+
+    params = {}
+    where_parts = []
+    if tenant_id:
+        where_parts.append('tenant_id = :_tenant')
+        params['_tenant'] = tenant_id
+    if search:
+        like = '%' + search + '%'
+        search_clauses = [f'"{c}" ILIKE :_s' for c in col_names if c != "name"]
+        search_clauses.insert(0, '"name" ILIKE :_s')
+        where_parts.append('(' + ' OR '.join(search_clauses) + ')')
+        params['_s'] = like
+
+    where = ' AND '.join(where_parts) if where_parts else '1=1'
+    quoted_table = '"' + table_name + '"'
+
+    safe_sort = sort_by if sort_by in col_names else "name"
+    safe_order = "ASC" if sort_order.lower() != "desc" else "DESC"
+    offset = (page - 1) * limit
+
+    count_sql = f'SELECT COUNT(*) FROM {quoted_table} WHERE {where}'
+    data_sql = f'SELECT * FROM {quoted_table} WHERE {where} ORDER BY "{safe_sort}" {safe_order} LIMIT :_lim OFFSET :_off'
+    params['_lim'] = limit
+    params['_off'] = offset
+
+    with engine.connect() as conn:
+        total = conn.execute(text(count_sql), params).scalar() or 0
+        rows = conn.execute(text(data_sql), params).mappings().all()
+    return [dict(r) for r in rows], total, doctype
+
+
+async def desk_resource_list(request):
+    if require_auth(request) is None:
+        return RedirectResponse(url="/login", status_code=302)
+    raw = request.path_params.get("doctype", "")
+    doctype_name = urllib.parse.unquote(raw)
+
+    page = int(request.query_params.get("page", "1"))
+    limit = int(request.query_params.get("limit", "20"))
+    sort_by = request.query_params.get("sort_by", "name")
+    sort_order = request.query_params.get("sort_order", "asc")
+    search = request.query_params.get("search", "")
+
+    records, total, doctype = _list_records(doctype_name, page, limit, sort_by, sort_order, search)
+    if doctype is None:
+        return JSONResponse({"error": "DocType not found"}, status_code=404)
+
+    columns = _get_table_columns(doctype_name)
+
+    if request.headers.get("HX-Request") == "true":
+        from galaxy.desk.components.table import datatable
+        html = datatable(doctype_name, columns, records, total, page, limit, sort_by, sort_order, search)
+        return HTMLResponse(html)
+
+    return templates.TemplateResponse(request, "desk_list.html", {
+        "doctype": doctype_name,
+        "columns": columns,
+        "records": records,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "sort_by": sort_by,
+        "sort_order": sort_order,
+        "search": search,
+    })
+
+
+async def desk_resource_new(request):
+    if require_auth(request) is None:
+        return RedirectResponse(url="/login", status_code=302)
+    raw = request.path_params.get("doctype", "")
+    doctype_name = urllib.parse.unquote(raw)
+
+    doctype = get_doctype(doctype_name)
+    if doctype is None:
+        return JSONResponse({"error": "DocType not found"}, status_code=404)
+
+    fields = get_crud_fields(doctype_name)
+    return templates.TemplateResponse(request, "desk_form.html", {
+        "doctype": doctype_name, "title": f"New {doctype_name}",
+        "fields": fields, "record": None,
+    })
+
+
 async def desk_resource_detail(request):
     if require_auth(request) is None:
         return RedirectResponse(url="/login", status_code=302)
@@ -334,25 +446,15 @@ async def desk_resource_detail(request):
     if doctype is None:
         return JSONResponse({"error": "DocType not found"}, status_code=404)
 
-    from galaxy.core.crud import get_document as crud_get_document
-
     doc = crud_get_document(doctype_name, name)
     if doc is None:
         return JSONResponse({"error": "Record not found"}, status_code=404)
 
-    all_fields = get_doctype_fields(doctype_name)
-    columns = [
-        {"fieldname": f["fieldname"], "label": f["label"] or f["fieldname"]}
-        for f in all_fields
-        if f["fieldtype"] != "Table"
-    ]
-    columns.insert(0, {"fieldname": "name", "label": "Name"})
-
-    return templates.TemplateResponse(
-        request,
-        "resource_detail.html",
-        {"doctype": doctype, "record": doc, "columns": columns},
-    )
+    fields = get_crud_fields(doctype_name)
+    return templates.TemplateResponse(request, "desk_form.html", {
+        "doctype": doctype_name, "title": f"{name}",
+        "fields": fields, "record": doc,
+    })
 
 
 # ── Route Protection ──────────────────────────────────────────────
@@ -510,6 +612,8 @@ routes = [
     Route("/desk/scripts/new", endpoint=desk_script_new),
     Route("/desk/scripts/{name}", endpoint=desk_script_edit),
     Route("/desk/resource/{doctype}", endpoint=desk_resource_list),
+    Route("/desk/resource/{doctype}/list", endpoint=desk_resource_list),
+    Route("/desk/resource/{doctype}/new", endpoint=desk_resource_new),
     Route("/desk/resource/{doctype}/{name}", endpoint=desk_resource_detail),
     Route("/desk/bench", endpoint=desk_bench),
     Route("/desk/bench/sites/new", endpoint=desk_bench_new),

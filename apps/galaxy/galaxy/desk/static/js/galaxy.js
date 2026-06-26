@@ -255,6 +255,71 @@ galaxy.initHTMX = function () {
   }
 };
 
+// ── Bulk Actions ──
+galaxy.selectedRecords = {};
+galaxy.toggleAll = function (checkbox, doctype) {
+  document.querySelectorAll(".galaxy-row-check").forEach(function (cb) {
+    cb.checked = checkbox.checked;
+    if (checkbox.checked) galaxy.selectedRecords[cb.value] = true;
+    else delete galaxy.selectedRecords[cb.value];
+  });
+  galaxy.updateBulkBtn();
+};
+galaxy.onRowCheck = function () {
+  var all = document.querySelectorAll(".galaxy-row-check");
+  var checked = document.querySelectorAll(".galaxy-row-check:checked");
+  var selectAll = document.querySelector(".galaxy-table-check input[type=checkbox]");
+  if (selectAll) selectAll.checked = all.length === checked.length;
+  checked.forEach(function (cb) { galaxy.selectedRecords[cb.value] = true; });
+  document.querySelectorAll(".galaxy-row-check:not(:checked)").forEach(function (cb) { delete galaxy.selectedRecords[cb.value]; });
+  galaxy.updateBulkBtn();
+};
+galaxy.updateBulkBtn = function () {
+  var btn = document.getElementById("bulk-action-btn");
+  if (!btn) return;
+  var count = Object.keys(galaxy.selectedRecords).length;
+  btn.style.display = count ? "inline-flex" : "none";
+  btn.textContent = count + " selected ▼";
+};
+galaxy.bulkActions = function (doctype) {
+  var ids = Object.keys(galaxy.selectedRecords);
+  if (!ids.length) return;
+  galaxy.confirm("Delete " + ids.length + " records?", { tone: "danger", confirmText: "Delete All" }).then(function (ok) {
+    if (!ok) return;
+    var promises = ids.map(function (id) {
+      return fetch("/api/resource/" + doctype + "/" + id, { method: "DELETE" });
+    });
+    Promise.all(promises).then(function () {
+      galaxy.toast("Deleted " + ids.length + " records", { tone: "success" });
+      galaxy.selectedRecords = {};
+      window.location.reload();
+    });
+  });
+};
+
+// ── Form Save ──
+galaxy.saveForm = async function (doctype, name) {
+  var data = {};
+  document.querySelectorAll(".form-card-body [name]").forEach(function (el) {
+    if (el.type === "checkbox") data[el.name] = el.checked;
+    else data[el.name] = el.value;
+  });
+  try {
+    var resp = await fetch("/api/resource/" + doctype + "/" + name, {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (resp.ok) {
+      galaxy.toast("Saved successfully", { tone: "success" });
+    } else {
+      var err = await resp.json();
+      galaxy.toast(err.error || "Save failed", { tone: "danger" });
+    }
+  } catch (e) {
+    galaxy.toast("Network error", { tone: "danger" });
+  }
+};
+
 // ── Nav Active State ──
 galaxy.initNavActive = function () {
   var path = window.location.pathname;

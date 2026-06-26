@@ -1,0 +1,17 @@
+{% from "components/table.html" import datatable %}
+{% extends request.state.htmx_boosted|default(False) and "base_htmx.html" or "base.html" %}
+{% block title %}{{ doctype }} — Galaxy Desk{% endblock %}
+{% block content %}
+{% if not request.state.htmx_boosted %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ doctype }}</h1>
+    <p class="page-subtitle">Manage {{ doctype }} records</p>
+  </div>
+  <div class="page-actions">
+    <a href="/desk/resource/{{ doctype }}/new" class="galaxy-btn galaxy-btn-solid galaxy-btn-primary galaxy-btn-md">+ New {{ doctype }}</a>
+  </div>
+</div>
+{% endif %}
+{{ datatable(doctype, columns, records, total, page, limit, sort_by, sort_order, search) }}
+{% endblock %}
