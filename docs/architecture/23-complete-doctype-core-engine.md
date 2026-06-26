@@ -259,6 +259,31 @@ Per-DocType settings control operational behavior. These are stored as a single 
 
 Settings can be overridden by Property Setters with target_type `DocType` and target_name `_settings`.
 
+### DocType Exposure Targeting
+
+Each DocType can target one or more user worlds for access. Exposure is controlled by:
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `exposure` | Select | `system` | Which world the DocType is exposed to: `system`, `portal`, `public`, `all` |
+| `portal_permission_model` | Select | `none` | Portal permission model: `none`, `owner`, `profile_link`, `shared`, `public` |
+| `allow_portal_view` | Check | false | Enable portal list/form views |
+| `allow_portal_create` | Check | false | Allow portal users to create records |
+| `allow_portal_update` | Check | false | Allow portal users to update records |
+| `allow_portal_delete` | Check | false | Allow portal users to delete records |
+| `allow_web_view` | Check | false | Enable public read access |
+| `allow_public_api` | Check | false | Enable public REST API access |
+
+- **`exposure = system`** — DocType only accessible via Desk and internal API. No portal or public access.
+- **`exposure = portal`** — DocType accessible via portal routes and portal API, in addition to system.
+- **`exposure = public`** — DocType accessible to guests via public routes (read-only unless public forms are configured).
+- **`exposure = all`** — DocType accessible across all three worlds with appropriate restrictions per world.
+
+Each exposure level uses its own permission/view layer:
+- System access → evaluated through DocPerm + FieldPermission + PermissionRule (see Doc 28 §3.4)
+- Portal access → evaluated through PortalPermission + PortalFieldPermission + PortalProfileLink (see Doc 28 §4.4)
+- Public access → evaluated through PublicViewRule + PublicForm + PublicAccessToken (see Doc 28 §5.4)
+
 ## 10. Field Type Dictionary Extension
 
 Extend the base field type dictionary with support for industry-wide types. Each field type defines its behavior across multiple dimensions.
