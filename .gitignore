@@ -11,4 +11,6 @@ sites/*/site_config.json
 sites/platform.db
 sites/platform.db-shm
 sites/platform.db-wal
+sites/files/
+galaxy/sites/
 .agents/
