@@ -239,7 +239,9 @@ DOCFIELDS = {
         ("is_submittable", "Is Submittable", "Check", None, False, False, False, False, 5),
         ("is_child_table", "Is Child Table", "Check", None, False, False, False, False, 6),
         ("is_tree", "Is Tree", "Check", None, False, False, False, False, 7),
-        ("idx", "Idx", "Int", None, False, False, False, False, 8),
+        ("allow_import", "Allow Import", "Check", None, False, False, False, True, 8),
+        ("allow_export", "Allow Export", "Check", None, False, False, False, True, 9),
+        ("idx", "Idx", "Int", None, False, False, False, False, 10),
     ],
     "DocField": [
         ("name", "Name", "Data", None, True, False, False, True, 0),

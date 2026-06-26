@@ -66,6 +66,8 @@ def create_core_tables(engine: Engine) -> None:
             is_submittable BOOLEAN DEFAULT FALSE,
             is_child_table BOOLEAN DEFAULT FALSE,
             is_tree BOOLEAN DEFAULT FALSE,
+            allow_import BOOLEAN DEFAULT TRUE,
+            allow_export BOOLEAN DEFAULT TRUE,
             idx INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -524,6 +526,8 @@ def create_core_tables(engine: Engine) -> None:
         _tenant_alter("tabReport"),
         _tenant_alter("tabError Log"),
         'ALTER TABLE "tabError Log" ALTER COLUMN method TYPE VARCHAR(255);',
+        'ALTER TABLE "tabDocType" ADD COLUMN IF NOT EXISTS allow_import BOOLEAN DEFAULT TRUE;',
+        'ALTER TABLE "tabDocType" ADD COLUMN IF NOT EXISTS allow_export BOOLEAN DEFAULT TRUE;',
     ]
 
     with engine.begin() as conn:

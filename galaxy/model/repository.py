@@ -77,7 +77,8 @@ def get_doctype(name: str):
         row = conn.execute(
             text("""
                 SELECT name, module, app_name, table_name,
-                       is_single, is_submittable, is_child_table, is_tree, idx
+                       is_single, is_submittable, is_child_table, is_tree,
+                       allow_import, allow_export, idx
                 FROM "tabDocType" WHERE name = :name
             """),
             {"name": name},

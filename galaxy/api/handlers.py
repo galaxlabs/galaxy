@@ -643,6 +643,11 @@ async def handle_resource_export(request):
     ok, msg = authorize(doctype, user, "read")
     if not ok:
         return _err(403, msg)
+    dt = get_doctype(doctype)
+    if dt is None:
+        return _err(404, f"DocType '{doctype}' not found.")
+    if not dt.get("allow_export", True):
+        return _err(403, f"Export is disabled for DocType '{doctype}'.")
     fmt = request.query_params.get("format", "csv")
     limit = min(int(request.query_params.get("limit", 1000)), 10000)
     offset = int(request.query_params.get("offset", 0))
@@ -677,6 +682,11 @@ async def handle_resource_import(request):
     ok, msg = authorize(doctype, user, "create")
     if not ok:
         return _err(403, msg)
+    dt = get_doctype(doctype)
+    if dt is None:
+        return _err(404, f"DocType '{doctype}' not found.")
+    if not dt.get("allow_import", True):
+        return _err(403, f"Import is disabled for DocType '{doctype}'.")
     fmt = request.query_params.get("format", "csv")
     body = await request.body()
     if not body:
