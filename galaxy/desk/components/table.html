@@ -13,6 +13,10 @@
         Bulk Actions ▼
       </button>
       <a href="/desk/resource/{{ doctype }}/new" class="galaxy-btn galaxy-btn-solid galaxy-btn-primary galaxy-btn-sm">+ New</a>
+      <div class="galaxy-btn-group">
+        <a href="/api/resource/{{ doctype }}/export?format=csv" class="galaxy-btn galaxy-btn-soft galaxy-btn-secondary galaxy-btn-sm">CSV</a>
+        <a href="/api/resource/{{ doctype }}/export?format=json" class="galaxy-btn galaxy-btn-soft galaxy-btn-secondary galaxy-btn-sm">JSON</a>
+      </div>
     </div>
   </div>
   <div class="galaxy-table-scroll">

@@ -175,7 +175,4 @@ def validate_field_rules(meta: RuntimeMeta, doc_data: dict) -> list[str]:
             errors.append(f"{label} is required in this context.")
 
     return errors
-
-
-def apply_field_rules_to_meta(meta: RuntimeMeta) -> RuntimeMeta:
-    return meta
+ 
