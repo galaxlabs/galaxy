@@ -721,6 +721,104 @@ This allows generated Vue/React apps to mirror the same visual design as Galaxy 
 | Jinja2 macros become slow with many components | Lazy-load component macros. Pre-compile commonly used macros. |
 | Galaxy becomes too Frappe-like visually | Design tokens make complete visual rebranding possible. Galaxy Default theme is modern but can be fully customized. |
 
+## 19. Icon Provider Integration
+
+Galaxy components render icons through an adapter layer rather than hardcoding icon markup.
+
+### Icon Adapter Pattern
+
+```jinja
+{% macro render_icon(icon_meta, class="") %}
+  {% if icon_meta %}
+    {% if icon_meta.provider == "lucide" %}
+      <i class="lucide lucide-{{ icon_meta.name }}" 
+         style="width:{{ icon_meta.size|default(20) }}px;height:{{ icon_meta.size|default(20) }}px;
+                color:{{ icon_meta.color|default('currentColor') }}"
+         aria-hidden="true"></i>
+    {% elif icon_meta.provider == "heroicons" %}
+      <svg class="hi-outline hi-{{ icon_meta.name }}" ...></svg>
+    {% endif %}
+  {% endif %}
+{% endmacro %}
+```
+
+### Icon in Component Macros
+
+Every component macro accepts an `icon` parameter as a dict:
+
+```jinja
+{{ ui.button("Save", icon={"provider": "lucide", "name": "save", "size": 16}) }}
+{{ ui.badge("Active", icon={"provider": "lucide", "name": "check-circle"}) }}
+{{ ui.empty_state("No records", icon={"provider": "tabler", "name": "database-off"}) }}
+```
+
+### Component Icon Rules
+
+- All components pass icons through `render_icon()` macro.
+- The adapter layer is swappable — change provider without touching templates.
+- Icons default to Lucide (lightweight, ISC license).
+- Directional icons (`arrow-left`, `chevron-right`) are mirrored in RTL mode via CSS.
+- Icons use `aria-hidden="true"` by default. Meaningful icons add `aria-label`.
+- Never use emoji, unicode symbols, or letter placeholders as icons.
+
+## 20. Field-Level Styling Integration
+
+Components consume field-level UI properties from DocField metadata.
+
+### Field → Component Mapping
+
+Field UI properties are passed to component macros during form rendering:
+
+```python
+def render_form_field(field: RuntimeField) -> str:
+    icon = field.ui_config.get("ui_icon")
+    tone = field.ui_config.get("ui_tone", "neutral")
+    return render_component("form_field", 
+        field=field,
+        icon={"provider": "lucide", "name": icon} if icon else None,
+        variant=field.ui_config.get("ui_variant", "standard"),
+        tone=tone,
+        size=field.ui_config.get("ui_size", "md"),
+        help_text=field.ui_config.get("ui_help_text"),
+    )
+```
+
+### Validation State
+
+Components receive a `validation` parameter that applies visual feedback:
+
+```jinja
+{{ ui.form_field(field, validation={"state": "error", "message": "Required"}) }}
+{{ ui.form_field(field, validation={"state": "warning", "message": "Optional"}) }}
+{{ ui.form_field(field, validation={"state": "success", "message": "Valid"}) }}
+```
+
+## 21. Theme Versioning
+
+Themes are versioned to allow safe upgrades.
+
+### Version Semantics
+
+- Theme versions are integers incremented on each save.
+- Components can reference theme version for backward compatibility.
+- Old themes are preserved (not deleted) when updated.
+- Users can be assigned a specific theme version.
+- Site default theme version is configurable.
+
+### Theme Migration
+
+```json
+{
+  "theme_name": "Galaxy Default",
+  "version": 3,
+  "previous_version": 2,
+  "changes": [
+    {"property": "primary_color", "old": "#1d4ed8", "new": "#2563eb"},
+    {"property": "border_radius", "old": "0.25rem", "new": "0.375rem"}
+  ]
+}
+```
+
 ## Summary
 
 Galaxy UI component system provides:

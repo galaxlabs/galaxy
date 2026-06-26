@@ -986,6 +986,9 @@ Version History records field-level changes to documents for audit and rollback.
 | `mentioned_user` | Link | The user who was mentioned |
 | `mentioned_role` | Link | Optional — a role that was mentioned |
 | `mentioned_team` | Data | Optional — a team that was mentioned |
+| `mentioned_department` | Data | Optional — department that was mentioned |
+| `notification_channel` | Select | `in_app` / `email` / `webhook` |
+| `mention_type` | Select | `user` / `role` / `team` / `department` / `all` |
 | `status` | Select | `pending` / `notified` / `read` / `dismissed` |
 | `notified_at` | Datetime | When the notification was sent |
 | `read_at` | Datetime | When the mention was read |
@@ -995,11 +998,17 @@ Version History records field-level changes to documents for audit and rollback.
 - `@username` mentions a specific user.
 - `@role` mentions all users with that role.
 - `@team` mentions all members of a team.
+- `@department` mentions all users in a department.
 - `@all` mentions everyone with access to the document (must be explicitly allowed in DocType Setting).
-- Mention spam prevention: max N mentions per comment (configurable, default 20).
-- Permission check: mentioned users who cannot access the document are silently skipped.
-- Each valid mention creates a notification record.
-- Notifications can be delivered in-app, by email, or by webhook (configurable per user).
+- Mention spam prevention: max N mentions per comment (configurable, default 20). Rate-limited at the server level — no more than M mentions per minute per user (configurable, default 30).
+- Permission check: mentioned users who cannot access the document are silently skipped. Do not notify users who lack read permission on the document.
+- Each valid mention creates a Mention record with status=«pending».
+- Mention records track read/unread status per user.
+- Support for RTL names and multilingual display names — mentions use the user's display_name field, and @-autocomplete searches across both username and display_name.
+- Notifications can be delivered in-app (notification center), by email, or by webhook (configurable per user and per notification rule).
+- Mention notification center: a `/desk/notifications` page lists all mentions with read/unread state, grouped by document.
+- Email notifications for mentions include a direct link to the document.
+- `@all` mentions require `allow_mentions = true` in DocType Setting AND a separate `allow_at_all` flag.
 
 ### Notification Rule Fields
 
@@ -1135,9 +1144,13 @@ class RuntimeMetaCache:
 | Client Script saved | Clear cache for the target doctype |
 | Server Script saved | Clear cache for the target doctype |
 | DocType Web View saved | Clear cache for the target doctype |
+| Integration saved | Clear cache for the target doctype |
+| DocType Override saved | Clear cache for the target doctype |
 | App installed / updated | Clear ALL doctype caches |
 | Migration applied | Clear ALL doctype caches |
-| Theme changed | Clear view-related caches (future) |
+| Theme changed | Clear ALL caches (including view caches) |
+| Mention notification sent | No cache impact (notification-only) |
+| Comment added | No cache impact |
 
 ### Cache Key
 
