@@ -1,7 +1,16 @@
 from galaxy.model.field_type_registry import get_all_types, options_required
+from galaxy.model.document import RESERVED_FIELD_NAMES
 
 VALID_FIELDTYPES = set(get_all_types().keys())
 OPTIONS_REQUIRED = {name for name, td in get_all_types().items() if td.options_required}
+
+RESERVED_FIELD_NAMES = {
+    "name", "owner", "creation", "modified", "modified_by",
+    "idx", "parent", "parentfield", "parenttype", "doctype",
+    "docstatus", "_user_tags", "_comments", "_assign",
+    "_liked_by", "__islocal", "__onload", "__run_trigger",
+    "tenant_id", "created_at", "updated_at",
+}
 
 DEFAULT_DOCTYPE_FIELDS = {
     "is_single": False,
@@ -45,6 +54,8 @@ def validate_doctype_payload(payload: dict) -> tuple[list[str], list[str]]:
 
         if not fname or not isinstance(fname, str) or not fname.strip():
             errors.append(f"{prefix}: 'fieldname' is required and must be a non-empty string.")
+        elif fname.strip() in RESERVED_FIELD_NAMES:
+            errors.append(f"{prefix}: fieldname '{fname}' is reserved and cannot be used.")
         if not flabel or not isinstance(flabel, str) or not flabel.strip():
             errors.append(f"{prefix}: 'label' is required and must be a non-empty string.")
         if not ftype or not isinstance(ftype, str) or not ftype.strip():

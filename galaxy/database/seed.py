@@ -241,7 +241,15 @@ DOCFIELDS = {
         ("is_tree", "Is Tree", "Check", None, False, False, False, False, 7),
         ("allow_import", "Allow Import", "Check", None, False, False, False, True, 8),
         ("allow_export", "Allow Export", "Check", None, False, False, False, True, 9),
-        ("idx", "Idx", "Int", None, False, False, False, False, 10),
+        ("track_changes", "Track Changes", "Check", None, False, False, False, True, 10),
+        ("track_views", "Track Views", "Check", None, False, False, False, False, 11),
+        ("quick_entry", "Quick Entry", "Check", None, False, False, False, True, 12),
+        ("in_dashboard", "In Dashboard", "Check", None, False, False, False, True, 13),
+        ("document_type", "Document Type", "Select", "Master\nTransaction\nSetup\nOther", False, False, False, True, 14),
+        ("title_field", "Title Field", "Data", None, False, False, False, True, 15),
+        ("image_field", "Image Field", "Data", None, False, False, False, False, 16),
+        ("search_fields", "Search Fields", "Text", None, False, False, False, False, 17),
+        ("idx", "Idx", "Int", None, False, False, False, False, 18),
     ],
     "DocField": [
         ("name", "Name", "Data", None, True, False, False, True, 0),
@@ -1287,6 +1295,10 @@ def seed_print_doctypes(engine: Engine) -> None:
     print_dt = [
         ("PrintFormat", "Core", "core", "tabPrintFormat", False, False, False, False, 28),
         ("Letterhead", "Core", "core", "tabLetterhead", False, False, False, False, 29),
+        ("DocVersion", "Core", "core", "tabDocVersion", False, False, False, False, 30),
+    ]
+    print_doctypes = [
+        "PrintFormat", "Letterhead", "DocVersion",
     ]
     with engine.begin() as conn:
         for dt in print_dt:
@@ -1306,7 +1318,7 @@ def seed_print_doctypes(engine: Engine) -> None:
                 )
 
     with engine.begin() as conn:
-        for parent in PRINT_DOCTYPES:
+        for parent in print_doctypes:
             perm_name = f"{parent}-System Manager"
             result = conn.execute(
                 text("""SELECT COUNT(*) FROM "tabDocPerm" WHERE name = :name"""),
@@ -1340,6 +1352,16 @@ PRINT_DOCFIELDS = {
         ("is_default", "Is Default", "Check", None, False, False, False, True, 2),
         ("enabled", "Enabled", "Check", None, False, False, False, True, 3),
         ("idx", "Idx", "Int", None, False, False, False, False, 4),
+    ],
+    "DocVersion": [
+        ("name", "Name", "Data", None, True, False, False, True, 0),
+        ("ref_doctype", "Ref DocType", "Link", "DocType", True, False, False, True, 1),
+        ("docname", "DocName", "Data", None, True, False, False, True, 2),
+        ("version_data", "Version Data", "JSON", None, True, False, True, False, 3),
+        ("changed_fields", "Changed Fields", "JSON", None, False, False, False, False, 4),
+        ("comment", "Comment", "Text", None, False, False, False, False, 5),
+        ("created_by", "Created By", "Data", None, False, False, False, False, 6),
+        ("idx", "Idx", "Int", None, False, False, False, False, 7),
     ],
 }
 

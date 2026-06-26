@@ -7,6 +7,7 @@ from sqlalchemy.engine import Engine
 from galaxy.config import load_site_config
 from galaxy.model.computed_field_engine import evaluate_and_apply_computed_fields
 from galaxy.model.field_rule_engine import validate_field_rules
+from galaxy.model.version_engine import create_version, get_field_delta, should_track_changes
 from galaxy.model.field_type_registry import coerce as registry_coerce, skip_in_crud
 from galaxy.model.runtimemeta import RuntimeMeta
 from galaxy.model.repository import get_doctype, get_doctype_fields, get_runtime_meta
@@ -19,6 +20,11 @@ from galaxy.database.core_tables import TENANT_TABLES
 def _get_engine() -> Engine:
     _, site = load_site_config()
     return get_engine(site)
+
+
+SYS_FIELDS = {"created_at", "updated_at", "owner", "modified_by", "idx"}
+
+RESERVED_FIELD_NAMES = SYS_FIELDS | {"name", "doctype", "parent", "parentfield", "parenttype", "docstatus"}
 
 
 def _quote(name: str) -> str:
@@ -52,7 +58,7 @@ def get_crud_fields(doctype_name: str) -> list[dict]:
     meta = _get_crud_meta(doctype_name)
     if meta is None:
         return []
-    return [f for f in meta.fields if not skip_in_crud(f["fieldtype"]) and f["fieldname"] != "name"]
+    return [f for f in meta.fields if not skip_in_crud(f["fieldtype"]) and f["fieldname"] != "name" and f["fieldname"] not in SYS_FIELDS]
 
 
 def validate_create_payload(doctype: dict, fields: list[dict], payload: dict) -> tuple[list[str], dict]:
@@ -164,6 +170,7 @@ def create_document(doctype_name: str, payload: dict) -> dict:
         }
 
     run_scripts(doctype_name, "after_save", doc_data)
+    create_version(doctype_name, doc_name, doc_data, comment="Created")
 
     return {
         "success": True,
@@ -301,6 +308,8 @@ def update_document(doctype_name: str, name: str, payload: dict) -> dict:
 
     updated = get_document(doctype_name, name)
     run_scripts(doctype_name, "after_save", updated or doc_data)
+    delta = get_field_delta(existing, updated or doc_data)
+    create_version(doctype_name, name, updated or doc_data, changed_fields=delta, comment="Updated")
     return {"success": True, "message": "Document updated.", "data": updated}
 
 

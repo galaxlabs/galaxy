@@ -65,7 +65,9 @@ def get_doctypes():
         rows = conn.execute(
             text("""
                 SELECT name, module, app_name, table_name,
-                       is_single, is_submittable, is_child_table, is_tree, idx
+                       is_single, is_submittable, is_child_table, is_tree,
+                       allow_import, allow_export, track_changes, track_views, quick_entry,
+                       in_dashboard, document_type, title_field, image_field, search_fields, idx
                 FROM "tabDocType" ORDER BY idx
             """)
         ).mappings().all()
@@ -78,7 +80,8 @@ def get_doctype(name: str):
             text("""
                 SELECT name, module, app_name, table_name,
                        is_single, is_submittable, is_child_table, is_tree,
-                       allow_import, allow_export, idx
+                       allow_import, allow_export, track_changes, track_views, quick_entry,
+                       in_dashboard, document_type, title_field, image_field, search_fields, idx
                 FROM "tabDocType" WHERE name = :name
             """),
             {"name": name},

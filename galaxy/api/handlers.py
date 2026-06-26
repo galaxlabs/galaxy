@@ -582,6 +582,42 @@ async def handle_resource_update(request):
     return _ok(result["data"])
 
 
+async def handle_doc_versions(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
+    raw_dt = request.path_params.get("doctype", "")
+    raw_name = request.path_params.get("name", "")
+    doctype = urllib.parse.unquote(raw_dt)
+    name = urllib.parse.unquote(raw_name)
+    user = _get_user(request)
+    ok, msg = authorize(doctype, user, "read")
+    if not ok:
+        return _err(403, msg)
+    from galaxy.model.version_engine import get_versions
+    versions = get_versions(doctype, name)
+    return _ok({"versions": versions})
+
+
+async def handle_dashboard_data(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
+    from galaxy.model.repository import get_doctypes
+    from sqlalchemy import text
+    engine = _get_engine()
+    all_doctypes = get_doctypes()
+    dashboard_dts = [d for d in all_doctypes if d.get("in_dashboard")]
+    stats = []
+    for dt in dashboard_dts:
+        table = dt.get("table_name", f"tab{dt['name']}")
+        try:
+            with engine.connect() as conn:
+                total = conn.execute(text(f'SELECT COUNT(*) FROM "{table}"')).scalar() or 0
+        except Exception:
+            total = 0
+        stats.append({"doctype": dt["name"], "label": dt.get("title_field") or dt["name"], "total": total, "icon": dt.get("icon", "")})
+    return _ok({"dashboard": stats})
+
+
 async def handle_upload(request):
     if require_auth(request) is None:
         return JSONResponse(AUTH_REQUIRED, status_code=401)

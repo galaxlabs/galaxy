@@ -31,6 +31,8 @@ from galaxy.api.handlers import (
     handle_resource_import,
     handle_print_html,
     handle_print_pdf,
+    handle_doc_versions,
+    handle_dashboard_data,
     handle_resource_get,
     handle_resource_list,
     handle_resource_update,
@@ -315,13 +317,14 @@ def _get_table_columns(doctype_name):
     cols.insert(0, {"key": "name", "label": "Name", "type": "Data", "sortable": True})
     return cols
 
-def _list_records(doctype_name, page=1, limit=20, sort_by="name", sort_order="asc", search=""):
+def _list_records(doctype_name, page=1, limit=20, sort_by="name", sort_order="asc", search="", filters=None):
     doctype = get_doctype_for_crud(doctype_name)
     if doctype is None:
         return [], 0, doctype
     meta = get_runtime_meta(doctype_name)
     table_name = doctype["table_name"]
     col_names = ["name"] + [f["fieldname"] for f in (meta.fields if meta else []) if f["fieldname"] != "name"]
+    fieldtype_map = {f["fieldname"]: f["fieldtype"] for f in (meta.fields if meta else [])}
 
     from sqlalchemy import text
 
@@ -344,6 +347,24 @@ def _list_records(doctype_name, page=1, limit=20, sort_by="name", sort_order="as
         search_clauses.insert(0, '"name" ILIKE :_s')
         where_parts.append('(' + ' OR '.join(search_clauses) + ')')
         params['_s'] = like
+
+    if filters:
+        for fname, fval in filters.items():
+            if fname in fieldtype_map and fval:
+                ft = fieldtype_map[fname]
+                quoted = '"' + fname + '"'
+                pname = '_f_' + fname
+                if ft == "Check":
+                    truthy = fval in ("1", "true", "yes", "on", True)
+                    where_parts.append(f'{quoted} = :{pname}')
+                    params[pname] = 1 if truthy else 0
+                elif ft in ("Select", "Data", "Link", "Small Text"):
+                    if fval.startswith("%") or fval.endswith("%"):
+                        where_parts.append(f'{quoted} ILIKE :{pname}')
+                        params[pname] = fval
+                    else:
+                        where_parts.append(f'{quoted} = :{pname}')
+                        params[pname] = fval
 
     where = ' AND '.join(where_parts) if where_parts else '1=1'
     quoted_table = '"' + table_name + '"'
@@ -374,8 +395,12 @@ async def desk_resource_list(request):
     sort_by = request.query_params.get("sort_by", "name")
     sort_order = request.query_params.get("sort_order", "asc")
     search = request.query_params.get("search", "")
+    filters = {}
+    for key, val in request.query_params.items():
+        if key.startswith("f_"):
+            filters[key[2:]] = val
 
-    records, total, doctype = _list_records(doctype_name, page, limit, sort_by, sort_order, search)
+    records, total, doctype = _list_records(doctype_name, page, limit, sort_by, sort_order, search, filters)
     if doctype is None:
         return JSONResponse({"error": "DocType not found"}, status_code=404)
 
@@ -599,6 +624,7 @@ routes = [
     Route("/api/resource/{doctype}/{name}", endpoint=handle_resource_delete, methods=["DELETE"]),
     Route("/api/print/{doctype}/{name}/html", endpoint=handle_print_html),
     Route("/api/print/{doctype}/{name}", endpoint=handle_print_pdf),
+    Route("/api/version/{doctype}/{name}", endpoint=handle_doc_versions),
     Route("/api/upload", endpoint=handle_upload, methods=["POST"]),
     Route("/api/core/scripts", endpoint=handle_save_script, methods=["POST"]),
     Route("/api/report/{name}", endpoint=handle_run_report),

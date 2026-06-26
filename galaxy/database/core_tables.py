@@ -68,6 +68,14 @@ def create_core_tables(engine: Engine) -> None:
             is_tree BOOLEAN DEFAULT FALSE,
             allow_import BOOLEAN DEFAULT TRUE,
             allow_export BOOLEAN DEFAULT TRUE,
+            track_changes BOOLEAN DEFAULT FALSE,
+            track_views BOOLEAN DEFAULT FALSE,
+            quick_entry BOOLEAN DEFAULT FALSE,
+            in_dashboard BOOLEAN DEFAULT FALSE,
+            document_type VARCHAR(50) DEFAULT 'Master',
+            title_field VARCHAR(255),
+            image_field VARCHAR(255),
+            search_fields TEXT,
             idx INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -401,6 +409,24 @@ def create_core_tables(engine: Engine) -> None:
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """,
+        """
+        CREATE TABLE IF NOT EXISTS "tabDocTypeLink" (
+            name VARCHAR(255) PRIMARY KEY,
+            parent VARCHAR(255) NOT NULL,
+            link_doctype VARCHAR(255) NOT NULL,
+            link_fieldname VARCHAR(255) NOT NULL,
+            parent_doctype VARCHAR(255),
+            table_fieldname VARCHAR(255),
+            "group" VARCHAR(255),
+            hidden BOOLEAN DEFAULT FALSE,
+            is_child_table BOOLEAN DEFAULT FALSE,
+            "custom" BOOLEAN DEFAULT FALSE,
+            enabled BOOLEAN DEFAULT TRUE,
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
     ]
 
     phase5_statements = [
@@ -552,6 +578,30 @@ def create_core_tables(engine: Engine) -> None:
         'ALTER TABLE "tabError Log" ALTER COLUMN method TYPE VARCHAR(255);',
         'ALTER TABLE "tabDocType" ADD COLUMN IF NOT EXISTS allow_import BOOLEAN DEFAULT TRUE;',
         'ALTER TABLE "tabDocType" ADD COLUMN IF NOT EXISTS allow_export BOOLEAN DEFAULT TRUE;',
+        'ALTER TABLE "tabDocType" ADD COLUMN IF NOT EXISTS track_changes BOOLEAN DEFAULT FALSE;',
+        'ALTER TABLE "tabDocType" ADD COLUMN IF NOT EXISTS quick_entry BOOLEAN DEFAULT FALSE;',
+        'ALTER TABLE "tabDocType" ADD COLUMN IF NOT EXISTS track_views BOOLEAN DEFAULT FALSE;',
+        'ALTER TABLE "tabDocType" ADD COLUMN IF NOT EXISTS in_dashboard BOOLEAN DEFAULT FALSE;',
+        'ALTER TABLE "tabDocType" ADD COLUMN IF NOT EXISTS document_type VARCHAR(50) DEFAULT \'Master\';',
+        'ALTER TABLE "tabDocType" ADD COLUMN IF NOT EXISTS title_field VARCHAR(255);',
+        'ALTER TABLE "tabDocType" ADD COLUMN IF NOT EXISTS image_field VARCHAR(255);',
+        'ALTER TABLE "tabDocType" ADD COLUMN IF NOT EXISTS search_fields TEXT;',
+    ]
+
+    version_statements = [
+        """
+        CREATE TABLE IF NOT EXISTS "tabDocVersion" (
+            name VARCHAR(255) PRIMARY KEY,
+            ref_doctype VARCHAR(255) NOT NULL,
+            docname VARCHAR(255) NOT NULL,
+            version_data JSONB NOT NULL,
+            changed_fields JSONB,
+            comment TEXT,
+            created_by VARCHAR(255),
+            idx INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
     ]
 
     with engine.begin() as conn:
@@ -568,6 +618,8 @@ def create_core_tables(engine: Engine) -> None:
         for stmt in portal_statements:
             conn.execute(text(stmt))
         for stmt in alter_statements:
+            conn.execute(text(stmt))
+        for stmt in version_statements:
             conn.execute(text(stmt))
 
 
@@ -606,6 +658,8 @@ def drop_core_tables(engine: Engine) -> None:
         "tabPortalFieldPermission",
         "tabPrintFormat",
         "tabLetterhead",
+        "tabDocVersion",
+        "tabDocTypeLink",
     ]
 
     with engine.begin() as conn:
