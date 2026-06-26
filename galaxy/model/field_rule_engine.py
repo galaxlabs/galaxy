@@ -78,7 +78,7 @@ def _safe_eval(expression: str, context: dict[str, Any]) -> Any:
         if isinstance(node, ast.List):
             return [_eval(el) for el in node.elts]
         if isinstance(node, ast.Dict):
-            return {_eval(k): _eval(v) for k, v in zip(node.keys, node.nodes)}
+            return {_eval(k): _eval(v) for k, v in zip(node.keys, node.values)}
         if isinstance(node, ast.Tuple):
             return tuple(_eval(el) for el in node.elts)
         if isinstance(node, ast.Slice):
