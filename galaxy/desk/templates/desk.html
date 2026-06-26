@@ -11,9 +11,8 @@
   </div>
 </div>
 
-<!-- Metric Cards -->
-<div class="dashboard-grid">
-  <div class="stat-card" onclick="window.location='/desk/doctypes'" style="cursor:pointer">
+<div class="dashboard-grid" id="stat-cards">
+  <div class="stat-card stat-card-solid" onclick="window.location='/desk/doctypes'" style="cursor:pointer">
     <div class="stat-card-icon stat-icon-doctype">📋</div>
     <div class="stat-card-body">
       <div class="stat-card-value">{{ summary.doctypes }}</div>
@@ -21,35 +20,35 @@
     </div>
     <div class="stat-card-trend up">+{{ summary.docfields }} fields</div>
   </div>
-  <div class="stat-card">
+  <div class="stat-card stat-card-solid">
     <div class="stat-card-icon stat-icon-apps">📦</div>
     <div class="stat-card-body">
       <div class="stat-card-value">{{ summary.installed_apps }}</div>
       <div class="stat-card-label">Installed Apps</div>
     </div>
   </div>
-  <div class="stat-card">
+  <div class="stat-card stat-card-solid">
     <div class="stat-card-icon stat-icon-modules">🧩</div>
     <div class="stat-card-body">
       <div class="stat-card-value">{{ summary.modules }}</div>
       <div class="stat-card-label">Modules</div>
     </div>
   </div>
-  <div class="stat-card">
+  <div class="stat-card stat-card-solid">
     <div class="stat-card-icon stat-icon-users">👥</div>
     <div class="stat-card-body">
       <div class="stat-card-value">{{ summary.users }}</div>
       <div class="stat-card-label">Users</div>
     </div>
   </div>
-  <div class="stat-card">
+  <div class="stat-card stat-card-solid">
     <div class="stat-card-icon stat-icon-roles">🔑</div>
     <div class="stat-card-body">
       <div class="stat-card-value">{{ summary.roles }}</div>
       <div class="stat-card-label">Roles</div>
     </div>
   </div>
-  <div class="stat-card">
+  <div class="stat-card stat-card-solid">
     <div class="stat-card-icon stat-icon-perms">🛡️</div>
     <div class="stat-card-body">
       <div class="stat-card-value">{{ summary.docperms }}</div>
@@ -58,7 +57,12 @@
   </div>
 </div>
 
-<!-- Quick Actions + Recent Activity -->
+<!-- DocType Dashboard Cards -->
+<div id="doctype-dashboard" hx-get="/api/dashboard" hx-trigger="load" hx-swap="innerHTML">
+  <div class="dash-loading"><span class="htmx-indicator">⏳ Loading records...</span></div>
+</div>
+
+<!-- Quick Actions + Activity -->
 <div class="dashboard-bottom">
   <div class="dash-section">
     <h3 class="dash-section-title">Quick Actions</h3>
@@ -86,9 +90,14 @@
     </div>
   </div>
   <div class="dash-section">
-    <h3 class="dash-section-title">Recently Viewed</h3>
-    <div class="activity-list" id="recent-list" hx-get="/api/core/doctypes" hx-trigger="load" hx-swap="innerHTML">
-      <div class="activity-placeholder">Loading...</div>
+    <h3 class="dash-section-title">Getting Started</h3>
+    <div class="setup-card">
+      <div class="setup-steps">
+        <div class="setup-step done"><span class="setup-step-icon">✓</span><span>Install Galaxy</span></div>
+        <div class="setup-step done"><span class="setup-step-icon">✓</span><span>Login as Administrator</span></div>
+        <div class="setup-step"><span class="setup-step-icon">○</span><span>Explore DocType Builder</span></div>
+        <div class="setup-step"><span class="setup-step-icon">○</span><span>Create your first custom app</span></div>
+      </div>
     </div>
   </div>
 </div>

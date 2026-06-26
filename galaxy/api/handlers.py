@@ -614,7 +614,19 @@ async def handle_dashboard_data(request):
                 total = conn.execute(text(f'SELECT COUNT(*) FROM "{table}"')).scalar() or 0
         except Exception:
             total = 0
-        stats.append({"doctype": dt["name"], "label": dt.get("title_field") or dt["name"], "total": total, "icon": dt.get("icon", "")})
+        stats.append({"doctype": dt["name"], "label": dt.get("title_field") or dt["name"], "total": total})
+    if request.headers.get("HX-Request") == "true":
+        html = '<h3 class="dash-section-title" style="margin:24px 0 12px">📊 DocType Records</h3><div class="doctype-dash-grid">'
+        for s in stats:
+            color = "#2563eb"
+            html += f'<a href="/desk/resource/{s["doctype"]}" class="doctype-dash-card">'
+            html += f'<div class="doctype-dash-icon" style="background:{color}">{s["doctype"][0]}</div>'
+            html += f'<div class="doctype-dash-info"><div class="doctype-dash-name">{s["label"]}</div>'
+            html += f'<div class="doctype-dash-count">{s["total"]} records</div></div></a>'
+        html += "</div>"
+        if not stats:
+            html = '<p style="text-align:center;color:var(--galaxy-muted-text);padding:24px">Enable <strong>Show in Dashboard</strong> on a DocType to see records here.</p>'
+        return HTMLResponse(html)
     return _ok({"dashboard": stats})
 
 

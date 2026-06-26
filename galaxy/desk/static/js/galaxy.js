@@ -251,6 +251,15 @@ galaxy.initHTMX = function () {
     });
     htmx.on("htmx:afterSwap", function (e) {
       galaxy.initNavActive();
+      galaxy.codeEditor.init();
+    });
+    htmx.on("htmx:beforeRequest", function (e) {
+      var indicator = e.detail.target && e.detail.target.querySelector(".htmx-indicator");
+      if (indicator) indicator.style.opacity = "1";
+    });
+    htmx.on("htmx:afterRequest", function (e) {
+      var indicator = e.detail.target && e.detail.target.querySelector(".htmx-indicator");
+      if (indicator) indicator.style.opacity = "0";
     });
   }
 };
@@ -299,24 +308,29 @@ galaxy.bulkActions = function (doctype) {
 
 // ── Form Save ──
 galaxy.saveForm = async function (doctype, name) {
-  var data = {};
+  var data = {}, btn = document.querySelector(".form-actions-bar .galaxy-btn-primary") || document.querySelector(".page-actions .galaxy-btn-primary");
+  if (btn) { btn.disabled = true; btn.textContent = "Saving..."; }
   document.querySelectorAll(".form-card-body [name]").forEach(function (el) {
     if (el.type === "checkbox") data[el.name] = el.checked;
     else data[el.name] = el.value;
   });
   try {
-    var resp = await fetch("/api/resource/" + doctype + "/" + name, {
-      method: "PUT", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (resp.ok) {
+    var url = "/api/resource/" + doctype + (name ? "/" + name : "");
+    var method = name ? "PUT" : "POST";
+    var resp = await fetch(url, { method: method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+    var result = await resp.json();
+    if (resp.ok && result.success) {
       galaxy.toast("Saved successfully", { tone: "success" });
+      if (!name && result.data && result.data.name) {
+        setTimeout(function () { window.location.href = "/desk/resource/" + doctype + "/" + result.data.name; }, 500);
+      }
     } else {
-      var err = await resp.json();
-      galaxy.toast(err.error || "Save failed", { tone: "danger" });
+      galaxy.toast(result.error || "Save failed", { tone: "danger" });
+      if (btn) { btn.disabled = false; btn.textContent = name ? "Save" : "Create"; }
     }
   } catch (e) {
     galaxy.toast("Network error", { tone: "danger" });
+    if (btn) { btn.disabled = false; btn.textContent = name ? "Save" : "Create"; }
   }
 };
 
@@ -325,8 +339,9 @@ galaxy.initNavActive = function () {
   var path = window.location.pathname;
   document.querySelectorAll("[data-nav]").forEach(function (a) {
     var href = a.getAttribute("href");
-    if (href === path) a.classList.add("active");
-    else a.classList.remove("active");
+    if (!href) return;
+    var isActive = href === path || (path.startsWith(href) && href !== "/desk");
+    a.classList.toggle("active", isActive);
   });
 };
 

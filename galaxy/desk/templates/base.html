@@ -31,38 +31,38 @@
       <nav class="sidebar-nav" id="sidebar-nav">
         <div class="sidebar-section">
           <span class="sidebar-section-title">Main</span>
-          <a href="/desk" class="nav-item {% if request.url.path == '/desk' %}active{% endif %}" data-nav>
-            <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+          <a href="/desk" class="nav-item" data-nav data-nav-icon="D">
+            <span class="nav-icon nav-icon-symbol">◉</span><span class="nav-label">Dashboard</span>
           </a>
-          <a href="/desk/doctypes" class="nav-item {% if '/desk/doctypes' in request.url.path %}active{% endif %}" data-nav>
-            <span class="nav-icon">📋</span><span class="nav-label">DocTypes</span>
+          <a href="/desk/doctypes" class="nav-item" data-nav data-nav-icon="T">
+            <span class="nav-icon nav-icon-symbol">⊞</span><span class="nav-label">DocTypes</span>
           </a>
-          <a href="/desk/reports" class="nav-item {% if '/desk/reports' in request.url.path %}active{% endif %}" data-nav>
-            <span class="nav-icon">📈</span><span class="nav-label">Reports</span>
+          <a href="/desk/reports" class="nav-item" data-nav data-nav-icon="R">
+            <span class="nav-icon nav-icon-symbol">▤</span><span class="nav-label">Reports</span>
           </a>
-          <a href="/desk/scripts" class="nav-item {% if '/desk/scripts' in request.url.path %}active{% endif %}" data-nav>
-            <span class="nav-icon">⚡</span><span class="nav-label">Scripts</span>
+          <a href="/desk/scripts" class="nav-item" data-nav data-nav-icon="S">
+            <span class="nav-icon nav-icon-symbol">▶</span><span class="nav-label">Scripts</span>
           </a>
         </div>
         <div class="sidebar-section">
           <span class="sidebar-section-title">Builder</span>
-          <a href="/desk/builder/doctype/new" class="nav-item" data-nav>
-            <span class="nav-icon">🛠</span><span class="nav-label">New DocType</span>
+          <a href="/desk/builder/doctype/new" class="nav-item" data-nav data-nav-icon="N">
+            <span class="nav-icon nav-icon-symbol">＋</span><span class="nav-label">New DocType</span>
           </a>
         </div>
         <div class="sidebar-section">
           <span class="sidebar-section-title">Management</span>
-          <a href="/desk/bench" class="nav-item {% if '/desk/bench' in request.url.path %}active{% endif %}" data-nav>
-            <span class="nav-icon">⚙️</span><span class="nav-label">Bench</span>
+          <a href="/desk/bench" class="nav-item" data-nav data-nav-icon="B">
+            <span class="nav-icon nav-icon-symbol">⚙</span><span class="nav-label">Bench</span>
           </a>
-          <a href="/desk/tenants" class="nav-item {% if '/desk/tenants' in request.url.path %}active{% endif %}" data-nav>
-            <span class="nav-icon">🏢</span><span class="nav-label">Tenants</span>
+          <a href="/desk/tenants" class="nav-item" data-nav data-nav-icon="M">
+            <span class="nav-icon nav-icon-symbol">▯</span><span class="nav-label">Tenants</span>
           </a>
         </div>
         <div class="sidebar-section">
           <span class="sidebar-section-title">Developer</span>
-          <a href="/desk/ui-guide" class="nav-item {% if '/desk/ui-guide' in request.url.path %}active{% endif %}" data-nav>
-            <span class="nav-icon">🎨</span><span class="nav-label">UI Guide</span>
+          <a href="/desk/ui-guide" class="nav-item" data-nav data-nav-icon="U">
+            <span class="nav-icon nav-icon-symbol">◐</span><span class="nav-label">UI Guide</span>
           </a>
         </div>
       </nav>

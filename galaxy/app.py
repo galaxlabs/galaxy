@@ -626,6 +626,7 @@ routes = [
     Route("/api/print/{doctype}/{name}", endpoint=handle_print_pdf),
     Route("/api/version/{doctype}/{name}", endpoint=handle_doc_versions),
     Route("/api/upload", endpoint=handle_upload, methods=["POST"]),
+    Route("/api/dashboard", endpoint=handle_dashboard_data),
     Route("/api/core/scripts", endpoint=handle_save_script, methods=["POST"]),
     Route("/api/report/{name}", endpoint=handle_run_report),
     Route("/api/bench/sites", endpoint=handle_bench_sites),

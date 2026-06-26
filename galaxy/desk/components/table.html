@@ -1,7 +1,9 @@
 {% macro datatable(doctype, columns, records, total, page=1, limit=20, sort_by="", sort_order="asc", search="") %}
 <div class="galaxy-table-wrap" id="table-{{ doctype | slugify }}">
+  <div class="htmx-indicator galaxy-table-loading">Loading...</div>
   <div class="galaxy-table-toolbar">
     <div class="galaxy-table-search">
+      <span class="galaxy-search-icon">🔍</span>
       <input type="text" class="galaxy-table-search-input" placeholder="Search {{ doctype }}..."
         hx-get="/desk/resource/{{ doctype }}/list?page=1&limit={{ limit }}&sort_by={{ sort_by }}&sort_order={{ sort_order }}"
         hx-trigger="keyup delay:300ms" hx-target="#table-{{ doctype | slugify }}" hx-swap="outerHTML"
@@ -10,7 +12,7 @@
     <div class="galaxy-table-actions">
       <span class="galaxy-table-count">{{ total }} records</span>
       <button class="galaxy-btn galaxy-btn-soft galaxy-btn-primary galaxy-btn-sm" onclick="galaxy.bulkActions('{{ doctype }}')" id="bulk-action-btn" style="display:none">
-        Bulk Actions ▼
+        Bulk ▼
       </button>
       <a href="/desk/resource/{{ doctype }}/new" class="galaxy-btn galaxy-btn-solid galaxy-btn-primary galaxy-btn-sm">+ New</a>
       <div class="galaxy-btn-group">
@@ -61,7 +63,14 @@
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="{{ columns|length + 2 }}" class="galaxy-table-empty">No {{ doctype }} records found.</td></tr>
+        <tr><td colspan="{{ columns|length + 2 }}" class="galaxy-table-empty">
+          <div class="galaxy-empty-state">
+            <div class="galaxy-empty-icon">📄</div>
+            <div class="galaxy-empty-title">No {{ doctype }} records found</div>
+            <div class="galaxy-empty-desc">Create your first record to get started.</div>
+            <a href="/desk/resource/{{ doctype }}/new" class="galaxy-btn galaxy-btn-solid galaxy-btn-primary galaxy-btn-sm">+ New {{ doctype }}</a>
+          </div>
+        </td></tr>
         {% endfor %}
       </tbody>
     </table>
