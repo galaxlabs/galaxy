@@ -31,6 +31,8 @@ from galaxy.api.handlers import (
     handle_resource_get,
     handle_resource_list,
     handle_resource_update,
+    handle_upload,
+    handle_link_search,
     handle_run_report,
     handle_save_script,
     handle_summary,
@@ -96,6 +98,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_DIR = os.path.join(BASE_DIR, "desk", "templates")
 COMPONENTS_DIR = os.path.join(BASE_DIR, "desk", "components")
 STATIC_DIR = os.path.join(BASE_DIR, "desk", "static")
+FILES_DIR = os.path.join(os.path.dirname(BASE_DIR), "sites", "files")
+os.makedirs(FILES_DIR, exist_ok=True)
 
 templates = Jinja2Templates(directory=[TEMPLATES_DIR, COMPONENTS_DIR])
 templates.env.globals["ui"] = ui
@@ -584,9 +588,11 @@ routes = [
     Route("/api/resource/{doctype}", endpoint=handle_resource_list),
     Route("/api/resource/{doctype}", endpoint=handle_resource_create, methods=["POST"]),
     Route("/api/resource/{doctype}/export", endpoint=handle_resource_export),
+    Route("/api/resource/{doctype}/search", endpoint=handle_link_search),
     Route("/api/resource/{doctype}/{name}", endpoint=handle_resource_get),
     Route("/api/resource/{doctype}/{name}", endpoint=handle_resource_update, methods=["PUT"]),
     Route("/api/resource/{doctype}/{name}", endpoint=handle_resource_delete, methods=["DELETE"]),
+    Route("/api/upload", endpoint=handle_upload, methods=["POST"]),
     Route("/api/core/scripts", endpoint=handle_save_script, methods=["POST"]),
     Route("/api/report/{name}", endpoint=handle_run_report),
     Route("/api/bench/sites", endpoint=handle_bench_sites),
@@ -636,6 +642,7 @@ routes = [
     Route("/api/portal/resource/{doctype}/{docname}", endpoint=portal_update, methods=["PUT"]),
     Route("/api/portal/resource/{doctype}/{docname}", endpoint=portal_delete, methods=["DELETE"]),
     Mount("/static", app=StaticFiles(directory=STATIC_DIR), name="static"),
+    Mount("/files", app=StaticFiles(directory=FILES_DIR), name="files"),
 ]
 
 async def _desk_render(request, template_name: str, context: dict, status_code: int = 200):

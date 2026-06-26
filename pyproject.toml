@@ -30,6 +30,9 @@ dependencies = [
     "Jinja2>=3.1,<4",
     "MarkupSafe>=2.1,<4",
 
+    # Form parsing (file upload)
+    "python-multipart>=0.0.18,<1",
+
     # Security
     "passlib[bcrypt]>=1.7,<2",
     "bcrypt>=4.2,<5",

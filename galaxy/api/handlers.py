@@ -214,9 +214,12 @@ def require_auth(request) -> str | None:
     if session is None:
         return None
     return session["username"]
-
-
 AUTH_REQUIRED = {"success": False, "error": "Authentication required."}
+
+
+def _get_engine():
+    _, site = load_site_config()
+    return get_engine(site)
 
 
 def _err(status: int, error: str, errors: list[str] | None = None):
@@ -578,6 +581,58 @@ async def handle_resource_update(request):
 
     return _ok(result["data"])
 
+
+async def handle_upload(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
+    if not _require_csrf(request):
+        return _err(403, "Invalid CSRF token.")
+    form = await request.form()
+    file = form.get("file")
+    if not file or not hasattr(file, "filename") or not file.filename:
+        return _err(400, "No file provided.")
+    import os, secrets
+    from datetime import UTC, datetime
+    _root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    upload_dir = os.path.join(_root, "sites", "files")
+    os.makedirs(upload_dir, exist_ok=True)
+    ext = os.path.splitext(file.filename)[1] if "." in file.filename else ""
+    safe_name = f"{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}-{secrets.token_hex(4)}{ext}"
+    filepath = os.path.join(upload_dir, safe_name)
+    content = await file.read()
+    with open(filepath, "wb") as f:
+        f.write(content)
+    file_url = f"/files/{safe_name}"
+    return _ok({"file_url": file_url, "file_name": safe_name, "original_name": file.filename})
+
+
+async def handle_link_search(request):
+    if require_auth(request) is None:
+        return JSONResponse(AUTH_REQUIRED, status_code=401)
+    raw = request.path_params.get("doctype", "")
+    doctype = urllib.parse.unquote(raw)
+    user = _get_user(request)
+    ok, msg = authorize(doctype, user, "read")
+    if not ok:
+        return _err(403, msg)
+    q = request.query_params.get("q", "")
+    limit = min(int(request.query_params.get("limit", 20)), 100)
+    from galaxy.model.repository import get_doctype
+    dt = get_doctype(doctype)
+    if dt is None:
+        return _err(404, f"DocType '{doctype}' not found.")
+    table_name = dt.get("table_name", f"tab{doctype}")
+    from galaxy.model.document import _quote, _tenant_where
+    quoted_table = _quote(table_name)
+    tenant_clause, tenant_params = _tenant_where(table_name)
+    where = f"AND {tenant_clause}" if tenant_clause else ""
+    params = {"q": f"%{q}%", "lim": limit}
+    params.update(tenant_params)
+    sql = f'SELECT name FROM {quoted_table} WHERE name ILIKE :q {where} ORDER BY name LIMIT :lim'
+    engine = _get_engine()
+    with engine.connect() as conn:
+        rows = conn.execute(text(sql), params).mappings().all()
+    return _ok([dict(r) for r in rows])
 
 async def handle_resource_export(request):
     if require_auth(request) is None:
